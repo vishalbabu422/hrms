@@ -1,0 +1,224 @@
+import { CButton, CFormInput, CFormTextarea } from '@coreui/react'
+import { useEffect, useState } from 'react'
+import {
+  getEmployeeSkills,
+  createEmployeeSkill,
+  updateEmployeeSkill,
+} from '../../../../services/employeeSkills'
+import { validateSkills } from '../../../../validations/skillValidation'
+
+const SkillsStep = ({ state, dispatch, employeeId }) => {
+  const [errors, setErrors] = useState([])
+  const { skills } = state
+
+  useEffect(() => {
+    const loadSkills = async () => {
+      try {
+        const res = await getEmployeeSkills(employeeId)
+        dispatch({
+          type: 'SET_SKILLS',
+          payload: res.data.data || [],
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    loadSkills()
+  }, [employeeId])
+
+  const saveSkill = async (skill) => {
+    try {
+      await createEmployeeSkill(employeeId, {
+        skill_name: skill.skill_name,
+        experience_years: skill.experience_years,
+        remarks: skill.remarks,
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const updateSkill = async (skill) => {
+    try {
+      await updateEmployeeSkill(employeeId, skill.id, {
+        skill_name: skill.skill_name,
+        experience_years: skill.experience_years,
+        remarks: skill.remarks,
+      })
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const handleSave = async (skill) => {
+    if (skill.id) {
+      await updateSkill(skill)
+    } else {
+      await saveSkill(skill)
+    }
+  }
+
+  // const handleNext = async () => {
+
+  //     for (const skill of state.skills) {
+  //         await handleSave(skill)
+  //     }
+
+  //     dispatch({
+  //         type: "SET_STEP",
+  //         payload: state.step + 1
+  //     })
+  // }
+
+  const handleNext = async () => {
+    const validationErrors = validateSkills(state.skills)
+    setErrors(validationErrors)
+
+    const hasError = validationErrors.some((e) => Object.keys(e).length)
+
+    if (hasError) {
+      toast.error('Please fill required fields')
+      return
+    }
+
+    for (const skill of state.skills) {
+      await handleSave(skill)
+    }
+
+    dispatch({
+      type: 'SET_STEP',
+      payload: state.step + 1,
+    })
+  }
+
+  return (
+    <div className="step-content">
+      <h5 className="mb-3">Skills</h5>
+      {skills.map((skill, index) => (
+        <div key={index} className="border rounded p-3 mb-3">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <CFormInput
+                label={
+                  <>
+                    Skill Name <span className="text-danger">*</span>
+                  </>
+                }
+                className={`form-control ${errors[index]?.skill_name ? 'is-invalid' : ''}`}
+                value={skill.skill_name}
+                maxLength={100}
+                placeholder="Enter skill name"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'UPDATE_ITEM',
+                    section: 'skills',
+                    index,
+                    field: 'skill_name',
+                    value: e.target.value,
+                  })
+                }
+              />
+
+              <div className="invalid-feedback">{errors[index]?.skill_name}</div>
+            </div>
+            <div className="col-md-6">
+              <CFormInput
+                label="Experience Years"
+                className="form-control"
+                type="number"
+                value={skill.experience_years}
+                placeholder="e.g. 2.5"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'UPDATE_ITEM',
+                    section: 'skills',
+                    index: index,
+                    field: 'experience_years',
+                    value: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="col-md-12">
+              <CFormTextarea
+                label="Remarks"
+                className={`form-control ${errors[index]?.remarks ? 'is-invalid' : ''}`}
+                value={skill.remarks}
+                maxLength={255}
+                placeholder="Enter remarks"
+                onChange={(e) =>
+                  dispatch({
+                    type: 'UPDATE_ITEM',
+                    section: 'skills',
+                    index,
+                    field: 'remarks',
+                    value: e.target.value,
+                  })
+                }
+              />
+
+              <div className="invalid-feedback">{errors[index]?.remarks}</div>
+            </div>
+          </div>
+          {skills.length > 1 && (
+            <div className="text-end mt-2">
+              <CButton
+                color="danger"
+                size="sm"
+                onClick={() =>
+                  dispatch({
+                    type: 'REMOVE_ITEM',
+                    section: 'skills',
+                    index: index,
+                  })
+                }
+              >
+                Remove
+              </CButton>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <CButton
+        className="btn btn-outline-primary"
+        onClick={() =>
+          dispatch({
+            type: 'ADD_ITEM',
+            section: 'skills',
+            payload: {
+              skill_name: '',
+              experience_years: '',
+              remarks: '',
+            },
+          })
+        }
+      >
+        + Add Skill
+      </CButton>
+
+      <div className="d-flex justify-content-end gap-2 mt-4">
+        <CButton
+          className="btn btn-outline-secondary"
+          color="light"
+          disabled={state.step === 0}
+          onClick={() =>
+            state.step > 0 &&
+            dispatch({
+              type: 'SET_STEP',
+              payload: state.step - 1,
+            })
+          }
+        >
+          Previous
+        </CButton>
+
+        <CButton color="primary" className="btn btn-primary" onClick={handleNext}>
+          Save & Next
+        </CButton>
+      </div>
+    </div>
+  )
+}
+
+export default SkillsStep

@@ -1,0 +1,123 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import Field from '../../components/field'
+
+import {
+  CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
+  CButton,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilCloudDownload } from '@coreui/icons'
+
+import { getEmployeeQualifications } from '../../../services/employeeQualification'
+
+const QualificationView = () => {
+  const { employeeId } = useParams()
+  const [qualificationData, setQualificationData] = useState([])
+
+  useEffect(() => {
+    if (!employeeId) return
+
+    getEmployeeQualifications(employeeId)
+      .then((res) => {
+
+        const data = res.data?.data || res.data || {}
+        const qualifications = data.EmployeeQualifications || []
+
+        const formatted = qualifications.map((q) => ({
+          id: q.id,
+          type: q.qualification_type,
+          name: q.qualification_name,
+          specialization: q.specialization,
+          institute: q.institute_name,
+          board: q.board_university,
+          year: q.year_of_passing,
+          grade: q.grade,
+          percentage: q.percentage,
+          document: q.document,
+          documentName: q.document
+            ? q.document.split('/').pop()
+            : '',
+        }))
+
+        setQualificationData(formatted)
+      })
+      .catch((err) => {
+        console.error('QUALIFICATION ERROR:', err)
+      })
+  }, [employeeId])
+
+  return (
+    <div className="mt-2">
+      {qualificationData.length === 0 ? (
+        <div className="text-muted">No qualifications found</div>
+      ) : (
+        <CAccordion alwaysOpen>
+          {qualificationData.map((item, index) => (
+            <CAccordionItem
+              itemKey={index}
+              key={item.id || index}
+              className="mb-3 border rounded-3 shadow-sm"
+            >
+              {/* HEADER */}
+              <CAccordionHeader>
+                <div className="fw-bold">
+                  {item.name || '-'} – {item.institute || '-'}
+                </div>
+              </CAccordionHeader>
+
+              {/* BODY */}
+              <CAccordionBody>
+                <div className="row g-4">
+                  {/* LEFT */}
+                  <div className="col-md-6">
+                    <Field label="Qualification Type" value={item.type} />
+                    <Field label="Specialization" value={item.specialization} />
+                    <Field label="Board / University" value={item.board} />
+                    <Field label="Grade" value={item.grade} />
+                  </div>
+
+                  {/* RIGHT */}
+                  <div className="col-md-6">
+                    <Field label="Qualification Name" value={item.name} />
+                    <Field label="Institute Name" value={item.institute} />
+                    <Field label="Year of Passing" value={item.year} />
+                    <Field label="Percentage (%)" value={item.percentage} />
+                  </div>
+
+                  {/* DOCUMENT */}
+                  <div className="col-12 mb-3">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <small className="text-muted">Certificate</small>
+                        <div className="fw-semibold">
+                          {item.documentName || 'No document uploaded'}
+                        </div>
+                      </div>
+
+                      {item.document && (
+                        <CButton
+                          size="sm"
+                          variant="outline"
+                          href={item.document}
+                          download
+                        >
+                          <CIcon icon={cilCloudDownload} />
+                        </CButton>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CAccordionBody>
+            </CAccordionItem>
+          ))}
+        </CAccordion>
+      )}
+    </div>
+  )
+}
+
+export default QualificationView

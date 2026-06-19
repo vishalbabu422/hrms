@@ -1,0 +1,414 @@
+const express = require("express");
+const router = express.Router();
+const validate = require("../middlewares/validate");
+const {
+  protect,
+  restrictTo,
+  checkPermission,
+  injectOrgScope,
+} = require("../middlewares/authMiddleware");
+
+// controllers
+const GstCodeController = require("../controllers/gstCodeController");
+const EmpanelmentController = require("../controllers/empanelmentController");
+const EmpanelmentDesignationController = require("../controllers/designationController");
+const ResourceRateController = require("../controllers/resourceRateController");
+const WorkOrderController = require("../controllers/workOrderController");
+const WorkOrderDesgnController = require("../controllers/workOrderDesignationController");
+const CompanyMasterController = require("../controllers/companyMasterController");
+const OrganizationController = require("../controllers/organizationController");
+const VendorMasterController = require("../controllers/vendorMasterController");
+
+// validations
+const {
+  empanelmentIdParamSchema,
+} = require("../validators/empanelment-schema");
+
+const {
+  gstCodeCreateSchema,
+  gstCodePatchSchema,
+  gstCodeIdParamSchema,
+  gstCodeActiveQuerySchema,
+} = require("../validators/gst-code-schema");
+
+const {
+  designationIdParamSchema,
+} = require("../validators/empanelment-desgn-schema");
+
+const {
+  resourcerateIdParamSchema,
+} = require("../validators/resource-rate-schema");
+
+const { workOrderIdParamSchema } = require("../validators/work-order-schema");
+
+const { companyIdParamSchema } = require("../validators/company-master-schema");
+
+const {
+  organizationIdParamSchema,
+} = require("../validators/organization-schema");
+
+const { vendorIdParamSchema } = require("../validators/vendor-master-schema");
+// Routes
+router.use(protect);
+
+router.route("/empanelment/index").get(
+  checkPermission("EMPANELMENT.READ"),
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  EmpanelmentController.index,
+);
+router.route("/empanelment/:id").get(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  //EmpanelmentController.id,
+  checkPermission("EMPANELMENT.READ"),
+  validate(empanelmentIdParamSchema, "params"),
+  EmpanelmentController.dataById,
+);
+
+router.route("/empanelment/create").post(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  //validate(gstCodeCreateSchema, "body"),
+  injectOrgScope(),
+  checkPermission("EMPANELMENT.CREATE"),
+  EmpanelmentController.create,
+);
+
+router.route("/empanelment/edit/:id").patch(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  injectOrgScope(),
+  checkPermission("EMPANELMENT.UPDATE"),
+  EmpanelmentController.edit,
+);
+
+router.route("/empanelment/delete/:id").delete(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("EMPANELMENT.DELETE"),
+  EmpanelmentController.deleteById,
+);
+
+// GST Code Routes
+router.route("/gst-code/index").get(
+  checkPermission("GST.READ"),
+  GstCodeController.index);
+router.route("/gst-code/:id").get(
+  checkPermission("GST.READ"),
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(gstCodeIdParamSchema, "params"),
+  validate(gstCodeActiveQuerySchema, "query"),
+  GstCodeController.dataById,
+);
+
+router.route("/gst-code/create").post(
+  checkPermission("GST.CREATE"),
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(gstCodeCreateSchema, "body"),
+  GstCodeController.create,
+);
+
+router.route("/gst-code/edit/:id").patch(
+  checkPermission("GST.UPDATE"),
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(gstCodeIdParamSchema, "params"),
+  validate(gstCodePatchSchema, "body"),
+  GstCodeController.edit,
+);
+
+router.route("/gst-code/delete/:id").delete(
+  checkPermission("GST.DELETE"),
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(gstCodeIdParamSchema, "params"),
+  GstCodeController.deleteById,
+);
+
+router.route("/designation/index").get(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("EMPL_DES.READ"),
+  EmpanelmentDesignationController.index,
+);
+router.route("/designation/:id").get(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  //EmpanelmentController.id,
+  validate(designationIdParamSchema, "params"),
+  checkPermission("EMPL_DES.READ"),
+  EmpanelmentDesignationController.dataById,
+);
+
+router.route("/designation/create").post(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  //validate(gstCodeCreateSchema, "body"),
+  checkPermission("EMPL_DES.CREATE"),
+  EmpanelmentDesignationController.create,
+);
+
+router.route("/designation/edit/:id").patch(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("EMPL_DES.UPDATE"),
+  EmpanelmentDesignationController.edit,
+);
+
+router.route("/designation/delete/:id").delete(
+  //authController.protect,
+  //authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("EMPL_DES.DELETE"),
+  EmpanelmentDesignationController.deleteById,
+);
+
+router.route("/resourcerate/index").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("EMPL_DES.DELETE"),
+  ResourceRateController.index,
+);
+
+router.route("/resourcerate/:id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(designationIdParamSchema, "params"),
+  checkPermission("RESO_RATE.READ"),
+  ResourceRateController.dataById,
+);
+
+router.route("/resourcerate/designation/:desgn_id_fk").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(designationIdParamSchema, "params"),
+  checkPermission("RESO_RATE.READ"),
+  ResourceRateController.dataByDesignation,
+);
+
+router.route("/resourcerate/create").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(resourceRateCreateSchema, "body"),
+  checkPermission("RESO_RATE.CREATE"),
+  ResourceRateController.create,
+);
+
+router.route("/resourcerate/edit/:id").patch(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(resourceRateUpdateSchema, "body"),
+  checkPermission("RESO_RATE.UPDATE"),
+  ResourceRateController.edit,
+);
+
+router.route("/resourcerate/delete/:id").delete(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("RESO_RATE.DELETE"),
+  ResourceRateController.deleteById,
+);
+
+router.route("/workorder/index").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("RESO_RATE.DELETE"),
+  WorkOrderController.index,
+);
+
+router.route("/workorder/:id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(workOrderIdParamSchema, "params"),
+  checkPermission("WORKORDER.READ"),
+  WorkOrderController.dataById,
+);
+
+router.route("/workorder/create").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  checkPermission("WORKORDER.CREATE"),
+  WorkOrderController.create,
+);
+
+router.route("/workorder/edit/:id").patch(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderUpdateSchema, "body"),
+  checkPermission("WORKORDER.UPDATE"),
+  WorkOrderController.edit,
+);
+
+router.route("/workorder/delete/:id").delete(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("WORKORDER.DELETE"),
+  WorkOrderController.deleteById,
+);
+
+router.route("/workorder-desgn").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  checkPermission("RESO_RATE.DELETE"),
+  WorkOrderDesgnController.index,
+);
+
+router.route("/workorder-desgn/:id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  checkPermission("RESO_RATE.DELETE"),
+  WorkOrderDesgnController.dataById,
+);
+
+router.route("/workorder-desgn/create").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  WorkOrderDesgnController.create,
+);
+
+router.route("/workorder-desgn/workorder/:work_order_id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  WorkOrderDesgnController.getByWorkOrderId,
+);
+
+router.route("/workorder-desgn/deployment").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  WorkOrderDesgnController.createDeployment,
+);
+
+router.route("/workorder-desgn/deployment/:id").patch(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  WorkOrderDesgnController.patchDeployment,
+);
+
+router.route("/workorder-desgn/deployment/:id").delete(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(workOrderCreateSchema, "body"),
+  WorkOrderDesgnController.deleteDeployment,
+);
+
+router.route("/company/index").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("COMPANY.READ"),
+  CompanyMasterController.index,
+);
+router.route("/company/:id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(companyIdParamSchema, "params"),
+  checkPermission("COMPANY.READ"),
+  CompanyMasterController.dataById,
+);
+router.route("/company/create").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(companyCreateSchema, "body"),
+  injectOrgScope(),
+  checkPermission("COMPANY.UPDATE"),
+  CompanyMasterController.create,
+);
+router.route("/company/edit/:id").patch(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(companyUpdateSchema, "body"),
+  injectOrgScope(),
+  checkPermission("COMPANY.UPDATE"),
+  CompanyMasterController.edit,
+);
+router.route("/company/delete/:id").delete(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("COMPANY.DELETE"),
+  CompanyMasterController.deleteById,
+);
+router.route("/organization/index").get(
+  checkPermission("ORGANIZATION.READ"),
+  OrganizationController.index,
+);
+
+// Get Organization By ID
+router.route("/organization/:id").get(
+  checkPermission("ORGANIZATION.READ"),
+  validate(organizationIdParamSchema, "params"),
+  OrganizationController.dataById,
+);
+
+// Create Organization
+router.route("/organization/create").post(
+  protect,
+  checkPermission("ORGANIZATION.CREATE"),
+  // validate(organizationCreateSchema, "body"),
+  OrganizationController.create,
+);
+
+// Edit Organization
+router.route("/organization/edit/:id").patch(
+  protect,
+  checkPermission("ORGANIZATION.UPDATE"),
+  // validate(organizationUpdateSchema, "body"),
+  OrganizationController.edit,
+);
+
+// Soft Delete Organization
+router.route("/organization/delete/:id").delete(
+  protect,
+  checkPermission("ORGANIZATION.DELETE"),
+  OrganizationController.deleteById,
+);
+
+// Get All Vendors
+router.route("/vendor/index").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("VENDOR.READ"),
+  VendorMasterController.index,
+);
+
+// Get Vendor By ID
+router.route("/vendor/:id").get(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  validate(vendorIdParamSchema, "params"),
+  checkPermission("VENDOR.READ"),
+  VendorMasterController.dataById,
+);
+
+// Create Vendor
+router.route("/vendor/create").post(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(vendorCreateSchema, "body"),
+  injectOrgScope(),
+  checkPermission("VENDOR.CREATE"),
+  VendorMasterController.create,
+);
+
+// Edit Vendor
+router.route("/vendor/edit/:id").patch(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  // validate(vendorUpdateSchema, "body"),
+  injectOrgScope(),
+  checkPermission("VENDOR.UPDATE"),
+  VendorMasterController.edit,
+);
+
+// Soft Delete Vendor
+router.route("/vendor/delete/:id").delete(
+  // authController.protect,
+  // authController.restrictTo("Manager/Admin", "System Admin"),
+  checkPermission("VENDOR.DELETE"),
+  VendorMasterController.deleteById,
+);
+
+module.exports = router;

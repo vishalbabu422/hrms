@@ -1,0 +1,71 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+const DesignationMaster = sequelize.define(
+    "DesignationMaster",
+    {
+        id: {
+            type: DataTypes.BIGINT,
+            autoIncrement: true,
+            primaryKey: true
+        },
+
+        organization_id: {
+            type: DataTypes.BIGINT,
+            allowNull: false
+        },
+
+        designation_name: {
+            type: DataTypes.STRING(150),
+            allowNull: false
+        },
+
+        designation_code: {
+            type: DataTypes.STRING(50),
+            allowNull: true
+        },
+
+        level: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+
+        is_active: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+        },
+
+        is_deleted: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        }
+    },
+    {
+        tableName: "designations",
+        schema: "pmu",
+        timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+        indexes: [
+            {
+                unique: true,
+                fields: ["organization_id", "designation_name"]
+            }
+        ]
+    }
+);
+
+DesignationMaster.associate = (models) => {
+    DesignationMaster.belongsTo(models.Organization, {
+        foreignKey: "organization_id",
+        as: "organization",
+        onDelete: "CASCADE"
+    });
+
+    DesignationMaster.hasMany(models.EmployeeDesignation, {
+        foreignKey: "designation_id",
+        as: "employeeDesignations"
+    });
+    
+};
+module.exports = DesignationMaster;

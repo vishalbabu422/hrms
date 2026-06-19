@@ -1,0 +1,64 @@
+const sequelize = require("../../../utils/database");
+const {
+    Employee,
+    ExaminationMaster,
+    EmployeeExamination
+} = require("../../../models");
+const AppError = require("../../../utils/appError");
+
+exports.assignExam = async (employeeId, body) => {
+
+    const { examination_id, exam_date, marks_obtained, result_status, certificate_number } = body;
+
+    return sequelize.transaction(async (t) => {
+
+        const employee = await Employee.findByPk(employeeId, { transaction: t });
+        if (!employee) throw new AppError("Employee not found", 404);
+
+        const exam = await ExaminationMaster.findByPk(examination_id, { transaction: t });
+        if (!exam) throw new AppError("Examination not found", 404);
+
+        if (employee.organization_id !== exam.organization_id) {
+            throw new AppError("Cross organization assignment not allowed", 400);
+        }
+
+        return EmployeeExamination.create(
+            {
+                employee_id: employeeId,
+                examination_id,
+                exam_date,
+                marks_obtained,
+                result_status,
+                certificate_number
+            },
+            { transaction: t }
+        );
+    });
+};
+
+exports.getEmployeeExams = async (employeeId) => {
+
+    return EmployeeExamination.findAll({
+        where: { employee_id: employeeId },
+        include: [
+            {
+                model: ExaminationMaster,
+                as: "examination"
+            }
+        ],
+        order: [["exam_date", "DESC"]]
+    });
+};
+
+exports.updateEmployeeExam = async (employeeId, id, body) => {
+
+    const record = await EmployeeExamination.findOne({
+        where: { id, employee_id: employeeId }
+    });
+
+    if (!record) {
+        throw new AppError("Employee examination record not found", 404);
+    }
+
+    return record.update(body);
+};

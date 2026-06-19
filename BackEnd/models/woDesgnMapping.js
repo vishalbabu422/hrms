@@ -1,0 +1,125 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+const WoDesgnMapping = sequelize.define(
+  "WoDesgnMapping",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    work_order_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+
+    sac_code: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+    desgn_id_fk: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+
+    req_person_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    duration_days: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    monthly_unit_rate: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    deployment_from: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    deployment_to: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    cgst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    sgst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    igst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    modified_by: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    created: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+
+    updated_at: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "wo_desgn_mapping",
+    schema: "pmu",
+    timestamps: false,
+  },
+);
+
+WoDesgnMapping.associate = (models) => {
+  WoDesgnMapping.belongsTo(models.WorkOrder, {
+    foreignKey: "work_order_id",
+    onDelete: "CASCADE",
+  });
+
+  WoDesgnMapping.belongsTo(models.GstCodeMaster, {
+    foreignKey: "sac_code",
+    onDelete: "RESTRICT",
+  });
+
+  WoDesgnMapping.belongsTo(models.Designation, {
+    foreignKey: "desgn_id_fk",
+    onDelete: "RESTRICT",
+  });
+
+  WoDesgnMapping.hasMany(models.EmployeeWorkOrderDeployment, {
+    foreignKey: "wo_desgn_id",
+    onDelete: "CASCADE",
+  });
+};
+
+module.exports = WoDesgnMapping;

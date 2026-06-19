@@ -1,0 +1,108 @@
+import React, { useState, useEffect } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CForm,
+  CFormLabel,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CRow,
+  CCol,
+} from '@coreui/react'
+import OrganizationSelect from '../../views/components/organization-select'
+
+const DesignationFormComponent = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData || {})
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === '' ? null : name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      setLoading(true)
+      await onSubmit(formData)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!formData) return null
+
+  return (
+    <CCard>
+      <CCardBody>
+        <CForm onSubmit={handleSubmit}>
+          <CRow>
+            {/* Organization */}
+            <OrganizationSelect
+              name="organization_id"
+              value={formData.organization_id || ''}
+              onChange={handleChange}
+              label="Organization"
+              colSize={12}
+            />
+            <CCol md={4}>
+              <CFormLabel className="mt-2">Designation Name</CFormLabel>
+              <CFormInput
+                type="text"
+                name="designation_name"
+                value={formData.designation_name || ''}
+                onChange={handleChange}
+                placeholder="Enter designation name"
+                required
+              />
+            </CCol>
+
+            <CCol md={4}>
+              <CFormLabel className="mt-2">Designation Code</CFormLabel>
+              <CFormInput
+                type="text"
+                name="designation_code"
+                value={formData.designation_code || ''}
+                onChange={handleChange}
+                placeholder="Enter designation code"
+                required
+              />
+            </CCol>
+
+            <CCol md={4}>
+              <CFormLabel className="mt-2">Status</CFormLabel>
+              <CFormSelect
+                name="is_active"
+                value={String(formData.is_active ?? true)}
+                onChange={handleChange}
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </CFormSelect>
+            </CCol>
+          </CRow>
+
+          <div className="mt-3">
+            <CButton type="submit" color="primary" disabled={loading}>
+              {loading ? 'Saving...' : 'Save'}
+            </CButton>
+          </div>
+        </CForm>
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default DesignationFormComponent

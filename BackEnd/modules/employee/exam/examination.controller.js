@@ -1,0 +1,102 @@
+const catchAsync = require("../../../utils/catchAsync");
+const examinationService = require("./examination.service");
+
+const APIFeatures = require("../../../utils/apiFeature");
+const AppError = require("../../../utils/appError");
+
+exports.createExamination = catchAsync(async (req, res) => {
+    if (req.isSuperAdmin) {
+        if (!req.body.organization_id) {
+            throw new AppError("organization_id is required", 400);
+        }
+    } else {
+        req.body.organization_id = req.user.organization_id;
+    }
+    const exam = await examinationService.createExamination(req.body);
+
+    res.status(201).json({
+        status: "success",
+        message: "Examination created successfully",
+        data: exam
+    });
+});
+
+exports.getAllExaminations = catchAsync(async (req, res, next) => {
+    const features = new APIFeatures(req.query, ["exam_name", "exam_type"])
+        .filter()
+        .search()
+        .sort()
+        .limitFields()
+        .join()
+        .paginate();
+
+    features.query.where = features.query.where || {};
+
+    if (!req.isSuperAdmin) {
+        features.query.where = {
+            ...features.query.where,
+            organization_id: req.user.organization_id
+        };
+    }
+
+    const result = await examinationService.findAllExaminations(features.query);
+
+    res.status(200).json({
+        status: "success",
+        message: "Examinations fetched successfully",
+        total: result.count,
+        data: result.rows,
+    });
+});
+
+exports.getExamination = catchAsync(async (req, res) => {
+    const whereCondition = {
+        id: req.params.id
+    };
+
+    // If not super admin, restrict to same organization
+    if (!req.isSuperAdmin) {
+        whereCondition.organization_id = req.user.organization_id;
+    }
+    const exam = await examinationService.findExaminationById({ where: whereCondition });
+
+    if (!exam) {
+        throw new AppError("Examination not found", 404);
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "Get Examination",
+        data: exam
+    });
+});
+
+exports.updateExamination = catchAsync(async (req, res) => {
+
+    const exam = await examinationService.updateExamination(
+        req.params.id,
+        req.body,
+        req.user,
+        req.isSuperAdmin
+    );
+
+    res.status(200).json({
+        status: "success",
+        message: "Examination updated successfully",
+        data: exam
+    });
+});
+
+exports.deleteExamination = catchAsync(async (req, res) => {
+
+    await examinationService.deleteExamination(
+        req.params.id,
+        req.user,
+        req.isSuperAdmin
+    );
+
+    res.status(200).json({
+        status: "success",
+        message: "Examination deleted successfully"
+    });
+});

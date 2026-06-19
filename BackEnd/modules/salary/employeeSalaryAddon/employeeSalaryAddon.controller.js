@@ -1,0 +1,114 @@
+const catchAsync = require("../../../utils/catchAsync");
+const APIFeatures = require("../../../utils/apiFeature");
+const EmployeeSalaryAddonService = require("./employeeSalaryAddon.service");
+const { Op } = require("sequelize");
+
+// List
+const index = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .join()
+    .paginate();
+
+  const page = req.query.page * 1 || 1;
+  const limit = req.query.limit * 1 || 10;
+
+  if (!features.query.where) {
+    features.query.where = {};
+  }
+
+  features.query.where.is_deleted = false;
+
+  const { rows, count } =
+    await EmployeeSalaryAddonService.index(
+      features.query
+    );
+
+  res.status(200).json({
+    status: "success",
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+    results: rows.length,
+    data: {
+      employeeSalaryAddonList: rows,
+    },
+  });
+});
+
+// By ID
+const dataById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const result =
+    await EmployeeSalaryAddonService.dataById(id);
+
+  if (!result) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Employee Salary Addon not found",
+    });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
+
+// Create
+const create = catchAsync(async (req, res, next) => {
+  const payload = req.body;
+  const result =
+    await EmployeeSalaryAddonService.create(
+      payload
+    );
+
+  res.status(201).json({
+    status: "success",
+     results: Array.isArray(result)
+      ? result.length
+      : 1,
+    data: result,
+  });
+});
+
+// Update
+const edit = catchAsync(async (req, res, next) => {
+  const result =
+    await EmployeeSalaryAddonService.edit(
+      req.params.id,
+      req.body
+    );
+
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
+
+// Delete
+const deleteById = catchAsync(
+  async (req, res, next) => {
+    await EmployeeSalaryAddonService.deleteById(
+      req.params.id
+    );
+
+    res.status(200).json({
+      status: "success",
+      message:
+        "Employee Salary Addon deleted successfully",
+    });
+  }
+);
+
+module.exports = {
+  index,
+  dataById,
+  create,
+  edit,
+  deleteById,
+};

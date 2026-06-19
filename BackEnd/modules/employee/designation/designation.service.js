@@ -1,0 +1,123 @@
+const { DesignationMaster, EmployeeDesignation } = require("../../../models");
+const AppError = require("../../../utils/appError");
+const sequelize = require("../../../utils/database");
+const { Op } = require("sequelize");
+
+exports.create = async (payload) => {
+    return await sequelize.transaction(async (t) => {
+        try {
+            const designation = await DesignationMaster.create(
+                {
+                    ...payload,
+                    designation_name: payload.designation_name.trim()
+                },
+                { transaction: t }
+            );
+
+            return designation;
+
+        } catch (error) {
+
+            if (error.name === "SequelizeUniqueConstraintError") {
+                throw new AppError("Designation already exists", 400);
+            }
+
+            throw error;
+        }
+    });
+};
+
+exports.findAll = async (queryOptions) => {
+    return await DesignationMaster.findAndCountAll({
+        ...queryOptions,
+        where: {
+            is_deleted: false,
+            ...queryOptions.where
+        }
+    });
+};
+
+exports.findById = async (queryOptions) => {
+    return await DesignationMaster.findOne({
+        ...queryOptions,
+        where: {
+            is_deleted: false,
+            ...queryOptions.where
+        }
+    });
+};
+
+exports.update = async (id, payload, user, isSuperAdmin) => {
+
+    return await sequelize.transaction(async (t) => {
+
+        const whereCondition = {
+            id,
+            is_deleted: false
+        };
+
+        if (!isSuperAdmin) {
+            whereCondition.organization_id = user.organization_id;
+        }
+
+        const designation = await DesignationMaster.findOne({
+            where: whereCondition,
+            transaction: t
+        });
+
+        if (!designation) {
+            throw new AppError("Designation not found", 404);
+        }
+
+        delete payload.organization_id;
+        delete payload.is_deleted;
+
+        await designation.update(payload, { transaction: t });
+
+        return designation;
+    });
+};
+
+exports.delete = async (id, user, isSuperAdmin) => {
+    return await sequelize.transaction(async (t) => {
+
+        const whereCondition = {
+            id,
+            is_deleted: false
+        };
+
+        if (!isSuperAdmin) {
+            whereCondition.organization_id = user.organization_id;
+        }
+
+        const designation = await DesignationMaster.findOne({
+            where: whereCondition,
+            transaction: t
+        });
+
+        if (!designation) {
+            throw new AppError("Designation not found", 404);
+        }
+
+        // Prevent delete if employees assigned
+        const employeeCount = await EmployeeDesignation.count({
+            where: { designation_id: id },
+            transaction: t
+        });
+
+        if (employeeCount > 0) {
+            throw new AppError(
+                "Cannot delete designation assigned to employees",
+                400
+            );
+        }
+
+        await designation.update(
+            { is_deleted: true },
+            { transaction: t }
+        );
+
+        return true;
+    });
+};
+

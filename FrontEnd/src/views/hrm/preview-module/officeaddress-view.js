@@ -1,0 +1,57 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import AddressCard from '../../components/address-card'
+import { getEmployeeAddresses } from '../../../services/employeeAddress'
+
+const OfficeAddressView = () => {
+  const { employeeId } = useParams()
+
+  const [address, setAddress] = useState({
+    office: {},
+    client: {},
+  })
+
+  useEffect(() => {
+    if (!employeeId) return
+
+    getEmployeeAddresses(employeeId)
+      .then((res) => {
+
+        const data = res.data?.data || res.data || {}
+        const addresses = data.EmployeeAddresses || []
+
+        const getAddress = (type) => {
+          const a = addresses.find((x) => x.address_type === type)
+
+          return {
+            address: [a?.address_line1, a?.address_line2]
+              .filter(Boolean)
+              .join(', '),
+            landmark: a?.landmark || '',
+            city: a?.city || '',
+            district: a?.district || '',
+            state: a?.state || '',
+            country: a?.country || '',
+            pincode: a?.pin_code || '',
+          }
+        }
+
+        setAddress({
+          office: getAddress('OFFICE'),
+          client: getAddress('CLIENT'),
+        })
+      })
+      .catch((err) => {
+        console.error('OFFICE ADDRESS ERROR:', err)
+      })
+  }, [employeeId])
+
+  return (
+    <div className="row g-4">
+      <AddressCard title="Office Address" data={address.office} />
+      <AddressCard title="Client Office Address" data={address.client} />
+    </div>
+  )
+}
+
+export default OfficeAddressView

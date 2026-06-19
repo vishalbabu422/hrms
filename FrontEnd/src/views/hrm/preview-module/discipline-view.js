@@ -1,0 +1,90 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { CCol, CCardBody } from '@coreui/react'
+import { getEmployeeDiscipline } from '../../../services/disciplineService'
+const DisciplineView = () => {
+  const { employeeId } = useParams()
+
+  const [records, setRecords] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchDiscipline = async () => {
+    try {
+      setLoading(true)
+
+      const response = await getEmployeeDiscipline(employeeId)
+
+      const data = response.data?.data || response.data || []
+      setRecords(data)
+    } catch (error) {
+      console.error('Error fetching discipline records:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchDiscipline()
+  }, [employeeId])
+
+  return (
+    <CCol xs={12} sm={12} md={9} lg={10}>
+      <CCardBody style={{ minHeight: '400px' }}>
+        {/* Header */}
+        <div className="section-header mb-4">
+          <div className="section-accent"></div>
+          <h5 className="section-title">Disciplinary Record</h5>
+        </div>
+
+        {/* Loading */}
+        {loading && <p>Loading discipline records...</p>}
+
+        {/* Empty */}
+        {!loading && records.length === 0 && (
+          <p className="text-muted">No disciplinary records found</p>
+        )}
+
+        {/* Data */}
+        {!loading &&
+          records.length > 0 &&
+          records.map((item, index) => (
+            <div className="mb-4" key={item.id || index}>
+              <div className="row g-4">
+                <div className="col-12 col-md-6">
+                  <small className="text-muted">Offence</small>
+                  <div className="fw-semibold border-bottom pb-2">
+                    {item.offence || '-'}
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-6">
+                  <small className="text-muted">Offence Date</small>
+                  <div className="fw-semibold border-bottom pb-2">
+                    {item.offence_date
+                      ? new Date(item.offence_date).toLocaleDateString()
+                      : '-'}
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-6">
+                  <small className="text-muted">Disciplinary Action</small>
+                  <div className="fw-semibold border-bottom pb-2 text-danger">
+                    {item.disciplinary_action || '-'}
+                  </div>
+                </div>
+
+                <div className="col-12 col-md-6">
+                  <small className="text-muted">Remarks</small>
+                  <div className="fw-semibold border-bottom pb-2">
+                    {item.remarks || '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+      </CCardBody>
+    </CCol>
+  )
+}
+
+export default DisciplineView

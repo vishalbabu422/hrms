@@ -1,0 +1,275 @@
+const Sequelize = require("sequelize");
+const Op = Sequelize.Op;
+
+// const transformOperators = (obj = {}) => {
+//   const transformed = {};
+
+//   Object.keys(obj).forEach((key) => {
+//     const value = obj[key];
+
+//     if (value && typeof value === "object" && !Array.isArray(value)) {
+//       if (value.$in) {
+//         transformed[key] = {
+//           [Op.in]: value.$in,
+//         };
+//       } else {
+//         transformed[key] = transformOperators(value);
+//       }
+//     } else {
+//       transformed[key] = value;
+//     }
+//   });
+
+//   return transformed;
+// };
+
+function transformOperators(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+
+  const transformed = {};
+
+  for (const key in obj) {
+    const value = obj[key];
+
+    /* ================= NESTED OBJECT ================= */
+
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value)
+    ) {
+      const operatorMap = {
+        $eq: Op.eq,
+        $ne: Op.ne,
+        $in: Op.in,
+        $notIn: Op.notIn,
+        $like: Op.like,
+        $iLike: Op.iLike,
+        $gte: Op.gte,
+        $lte: Op.lte,
+        $gt: Op.gt,
+        $lt: Op.lt,
+        $is: Op.is,
+      };
+
+      const transformedValue = {};
+
+      for (const opKey in value) {
+        if (operatorMap[opKey]) {
+          transformedValue[operatorMap[opKey]] = value[opKey];
+        } else {
+          transformedValue[opKey] = transformOperators(value[opKey]);
+        }
+      }
+
+      transformed[key] = transformedValue;
+    } else {
+      transformed[key] = value;
+    }
+  }
+
+  return transformed;
+}
+
+class APIFeatures {
+  constructor(queryString, searchableFields = []) {
+    this.query = {};
+    this.queryString = queryString;
+    this.searchableFields = searchableFields;
+  }
+
+  filter() {
+    const queryObj = { ...this.queryString };
+    const excludedFields = [
+      "page",
+      "limit",
+      "sort",
+      "fields",
+      "models",
+      "modelFilter",
+      "startDate",
+      "endDate",
+      "search",
+    ];
+    excludedFields.forEach((el) => delete queryObj[el]);
+    const where = {};
+
+    Object.keys(queryObj).forEach((key) => {
+      const value = queryObj[key];
+
+      // Handle operators like level[gte]
+      const match = key.match(/^(.+)\[(.+)\]$/);
+
+      if (match) {
+        const field = match[1];
+        const operator = match[2];
+
+        const operatorsMap = {
+          gte: Op.gte,
+          gt: Op.gt,
+          lte: Op.lte,
+          lt: Op.lt,
+          ne: Op.ne,
+          like: Op.iLike,
+          in: Op.in,
+        };
+
+        if (!where[field]) where[field] = {};
+
+        if (operator === "in") {
+          where[field][Op.in] = value.split(",");
+        } else if (operator === "like") {
+          where[field][Op.iLike] = `%${value}%`;
+        } else {
+          where[field][operatorsMap[operator]] = value;
+        }
+      } else {
+        // Handle null conversion
+        if (value === "null") {
+          where[key] = null;
+        } else if (value === "true") {
+          where[key] = true;
+        } else if (value === "false") {
+          where[key] = false;
+        } else {
+          where[key] = value;
+        }
+      }
+    });
+
+    this.query = { where };
+
+    return this;
+  }
+
+  search() {
+    if (
+      this.queryString.search &&
+      this.queryString.search.trim().length >= 3 &&
+      this.searchableFields.length > 0
+    ) {
+      const search = this.queryString.search.trim();
+
+      const searchConditions = this.searchableFields.map((field) => ({
+        [field]: { [Op.iLike]: `%${search}%` },
+      }));
+
+      this.query.where = {
+        ...this.query.where,
+        [Op.and]: [
+          ...(this.query.where?.[Op.and] || []),
+          { [Op.or]: searchConditions },
+        ],
+      };
+    }
+
+    return this;
+  }
+
+  sort() {
+    if (this.queryString.sort) {
+      const queryObj = [];
+      this.queryString.sort
+        .split(",")
+        .forEach((el) => queryObj.push([el.split(" ")]));
+      //console.log(queryObj);
+      this.query = { ...this.query, order: queryObj };
+    } else {
+      this.query = { ...this.query, order: [["id", "DESC"]] };
+    }
+    return this;
+  }
+
+  limitFields() {
+    if (this.queryString.fields) {
+      const fields = this.queryString.fields.split(",");
+      //console.log(fields);
+      this.query = { ...this.query, attributes: fields };
+    }
+    return this;
+  }
+
+  join() {
+    if (!this.queryString.models) return this;
+
+    const modelFilterObj = JSON.parse(this.queryString.modelFilter || "{}");
+
+    const buildIncludeTree = (path) => {
+      const parts = path.split(".");
+      let root = null;
+      let current = null;
+
+      parts.forEach((part) => {
+        const filterObj = modelFilterObj[part] || {};
+
+        // extract control fields
+        const { required, separate, limit, attributes, ...rawWhere } =
+          filterObj;
+
+        const where = transformOperators(rawWhere);
+
+        const node = {
+          association: part,
+          ...(Object.keys(where).length ? { where } : {}),
+          ...(attributes ? { attributes } : {}),
+          required: required ?? !!Object.keys(where).length,
+          ...(separate !== undefined ? { separate } : {}),
+          ...(limit !== undefined ? { limit } : {}),
+        };
+
+        if (!root) {
+          root = node;
+          current = node;
+        } else {
+          current.include = [node];
+          current = node;
+        }
+      });
+
+      return root;
+    };
+
+    const paths = this.queryString.models.split(",");
+
+    const rootMap = {};
+
+    paths.forEach((path) => {
+      const tree = buildIncludeTree(path);
+
+      const rootKey = tree.association;
+
+      if (!rootMap[rootKey]) {
+        rootMap[rootKey] = tree;
+      } else {
+        // merge includes
+        if (tree.include) {
+          rootMap[rootKey].include = [
+            ...(rootMap[rootKey].include || []),
+            ...tree.include,
+          ];
+        }
+      }
+    });
+
+    this.query = {
+      ...this.query,
+      include: Object.values(rootMap),
+      subQuery: false,
+    };
+
+    return this;
+  }
+
+  paginate() {
+    const page = this.queryString.page * 1 || 1;
+    const limit = this.queryString.limit * 1 || 50;
+    const offset = (page - 1) * limit;
+
+    this.query = { ...this.query, offset, limit };
+    //console.log(this.query);
+    return this;
+  }
+}
+module.exports = APIFeatures;

@@ -1,0 +1,145 @@
+import React, { useEffect, useState } from 'react'
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+} from '@coreui/react'
+import { useParams } from 'react-router-dom'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import api from '../../api/axios'
+import ViewField from '../components/preview-field'
+
+const Preview = () => {
+  const { id } = useParams()
+
+  const [organization, setOrganization] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchOrg = async () => {
+      try {
+        setLoading(true)
+
+        const response = await api.get(`/admin/organization/${id}`)
+
+        setOrganization(response.data?.data || [])
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to fetch Organisation')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrg()
+  }, [])
+
+  /* ================= DATE FORMAT ================= */
+  const formatDate = (date) =>
+    date
+      ? new Date(date).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '-'
+
+  /* ================= PDF EXPORT ================= */
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 10
+
+    doc.setFontSize(14)
+    doc.text('Organization Details', 10, y)
+    y += 10
+
+    doc.setFontSize(10)
+    Object.entries(organization).forEach(([key, value]) => {
+      doc.text(`${key} : ${value}`, 10, y)
+      y += 8
+    })
+
+    doc.save('organization-details.pdf')
+  }
+
+  /* ================= EXCEL EXPORT ================= */
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet([organization])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Organization')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'organization-details.xlsx')
+  }
+
+  return (
+    <CContainer fluid className="py-4">
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="shadow border-0 rounded-4">
+            <CCardBody className="p-4">
+              {/* ================= HEADER ================= */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="fw-bold mb-1 text-primary">{organization.org_name}</h3>
+                  <div className="text-muted">{organization.org_code}</div>
+                </div>
+
+                <div className="d-flex gap-3">
+                  <CDropdown>
+                    <CDropdownToggle color="primary" size="sm">
+                      Export
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={handleExportPDF}>Download PDF</CDropdownItem>
+                      <CDropdownItem onClick={handleExportExcel}>Download Excel</CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </div>
+              </div>
+
+              {/* ================= DETAILS SECTION ================= */}
+              <div className="p-4 rounded-3 bg-light">
+                <h5 className="fw-semibold text-dark mb-4 border-start border-4 border-primary ps-3">
+                  Organization Details
+                </h5>
+
+                <CRow>
+                  <ViewField label="Organization Name" value={organization.org_name} />
+                  <ViewField label="Organization Code" value={organization.org_code} />
+                  <ViewField label="Contact Email" value={organization.contact_email} />
+                  <ViewField label="Created On" value={formatDate(organization.created_at)} />
+
+                  <ViewField
+                    label="Status"
+                    value={organization.is_active ? 'Active' : 'Inactive'}
+                  />
+
+                  <ViewField label="Address" value={organization.address} />
+                </CRow>
+              </div>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default Preview
