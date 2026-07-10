@@ -1,0 +1,182 @@
+// // import EmpSalaryStructureForm from './form-component'
+// // import { toast } from 'react-toastify'
+// // import { useNavigate } from 'react-router-dom'
+
+// // const Add = () => {
+// //   const navigate = useNavigate()
+
+// //   const handleSubmit = (payload) => {
+// //     try {
+// //       // 🔹 Get existing data
+// //       const existing = JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+// //       // 🔹 payload = array of selected employees
+// //       const newItems = payload.map((item) => ({
+// //         ...item,
+// //         id: Date.now() + Math.random(), // unique id
+// //         is_active: true,
+// //       }))
+
+// //       // 🔹 Merge old + new
+// //       const updatedData = [...existing, ...newItems]
+
+// //       // 🔹 Save
+// //       localStorage.setItem('empSalaryStructure', JSON.stringify(updatedData))
+
+// //       // 🔹 Success + redirect
+// //       toast.success('Created successfully')
+// //       navigate('/emp-salary-structure')
+// //     } catch (error) {
+// //       console.error(error)
+// //       toast.error('Failed to create')
+// //     }
+// //   }
+
+// //   const initialData = {
+// //     employee_id: '',
+// //     salary_structure_id: '',
+// //     ctc: '',
+// //     effective_from: '',
+// //     is_active: true,
+// //   }
+
+// //   return <EmpSalaryStructureForm initialData={initialData} mode="create" onSubmit={handleSubmit} />
+// // }
+
+// // export default Add
+
+
+
+// import EmpSalaryStructureForm from './form-component'
+// import { toast } from 'react-toastify'
+// import { useNavigate } from 'react-router-dom'
+
+// const Add = () => {
+//   const navigate = useNavigate()
+
+//   const handleSubmit = (payload) => {
+//     try {
+//       const existing =
+//         JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+//       const formatted = payload.map((item) => {
+//         const date = new Date(item.effective_from)
+
+//         return {
+//           id: Date.now() + Math.random(),
+
+//           employee_id: item.employee_id,
+//           employee_name: item.employee_name,
+//           salary_structure_id: item.salary_structure_id,
+
+//           ctc: Number(item.ctc),
+
+//           // 🔥 important for filter
+//           month: date.getMonth() + 1,
+//           year: date.getFullYear(),
+
+//           // 🔥 calculated
+//           gross_earnings: Number(item.ctc) * 0.9,
+//           total_deductions: Number(item.ctc) * 0.1,
+//           net_salary: Number(item.ctc) * 0.8,
+
+//           status: 'Pending',
+//           effective_from: item.effective_from,
+//         }
+//       })
+
+//       const finalData = [...existing, ...formatted]
+
+//       localStorage.setItem(
+//         'empSalaryStructure',
+//         JSON.stringify(finalData)
+//       )
+
+//       toast.success('Saved successfully')
+//       navigate('/emp-salary-structure')
+
+//     } catch (error) {
+//       toast.error('Error saving data')
+//     }
+//   }
+
+//   return (
+//     <EmpSalaryStructureForm
+//       mode="create"
+//       onSubmit={handleSubmit}
+//     />
+//   )
+// }
+
+// export default Add
+
+
+import EmpSalaryStructureForm from './form-component'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = (payload) => {
+    try {
+      const existing =
+        JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+      const formatted = payload.map((item) => {
+        const date = new Date(item.effective_from)
+
+        const working_days = Number(item.working_days || 30)
+        const paid_days = Number(item.paid_days || 30)
+
+        return {
+          id: Date.now() + Math.random(),
+
+          employee_id: item.employee_id,
+          employee_name: item.employee_name,
+          salary_structure_id: Number(item.salary_structure_id),
+
+          ctc: Number(item.ctc),
+
+          month: date.getMonth() + 1,
+          year: date.getFullYear(),
+
+          // 🔥 DAYS
+          working_days,
+          paid_days,
+          lop_days: working_days - paid_days,
+
+          // 🔥 CALCULATION
+          gross_earnings: Number(item.ctc) * 0.9,
+          total_deductions: Number(item.ctc) * 0.1,
+          net_salary: Number(item.ctc) * 0.8,
+
+          status: 'Pending',
+          effective_from: item.effective_from,
+        }
+      })
+
+      const finalData = [...existing, ...formatted]
+
+      localStorage.setItem(
+        'empSalaryStructure',
+        JSON.stringify(finalData)
+      )
+
+      toast.success('Saved successfully')
+      navigate('/emp-salary-structure')
+
+    } catch (error) {
+      toast.error('Error saving data')
+    }
+  }
+
+  return (
+    <EmpSalaryStructureForm
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

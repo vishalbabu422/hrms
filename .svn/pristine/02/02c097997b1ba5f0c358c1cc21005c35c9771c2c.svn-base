@@ -1,0 +1,253 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { validateSalaryStructure } from '../../validations/salaryStructureValidation'
+import ValueTypeInput from "../components/ValueTypeInput"
+
+const SalaryStructureForm = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData)
+  const [errors, setErrors] = useState({})
+  const [selectedComponents, setSelectedComponents] = useState({})
+
+  // ✅ Dummy Data
+  const componentOptions = [
+    { id: 1, name: 'Basic Salary' },
+    { id: 2, name: 'HRA' },
+    { id: 3, name: 'DA' },
+    { id: 4, name: 'PF' },
+    { id: 5, name: 'Professional Tax' },
+  ]
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+
+      // edit mode support
+      if (initialData.components) {
+        const mapped = {}
+        initialData.components.forEach((item) => {
+          mapped[item.component_id] = {
+            checked: true,
+            type: item.value_type,
+            value: item.value,
+          }
+        })
+        setSelectedComponents(mapped)
+      }
+    }
+  }, [initialData])
+
+  if (!formData) return null
+
+  /* ================= CHANGE ================= */
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    let updatedValue = value
+
+    if (name === 'is_active') {
+      updatedValue = value === 'true'
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: updatedValue === '' ? null : updatedValue,
+    }))
+  }
+
+  /* ================= COMPONENT LOGIC ================= */
+
+  const handleComponentToggle = (id) => {
+    setSelectedComponents((prev) => {
+      const updated = { ...prev }
+
+      if (updated[id]?.checked) {
+        delete updated[id]
+      } else {
+        updated[id] = { checked: true }
+      }
+
+      return updated
+    })
+  }
+
+  const handleComponentChange = (id, field, value) => {
+    setSelectedComponents((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }))
+  }
+
+  /* ================= VALIDATION ================= */
+
+  const validateForm = () => {
+    const componentsArray = Object.keys(selectedComponents)
+
+    const validationErrors = validateSalaryStructure({
+      ...formData,
+      components: componentsArray,
+    })
+
+    if (componentsArray.length === 0) {
+      validationErrors.components = 'Select at least one component'
+    }
+
+    setErrors(validationErrors)
+    return Object.keys(validationErrors).length === 0
+  }
+
+  /* ================= SUBMIT ================= */
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!validateForm()) return
+
+    const componentsArray = Object.keys(selectedComponents).map((id) => ({
+      component_id: Number(id),
+      value_type: selectedComponents[id].type,
+      value: selectedComponents[id].value,
+    }))
+
+    const payload = {
+      ...formData,
+      components: componentsArray,
+    }
+
+    onSubmit(payload)
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="shadow border-0 rounded-4">
+          <CCardBody>
+
+            <CForm onSubmit={handleSubmit} className="row g-4">
+
+              {/* Name */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Name <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormInput
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.name}
+                  feedback={errors.name}
+                />
+              </CCol>
+
+              {/* Status */}
+              <CCol md={6}>
+                <CFormLabel>Status</CFormLabel>
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active)}
+                  onChange={handleChange}
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* Description */}
+              <CCol md={12}>
+                <CFormLabel>Description</CFormLabel>
+                <CFormInput
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              {/* 🔥 COMPONENT ROW UI */}
+              <CCol md={12}>
+                <div className="p-3 border rounded-3 bg-light">
+                  <h6 className="mb-3">
+                    Components <span className="text-danger">*</span>
+                  </h6>
+
+                  {componentOptions.map((item) => {
+                    const selected = selectedComponents[item.id] || {}
+
+                    return (
+                      <div key={item.id} className="row align-items-center mb-3">
+
+                        {/* Checkbox */}
+                        <div className="col-md-3 d-flex align-items-center">
+                          <input
+                            type="checkbox"
+                            checked={!!selected.checked}
+                            onChange={() => handleComponentToggle(item.id)}
+                            className="form-check-input me-2"
+                          />
+                          <label className="mb-0">{item.name}</label>
+                        </div>
+
+                        {/* ValueTypeInput */}
+                        {selected.checked && (
+                          <div className="col-md-6">
+                            <div className="row">
+
+                              <ValueTypeInput
+                                showLabel={false}
+                                colSize={6}
+                                typeValue={selected.type}
+                                inputValue={selected.value}
+                                onTypeChange={(e) =>
+                                  handleComponentChange(item.id, 'type', e.target.value)
+                                }
+                                onValueChange={(e) =>
+                                  handleComponentChange(item.id, 'value', e.target.value)
+                                }
+                              />
+
+                            </div>
+                          </div>
+                        )}
+
+                      </div>
+                    )
+                  })}
+
+                  {errors.components && (
+                    <div className="text-danger">{errors.components}</div>
+                  )}
+                </div>
+              </CCol>
+
+              {/* Submit */}
+              <CCol xs={12}>
+                <CButton type="submit" color="primary">
+                  {mode === 'edit' ? 'Update' : 'Create'}
+                </CButton>
+              </CCol>
+
+            </CForm>
+
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default SalaryStructureForm

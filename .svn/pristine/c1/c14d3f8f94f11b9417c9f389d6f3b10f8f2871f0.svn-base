@@ -1,0 +1,4064 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "KMS API Documentation",
+    "version": "9.0.0",
+    "title": "KMS API",
+    "contact": {
+      "email": "srikantp.nic@gmail.com"
+    }
+  },
+  "schemes": ["http", "https"],
+  "host": "localhost:3501",
+  "basePath": "/api/v1",
+  "securityDefinitions": {
+    "Authorization": {
+      "type": "apiKey",
+      "name": "authorization",
+      "in": "header",
+      "description": "Authentication token"
+    }
+  },
+  "paths": {
+    "/users/login": {
+      "post": {
+        "tags": ["Users"],
+        "summary": "Login KMS Application",
+        "description": "Login with login_id and password",
+        "produces": ["application/json"],
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "login object",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "object",
+                  "$ref": "#/definitions/Login"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users/logout": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Users"],
+        "summary": "Logout KMS Application",
+        "description": "Logout",
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Users"],
+        "summary": "Get Users",
+        "description": "Get all the users or single user by passing parameters!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "employee_id",
+            "description": "Filter any field (Ex. employee_id : 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "login_id",
+            "description": "Filter any field (Ex. login_id : cams.eoffice)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Ex. (full_name asc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Ex. (org_unit_id,post_detail_id,post_id,employee_id,global_org_id)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page no. (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit. (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/usersResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/users/userRoleMapping": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Users"],
+        "summary": "List of User Role Mapping",
+        "description": "List of User Role Mapping",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "employee_id",
+            "description": "Filter any field (Ex. employee_id : 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "role_id",
+            "description": "Filter any field (Ex. role_id : 2)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Ex. (id desc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Ex. (employee_id, role_id)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page no. (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit. (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Users"],
+        "summary": "Create a User Role",
+        "description": "Create a User Role",
+        "produces": ["application/json"],
+        "consumes": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "userRole object",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userRole": {
+                  "type": "object",
+                  "$ref": "#/definitions/wfhUserRoleMapping"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation"
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/trashList": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Trash"],
+        "summary": "Get Trash List",
+        "description": "Get all the Trash List by passing parameters!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_deleted",
+            "description": "Filter any field (Ex. is_deleted : true)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deleted_by",
+            "description": "Filter any field (Ex. deleted_by : 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Ex. (id desc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Ex. (workflow_state_id,status,created_by,modified_by,created,modified,...)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "models",
+            "description": "Join with ContentCatalogField, Ex. (ContentCatalogField.title,ContentMetadataMappings.value,ContentMetadataMappings.metadata_id,...)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "modelFilter",
+            "description": "Filter by type, Ex. {\"ContentCatalogField\":{\"type\":[2],...},\"ContentMetadataMappings\":{\"metadata_id\":\"7\",...},...}",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page no. (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit. (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/contentCatalogResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Trash"],
+        "summary": "Delete Multiple Trash Items",
+        "description": "Permanently delete one or more trashed ContentCatalog records. Only items with `is_deleted = true` will be removed.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Array of ContentCatalog IDs to permanently delete",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "example": [1, 2, 3]
+                }
+              },
+              "required": ["ids"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful deletion",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "3 trash item(s) permanently deleted."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — when IDs are missing or not an array",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No matching trash items found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Trash"],
+        "summary": "Restore Multiple Trash Items",
+        "description": "Restore one or more trashed ContentCatalog records by setting `is_deleted = false`.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Array of ContentCatalog IDs to restore",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "example": [1, 2, 3]
+                }
+              },
+              "required": ["ids"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful restore",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "3 trash item(s) restored successfully."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — when IDs are missing or not an array",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No matching trashed items found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/trashList/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Trash"],
+        "summary": "Delete Trash",
+        "description": "Delete Trash",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ContentCatalog id that needs to be deleted",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/contentCatalogResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Trash"],
+        "summary": "Restore Trash",
+        "description": "Restore Trash",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ContentCatalog id that needs to be Restore",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/contentCatalogResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workflowAction": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowAction"],
+        "summary": "Get Workflow Actions",
+        "description": "Retrieve a paginated, filtered, and sorted list of workflow actions. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "action_name",
+            "in": "query",
+            "description": "Filter fields (e.g., action_name:Share)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting order, e.g., (id desc)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of fields to include (e.g., id,action_name,status)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Pagination page number (e.g., 1)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page (e.g., 10)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow actions retrieved successfully.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow actions retrieved successfully."
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 42
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/workflowActionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workflow actions found.",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowAction"],
+        "summary": "Create Workflow Action",
+        "description": "Creates a new workflow action record in the system. Only accessible by authorized users (e.g., System Admin).",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Workflow Action data to be created",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "WorkflowAction": {
+                  "type": "object",
+                  "properties": {
+                    "action_name": {
+                      "type": "string",
+                      "example": "Submit"
+                    }
+                  }
+                }
+              },
+              "required": ["WorkflowAction"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Workflow Action successfully created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow Action Created!"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 101
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — 'workflowAction' object is required",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workflowAction/{id}": {
+      "put": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowAction"],
+        "summary": "Update Workflow Action",
+        "description": "Update details of a specific workflow action record by ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the workflow action to update",
+            "required": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Fields to update in the workflow action",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "action_name": {
+                  "type": "string",
+                  "example": "Review Document"
+                },
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow Action Updated Successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow Action Updated!"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 10
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body or missing ID",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Workflow Action not found or no changes applied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowAction"],
+        "summary": "Delete Workflow Action(s)",
+        "description": "Permanently delete one or more workflow actions by ID(s). Only inactive actions (status = false) can be deleted.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of a single workflow action to delete (optional if 'ids' array is sent in body)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Provide one or more IDs to delete",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "example": [5, 6, 7]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow Action(s) deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "3 workflow action(s) permanently deleted."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request — No IDs provided",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No matching workflow actions found or actions are active",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workflowRole": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowRole"],
+        "summary": "Get Workflow Roles",
+        "description": "Retrieve a paginated, filtered, and sorted list of workflow roles. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Filter fields (e.g., role_name=Editor)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting order, e.g., (id desc)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of fields to include (e.g., id,name,status)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Pagination page number (e.g., 1)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page (e.g., 10)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow roles retrieved successfully."
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 42
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/workflowRoleResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-WorkflowRole"],
+        "summary": "Create Workflow Role",
+        "description": "Create a new workflow role record.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Workflow role data to be created",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "workflowRole": {
+                  "$ref": "#/definitions/workflowRoleCreate"
+                }
+              },
+              "required": ["workflowRole"]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Workflow Role successfully created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow Role Created!"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 101
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — 'workflowRole' object is required",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workflowRole/{id}": {
+      "get": {
+        "tags": ["Admin-WorkflowRole"],
+        "summary": "Get Workflow Role by ID",
+        "description": "Retrieve a specific workflow role record by its ID.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the workflow role to retrieve",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow Role retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow Role retrieved successfully."
+                },
+                "data": {
+                  "$ref": "#/definitions/workflowRoleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — missing ID parameter",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Workflow Role not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ]
+      },
+      "put": {
+        "tags": ["Admin-WorkflowRole"],
+        "summary": "Update a Workflow Role",
+        "description": "Update an existing Workflow Role by ID. `role_name` and `display_name` should not be empty if provided.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the workflow role to update",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Workflow Role fields to update",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role_name": {
+                  "type": "string",
+                  "example": "Approver"
+                },
+                "display_name": {
+                  "type": "string",
+                  "example": "Workflow Approver"
+                },
+                "status": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful update",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow Role Updated!"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — missing ID or empty fields",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Workflow Role not found or no changes applied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["Admin-WorkflowRole"],
+        "summary": "Delete Workflow Role(s)",
+        "description": "Delete one or more workflow roles permanently. Only roles with `status=false` can be deleted. Accepts a single ID in path or multiple IDs in request body.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the workflow role to delete (optional if sending multiple IDs in body)",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Array of workflow role IDs to delete",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "example": [2, 3, 4]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful deletion",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "3 role(s) permanently deleted."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — no IDs provided",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No matching roles found or roles are active",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        },
+        "security": [
+          {
+            "Authorization": []
+          }
+        ]
+      }
+    },
+    "/admin/globalRolesList": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Global Roles"],
+        "summary": "Get Global Roles List",
+        "description": "Fetch a list of global roles with filtering, sorting, and pagination support.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "filter",
+            "description": "Filter criteria (Ex. is_deleted=true, role_name=Admin)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Sort the result (Ex. id desc, role_name asc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Specify the fields to return (Ex. id, role_name)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page number (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation, returns the list of global roles.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Get Global Roles!"
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/Role"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid filter, sort, or pagination parameters",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No roles found matching the criteria",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/menuList": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Global Roles"],
+        "summary": "Get Menu List",
+        "description": "Fetch a list of menu items, with support for filtering, sorting, and pagination. Includes hierarchical menu structure (parent and children).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "status",
+            "description": "Boolean Value (True/False)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "parent_id",
+            "description": "Integer (ID of Parent)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "Filter criteria (e.g., parent_id=0, is_deleted=true)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Specify the fields to return (e.g., id, module_name, action)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Sort the result (e.g., id desc, module_name asc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit (e.g., 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation, returns the list of menu items.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Get Menu Lists!"
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "menu": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/MenuItem"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid filter, sort, or pagination parameters",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No menu items found matching the criteria",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/userRolePermission": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Global Roles"],
+        "summary": "Get User Role Permissions",
+        "description": "Fetch a list of user-role permissions based on a specific role ID, with support for filtering, sorting, and pagination.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "role_id",
+            "description": "The role ID to fetch permissions for.",
+            "in": "query",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "fields",
+            "description": "Specify the fields to return (e.g., id, employee_id, role_id)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "Filter criteria (e.g., employee_id=5, role_id=1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Sort the result (e.g., id desc, employee_id asc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page number (e.g., 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit (e.g., 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation, returns the list of user-role mappings.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Get User Role Permission!"
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "userRolePerms": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/UserRolePermission"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid role_id",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No user role permissions found for the provided role_id",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/updateUserRolePermission": {
+      "put": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin-Global Roles"],
+        "summary": "Get User Role Permissions",
+        "description": "Fetch a list of user-role permissions based on a specific role ID, with support for filtering, sorting, and pagination.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "role_id",
+            "description": "The role ID to fetch permissions for.",
+            "in": "body",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "module",
+            "description": "The role ID to fetch permissions for.",
+            "in": "body",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation, returns the list of user-role mappings.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Update User Role Permission!"
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "userRolePerms": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/definitions/UserRolePermission"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or invalid role_id",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "No user role permissions found for the provided role_id",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workflowMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow Master"],
+        "summary": "Get all workflow master records",
+        "description": "Returns a list of workflow master records with filtering, sorting, limiting fields, joining and pagination.",
+        "parameters": [
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort by fields (e.g., workflow_name,-created)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Select fields to include (comma separated)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "type": "integer",
+            "default": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Items per page",
+            "required": false,
+            "type": "integer",
+            "default": 10
+          },
+          {
+            "name": "workflow_name",
+            "in": "query",
+            "description": "Filter by workflow name",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by status (1 = active, 0 = inactive)",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow master data retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow master retrieved successfully."
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 25
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/workflowMasterResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow Master"],
+        "summary": "Create Workflow Master",
+        "description": "Creates a new Workflow Master and returns the created ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "workflowMasterBody",
+            "description": "Workflow Master data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "workflowMasterBody": {
+                  "type": "object",
+                  "properties": {
+                    "workflow_name": {
+                      "type": "string",
+                      "example": "add"
+                    },
+                    "workflow_description": {
+                      "type": "string",
+                      "example": "xyz description"
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": "true"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Workflow Master Created Successfully",
+            "schema": {
+              "$ref": "#/definitions/workflowMasterResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid Input — Missing or wrong body"
+          }
+        }
+      }
+    },
+    "/admin/workflowMaster/{id}": {
+      "put": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow Master"],
+        "summary": "Update Workflow Master",
+        "description": "Updates an existing Workflow Master using the provided ID.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Workflow Master ID"
+          },
+          {
+            "in": "body",
+            "name": "workflowMasterBody",
+            "description": "Updated Workflow Master data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "workflowMasterBody": {
+                  "type": "object",
+                  "properties": {
+                    "workflow_name": {
+                      "type": "string",
+                      "example": "add"
+                    },
+                    "workflow_description": {
+                      "type": "string",
+                      "example": "xyz description"
+                    },
+                    "status": {
+                      "type": "boolean",
+                      "example": "true"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow Master Updated Successfully",
+            "schema": {
+              "$ref": "#/definitions/workflowMasterResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid Input"
+          },
+          "404": {
+            "description": "Workflow Master Not Found"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow Master"],
+        "summary": "Delete Workflow Master",
+        "description": "Soft deletes a Workflow Master using the provided ID.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Workflow Master ID"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "description": "Array of workflow master IDs to delete",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow Master Deleted Successfully",
+            "schema": {
+              "$ref": "#/definitions/workflowMasterResponse"
+            }
+          },
+          "404": {
+            "description": "Workflow Master Not Found"
+          }
+        }
+      },
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow Master"],
+        "summary": "Get a workflow",
+        "description": "Fetch a workflow",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Workflow Master ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow transitions fetched successfully"
+          },
+          "400": {
+            "description": "Workflow ID missing"
+          }
+        }
+      }
+    },
+    "/admin/workflowState": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Workflow State"],
+        "summary": "Get Workflow States",
+        "description": "Retrieves all workflow states with filtering, sorting, limiting, joining, and pagination.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter workflow states (APIFeatures filter)."
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort workflow states."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Limit number of results returned."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Page number for pagination."
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow states retrieved successfully.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Workflow state retrieved successfully."
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 12
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 12
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "state_name": {
+                        "type": "string",
+                        "example": "Initiated"
+                      },
+                      "status": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "is_deleted": {
+                        "type": "integer",
+                        "example": 0
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No workflow states found."
+          }
+        }
+      }
+    },
+    "/admin/workflowTransition": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["WorkflowTransition"],
+        "summary": "Get Workflow Transitions",
+        "description": "Retrieve a paginated, filtered, and sorted list of workflow transitions. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort format: field,(asc|desc). Example: id,desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields. Example: id,workflow_id,transition_name"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter conditions. Example: status=true"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow transitions retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/GetWorkflowTransitionResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/organisationMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organisation Master"],
+        "summary": "Get Organisation Master List",
+        "description": "Retrieve a paginated, filtered, and sorted list of organisations. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "description": "Page number for pagination"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "description": "Number of records per page"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "type": "string",
+            "description": "Sort by field"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "type": "string",
+            "description": "Fields to include"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/OrganisationMasterListResponse"
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organisation Master"],
+        "summary": "Create Organisation Master",
+        "description": "Creates a new Organisation record in the system. Only accessible by authorized users (e.g., System Admin).",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Organisation data to be created",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["OrganisationMaster"],
+              "properties": {
+                "organisationMaster": {
+                  "type": "object",
+                  "required": ["name", "organisation_code"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "Head Office"
+                    },
+                    "organisation_code": {
+                      "type": "string",
+                      "example": "ORG001"
+                    },
+                    "parent_id": {
+                      "type": "integer",
+                      "example": null
+                    },
+                    "is_active": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Organisation successfully created",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Organisation Created!"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1072
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input — 'OrganisationMaster' object is required",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/organisationMaster/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organisation Master"],
+        "summary": "Get Organisation by ID (Parent & Children)",
+        "description": "Fetch organisation details by ID including parent and child organisations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Organisation ID",
+            "schema": {
+              "type": "integer",
+              "example": 1072
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Organisation fetched successfully"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1072
+                        },
+                        "organisation_code": {
+                          "type": "string",
+                          "example": "ORG001"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Head Office"
+                        },
+                        "parent_id": {
+                          "type": "integer",
+                          "example": 0
+                        },
+                        "Parent": {
+                          "type": ["object", "null"],
+                          "example": null
+                        },
+                        "Children": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "example": 1435
+                              },
+                              "organisation_code": {
+                                "type": "string",
+                                "example": "ORG002"
+                              },
+                              "name": {
+                                "type": "string",
+                                "example": "Software Development Unit, Pune"
+                              },
+                              "parent_id": {
+                                "type": "integer",
+                                "example": 1072
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Organisation not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organisation Master"],
+        "summary": "Partially update Organisation Master",
+        "description": "Updates one or more fields of an existing Organisation record. Only provided fields will be updated.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Organisation ID"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "organisationMaster": {
+                  "type": "object",
+                  "description": "Fields to update (partial allowed)",
+                  "properties": {
+                    "organisation_code": {
+                      "type": "string",
+                      "example": "ORG002"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "National Informatics Centre"
+                    },
+                    "parent_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "is_deleted": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation updated successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Organisation updated successfully!"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Organisation not found"
+          },
+          "409": {
+            "description": "Organisation code already exists"
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organisation Master"],
+        "summary": "Delete Organisation Master",
+        "description": "Soft deletes an organisation by setting is_deleted = true. Only accessible by authorized users.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "description": "Organisation ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organisation deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Organisation deleted successfully!"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Organisation already deleted",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Organisation not found"
+          }
+        }
+      }
+    },
+
+    "/admin/categoryMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["CategoryMaster"],
+        "summary": "Get Category Masters",
+        "description": "Retrieve a paginated, filtered, and sorted list of category masters. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "Filter fields (e.g., name=Electronics)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting order, e.g., (id desc)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma-separated list of fields to include (e.g., id,name,status)",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Pagination page number (e.g., 1)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of items per page (e.g., 10)",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Category list retrieved successfully."
+                },
+                "total": {
+                  "type": "integer",
+                  "example": 42
+                },
+                "results": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/categoryMasterResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/audienceMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Audience Master"],
+        "summary": "Get Audience List",
+        "description": "Retrieve a paginated, filtered, and sorted list of audience records. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort format: field,(asc|desc). Example: id,desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields. Example: id,name,status"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter condition. Example: status=true"
+          },
+          {
+            "name": "join",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Join related models. Example: roleMaster"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audience list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/GetAudienceListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/typeMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Type Master"],
+        "summary": "Get Audience List",
+        "description": "Retrieve a paginated, filtered, and sorted list of type records. Excludes deleted records (`is_deleted = 0`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort format: field,(asc|desc). Example: id,desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields. Example: id,name,status"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter condition. Example: status=true"
+          },
+          {
+            "name": "join",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Join related models. Example: roleMaster"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Type list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/GetAudienceListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/languageMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Language Master"],
+        "summary": "Get Language List",
+        "description": "Retrieve a paginated, filtered, and sorted list of language records. Excludes deleted records (`is_deleted = false`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort format: field,(asc|desc). Example: id,desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields. Example: id,name,status"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter condition. Example: status=true"
+          },
+          {
+            "name": "join",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Join related models. Example: workflowMaster"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Language list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/GetLanguageListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/mimeTypeMaster": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Extension"],
+        "summary": "Get Mime Type List",
+        "description": "Retrieve a paginated, filtered, and sorted list of mime type records. Excludes deleted records (`is_deleted = false`).",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort format: field,(asc|desc). Example: id,desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields. Example: id,extension,status"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Filter condition. Example: status=true"
+          },
+          {
+            "name": "join",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Join related models. Example: userMaster"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Mime Type list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/MimeTypeListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/auditTrail": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Audit Trail"],
+        "summary": "Get Audit Trail List",
+        "description": "Retrieve a paginated, filtered, and sorted list of audit trail records.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Start date for filtering (YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-12-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "End date for filtering (YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-01-06"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Page number for pagination (default: 1)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "Items per page (default: 10)"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Sort format: field,(asc|desc). Example: id desc"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Select specific fields. Example: id,login_id,date_time"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Filter condition. Example: login_id=ADMIN01"
+          },
+          {
+            "name": "models",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Join related models. Example: User.full_name"
+          },
+          {
+            "name": "modelFilter",
+            "description": "Filter by type, Ex. {\"User\":{\"login_id\":[cams.eoffice],...},...}",
+            "in": "query",
+            "required": false,
+            "type": "object"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit Trail list retrieved successfully.",
+            "schema": {
+              "$ref": "#/definitions/AuditTrailListResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/recentlyCreated": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin Dashboard"],
+        "summary": "Get recently created content catalogs",
+        "description": "Fetch a paginated list of recently created content catalogs. If startDate and endDate are not provided, data from the last one month is returned by default.",
+        "operationId": "getRecentCreatedList",
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Start date for filtering (YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2025-12-01"
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "End date for filtering (YYYY-MM-DD)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "example": "2026-01-06"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of records per page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort fields (e.g. id DESC)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Select specific fields. Example: created,emp_name_en,title,state_name,state_color,content_code"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Filter condition. Example: created_by=1"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved recently created list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Get All Recently Created List!"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "results": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "recentlyCreatedList": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/definitions/ContentCatalogsView"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/dashboard-yearly-report": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin Dashboard"],
+        "summary": "Get yearly report on admin dashboard",
+        "description": "Fetch count of created,published,pending files and collections",
+        "operationId": "dashboardYearlyReport",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "year of document",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "2010"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved count of admin dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Get count of admin dashboard!"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "results": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "items": {
+                            "$ref": "#/definitions/ContentCatalogsView"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/dashboard-valid-year": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin Dashboard"],
+        "summary": "Get List of Valid Years KMS was used",
+        "description": "Get List of Valid Years KMS was used",
+        "operationId": "dashboardValidYears",
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved count of admin dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Get count of admin dashboard!"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "results": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "items": {
+                            "$ref": "#/definitions/ContentCatalogsView"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/dashboard-counts": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Admin Dashboard"],
+        "summary": "Get counts on admin dashboard",
+        "description": "Fetch count of created,published,pending files and collections",
+        "operationId": "dashboardCounts",
+        "parameters": [
+          {
+            "name": "filter",
+            "in": "query",
+            "description": "filter can be 'Today','Monthly' or 'Yearly'",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "Monthly"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved count of admin dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "success"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Get count of admin dashboard!"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "results": {
+                      "type": "integer",
+                      "example": 10
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "items": {
+                            "$ref": "#/definitions/ContentCatalogsView"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ContentCatalogsView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 101
+        },
+        "uid": {
+          "type": "string",
+          "example": "CAT-UID-123"
+        },
+        "title": {
+          "type": "string",
+          "example": "Sample Content"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2026-01-05T10:15:30.000Z"
+        },
+        "created_by": {
+          "type": "string",
+          "example": "admin"
+        }
+      }
+    },
+    "workflowRoleResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "role_name": {
+          "type": "string",
+          "example": "Content Editor"
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-11-10T11:00:00Z"
+        },
+        "display_name": {
+          "type": "string",
+          "example": "Review"
+        }
+      }
+    },
+    "OrganisationMasterListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Organisation list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 100
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OrganisationMaster"
+          }
+        }
+      }
+    },
+    "OrganisationMaster": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "organisation_code": {
+          "type": "string",
+          "example": "0.0113004"
+        },
+        "name": {
+          "type": "string",
+          "example": "Software Development Unit, Pune"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_deleted": {
+          "type": "boolean",
+          "example": false
+        },
+        "parent_id": {
+          "type": "integer",
+          "example": 0
+        }
+      }
+    },
+    "workflowActionResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "action_name": {
+          "type": "string",
+          "example": "Submit"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        },
+        "created": {
+          "type": "string",
+          "format": "time",
+          "example": "12:45:30"
+        }
+      }
+    },
+    "workflowRoleCreate": {
+      "type": "object",
+      "properties": {
+        "role_name": {
+          "type": "string",
+          "example": "Workflow Reviewer"
+        },
+        "display_name": {
+          "type": "string",
+          "example": "Review"
+        }
+      },
+      "required": ["role_name", "display_name"]
+    },
+    "WorkflowState": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "state_name": {
+          "type": "string",
+          "example": "Initiated"
+        },
+        "status": {
+          "type": "integer",
+          "example": 1,
+          "description": "1 = Active, 0 = Inactive"
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "workflowMasterResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "workflow_name": {
+          "type": "string",
+          "example": "Approval Process"
+        },
+        "workflow_description": {
+          "type": "string",
+          "example": "Workflow for document approval"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2025-01-03T10:20:30Z"
+        }
+      }
+    },
+    "usersResponse": {
+      "type": "object",
+      "properties": {
+        "employee_id": {
+          "type": "integer"
+        },
+        "designation_id_fk": {
+          "type": "string"
+        },
+        "full_name": {
+          "type": "string"
+        },
+        "employee_code": {
+          "type": "string"
+        },
+        "pan_no": {
+          "type": "string"
+        },
+        "employee_photo_path": {
+          "type": "string"
+        },
+        "date_of_birth": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "string"
+        },
+        "telephone_no2": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "joining_date": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "telephone_no1": {
+          "type": "string"
+        },
+        "intercom_no": {
+          "type": "string"
+        },
+        "residence_phone1": {
+          "type": "string"
+        },
+        "state_code_fk": {
+          "type": "string"
+        },
+        "appellation_name": {
+          "type": "string"
+        },
+        "designation": {
+          "type": "string"
+        },
+        "designation_name_hindi": {
+          "type": "string"
+        },
+        "org_unit_name": {
+          "type": "string"
+        },
+        "previous_org_unit_id": {
+          "type": "string"
+        },
+        "org_unit_id": {
+          "type": "string"
+        },
+        "is_ou_head": {
+          "type": "boolean"
+        },
+        "login_id": {
+          "type": "string"
+        },
+        "state_name": {
+          "type": "string"
+        },
+        "is_efile_user": {
+          "type": "integer"
+        },
+        "is_ims_user": {
+          "type": "integer"
+        },
+        "full_name_hindi": {
+          "type": "string"
+        },
+        "work_status_id": {
+          "type": "integer"
+        },
+        "employee_status_id": {
+          "type": "string"
+        },
+        "org_unit_name_hi": {
+          "type": "string"
+        },
+        "entity_type_id": {
+          "type": "string"
+        },
+        "designation_rank_id": {
+          "type": "string"
+        }
+      }
+    },
+    "contentCatalogResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer"
+        },
+        "content_type_id": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "parent_id": {
+          "type": "integer"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "created": {
+          "type": "date"
+        },
+        "created_by": {
+          "type": "integer"
+        },
+        "modified": {
+          "type": "dte"
+        },
+        "modified_by": {
+          "type": "integer"
+        },
+        "status": {
+          "type": "boolean"
+        },
+        "is_deleted": {
+          "type": "boolean"
+        },
+        "workflow_state_id": {
+          "type": "integer"
+        },
+        "priority": {
+          "type": "boolean"
+        },
+        "priority_last_date": {
+          "type": "date"
+        },
+        "priority_order": {
+          "type": "integer"
+        },
+        "assessed": {
+          "type": "boolean"
+        },
+        "max_upload_size": {
+          "type": "integer"
+        },
+        "remarks": {
+          "type": "string"
+        }
+      }
+    },
+    "Login": {
+      "type": "object",
+      "properties": {
+        "login_id": {
+          "type": "string"
+        },
+        "pwd": {
+          "type": "string"
+        }
+      }
+    },
+    "wfhUserRoleMapping": {
+      "type": "object",
+      "properties": {
+        "employee_id": {
+          "type": "integer"
+        },
+        "role_id": {
+          "type": "integer"
+        }
+      }
+    },
+    "Role": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "role_name": {
+          "type": "string",
+          "example": "Admin"
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "MenuItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "parent_id": {
+          "type": "integer",
+          "example": 0
+        },
+        "module_name": {
+          "type": "string",
+          "example": "Dashboard"
+        },
+        "action": {
+          "type": "string",
+          "example": "view"
+        },
+        "controller": {
+          "type": "string",
+          "example": "DashboardController"
+        },
+        "plugin": {
+          "type": "string",
+          "example": "core-plugin"
+        },
+        "created": {
+          "type": "string",
+          "format": "date",
+          "example": "2022-01-01"
+        },
+        "modified": {
+          "type": "string",
+          "format": "date-time",
+          "example": "2022-01-01T12:00:00Z"
+        },
+        "icon": {
+          "type": "string",
+          "example": "dashboard-icon.png"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "module_name_hi": {
+          "type": "string",
+          "example": "डैशबोर्ड"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MenuItem"
+          },
+          "example": []
+        }
+      }
+    },
+    "UserRolePermission": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "employee_id": {
+          "type": "integer",
+          "example": 101
+        },
+        "role_id": {
+          "type": "integer",
+          "example": 2
+        }
+      }
+    },
+    "categoryMasterResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "category_code": {
+          "type": "string",
+          "example": "CAT001"
+        },
+        "name": {
+          "type": "string",
+          "example": "Electronics"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_deleted": {
+          "type": "boolean",
+          "example": false
+        },
+        "parent_id": {
+          "type": "integer",
+          "example": 0
+        }
+      }
+    },
+    "WorkflowTransition": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "workflow_id": {
+          "type": "integer",
+          "example": 10
+        },
+        "transition_name": {
+          "type": "string",
+          "example": "Submit Request"
+        },
+        "transition_description": {
+          "type": "string",
+          "example": "Initial request submission step"
+        },
+        "destination_state_id": {
+          "type": "integer",
+          "example": 3
+        },
+        "transition_display_name": {
+          "type": "string",
+          "example": "Submit"
+        },
+        "script_before": {
+          "type": "string",
+          "example": "validateData();"
+        },
+        "status": {
+          "type": "boolean",
+          "example": true
+        },
+        "is_deleted": {
+          "type": "integer",
+          "example": 0
+        }
+      }
+    },
+    "GetWorkflowTransitionResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Workflow transition retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkflowTransition"
+          }
+        }
+      }
+    },
+    "AudienceListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Audience list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "audience_code": {
+                "type": "string",
+                "example": "AUD001"
+              },
+              "name": {
+                "type": "string",
+                "example": "Finance Team"
+              },
+              "status": {
+                "type": "boolean",
+                "example": true
+              },
+              "is_deleted": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "TypeListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": " Type list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "audience_code": {
+                "type": "string",
+                "example": "AUD001"
+              },
+              "name": {
+                "type": "string",
+                "example": "Finance Team"
+              },
+              "status": {
+                "type": "boolean",
+                "example": true
+              },
+              "is_deleted": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "LanguageListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": " Language list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "language_code": {
+                "type": "string",
+                "example": "EN-US"
+              },
+              "name": {
+                "type": "string",
+                "example": "English"
+              },
+              "language_short_code": {
+                "type": "string",
+                "example": "EN"
+              },
+              "status": {
+                "type": "boolean",
+                "example": true
+              },
+              "is_deleted": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "MimeTypeListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Mime Type list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "extension": {
+                "type": "string",
+                "example": ".jpg"
+              },
+              "mimetype": {
+                "type": "string",
+                "example": "image/jpeg"
+              },
+              "status": {
+                "type": "boolean",
+                "example": true
+              },
+              "is_deleted": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "AuditTrailListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Audit Trail list retrieved successfully."
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "login_id": {
+                "type": "string",
+                "example": "ADMIN01"
+              },
+              "activity": {
+                "type": "string",
+                "example": "User successfully logged in"
+              },
+              "date_time": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-11-12T10:30:00Z"
+              },
+              "login_ip": {
+                "type": "string",
+                "example": "192.168.1.15"
+              }
+            }
+          }
+        }
+      }
+    },
+    "InvalidResponse": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

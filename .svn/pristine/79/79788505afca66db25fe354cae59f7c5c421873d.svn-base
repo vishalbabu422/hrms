@@ -1,0 +1,106 @@
+const catchAsync = require("../../../utils/catchAsync");
+const EmployeeSalaryStructureService = require("./employeeSalaryStructure.service");
+const sequelize = require("../../../utils/database");
+const APIFeatures = require("../../../utils/apiFeature");
+
+// GET ALL
+const getEmployeeSalaryStructures = catchAsync(async (req, res) => {
+  const features = new APIFeatures(req.query)
+    .filter()
+    .limitFields()
+    .join()
+    .sort()
+    .paginate();
+
+
+  const result =
+    await EmployeeSalaryStructureService.getEmployeeSalaryStructures(
+      features.query
+    );
+
+  res.status(200).json({
+    status: "success",
+    ...result,
+  });
+});
+
+// GET BY ID
+const getEmployeeSalaryStructureById = catchAsync(async (req, res) => {
+  const features = new APIFeatures(req.query)
+    .limitFields()
+    .join();
+
+  if (!features.query.where) features.query.where = {};
+
+  features.query.where = {
+    ...features.query.where,
+    id: req.params.id,
+    is_deleted: false,
+  };
+
+  const result =
+    await EmployeeSalaryStructureService.getEmployeeSalaryStructureById(
+      features.query
+    );
+
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
+});
+
+// CREATE
+const createEmployeeSalaryStructure = catchAsync(async (req, res) => {
+  const result = await sequelize.transaction(async (t) => {
+    return await EmployeeSalaryStructureService.createEmployeeSalaryStructure(
+      req.body,
+      t
+    );
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Employee Salary Structure created successfully",
+    data: result,
+  });
+});
+
+// UPDATE
+const updateEmployeeSalaryStructure = catchAsync(async (req, res) => {
+  const result = await sequelize.transaction(async (t) => {
+    return await EmployeeSalaryStructureService.updateEmployeeSalaryStructure(
+      req.params.id,
+      req.body,
+      t
+    );
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Employee Salary Structure updated successfully",
+    data: result,
+  });
+});
+
+// DELETE
+const deleteEmployeeSalaryStructure = catchAsync(async (req, res) => {
+  await sequelize.transaction(async (t) => {
+    await EmployeeSalaryStructureService.deleteEmployeeSalaryStructure(
+      req.params.id,
+      t
+    );
+  });
+
+  res.status(200).json({
+    status: "success",
+    message: "Employee Salary Structure deleted successfully",
+  });
+});
+
+module.exports = {
+  getEmployeeSalaryStructures,
+  getEmployeeSalaryStructureById,
+  createEmployeeSalaryStructure,
+  updateEmployeeSalaryStructure,
+  deleteEmployeeSalaryStructure,
+};

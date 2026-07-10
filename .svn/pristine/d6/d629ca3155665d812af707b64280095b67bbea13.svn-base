@@ -1,0 +1,43 @@
+import ExamFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+      await api.post('/admin/exam/create', normalizedPayload)
+
+      toast.success('Exam details created successfully')
+      navigate('/exam')
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        error.response?.data?.message ||
+          'Failed to create Exam details'
+      )
+    }
+  }
+
+  const initialData = {
+    exam_name: '',
+    exam_date: '',
+    marks_obtained: '',
+  }
+
+  return (
+    <ExamFormComponent
+      initialData={initialData}
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

@@ -1,0 +1,52 @@
+import { CPagination, CPaginationItem } from '@coreui/react'
+
+const AppPagination = ({
+  page,
+  totalPages,
+  onPageChange,
+  className = 'justify-content-end',
+  ariaLabel = 'Pagination Navigation',
+}) => {
+  if (!totalPages || totalPages <= 1) return null
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages || newPage === page) return
+    onPageChange(newPage)
+  }
+
+  return (
+    <CPagination className={className} aria-label={ariaLabel}>
+      <CPaginationItem
+        aria-label="Previous Page"
+        disabled={page === 1}
+        onClick={() => handlePageChange(page - 1)}
+      >
+        <span aria-hidden="true">&laquo;</span>
+      </CPaginationItem>
+
+      {[...Array(totalPages)].map((_, i) => {
+        const pageNumber = i + 1
+        return (
+          <CPaginationItem
+            key={pageNumber}
+            active={page === pageNumber}
+            aria-current={page === pageNumber ? 'page' : undefined}
+            onClick={() => handlePageChange(pageNumber)}
+          >
+            {pageNumber}
+          </CPaginationItem>
+        )
+      })}
+
+      <CPaginationItem
+        aria-label="Next Page"
+        disabled={page === totalPages}
+        onClick={() => handlePageChange(page + 1)}
+      >
+        <span aria-hidden="true">&raquo;</span>
+      </CPaginationItem>
+    </CPagination>
+  )
+}
+
+export default AppPagination

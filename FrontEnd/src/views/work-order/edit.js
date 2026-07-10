@@ -40,7 +40,7 @@ const edit = () => {
     issued_to_contact: data.issued_to_contact ?? '',
     issued_to_phone: data.issued_to_phone ?? '',
     issued_to_email: data.issued_to_email ?? '',
-
+    type: data.type ?? 'MANPOWER',
     contact_name: data.contact_name ?? '',
     contact_number: data.contact_number ?? '',
     contact_email: data.contact_email ?? '',

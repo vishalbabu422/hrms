@@ -1,0 +1,136 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import {
+  CCol,
+  CCardBody,
+  CButton
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilCloudDownload } from '@coreui/icons'
+import { getEmployeeTrainings } from '../../../services/trainingService'
+
+const TrainingView = () => {
+  const { employeeId } = useParams()
+
+  const [trainings, setTrainings] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchTrainings = async () => {
+    try {
+      setLoading(true)
+
+      const response = await getEmployeeTrainings(employeeId)
+
+      const data = response.data?.data || response.data || []
+      setTrainings(data)
+    } catch (error) {
+      console.error('Error fetching trainings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchTrainings()
+  }, [employeeId])
+
+  return (
+    <CCol xs={12} sm={12} md={9} lg={10}>
+      <CCardBody style={{ minHeight: '400px' }}>
+        {/* Header */}
+        <div className="section-header mb-4">
+          <div className="section-accent"></div>
+          <h5 className="section-title">Training Details</h5>
+        </div>
+
+        {/* Loading */}
+        {loading && <p>Loading trainings...</p>}
+
+        {/* Empty */}
+        {!loading && trainings.length === 0 && (
+          <p className="text-muted">No training records found</p>
+        )}
+
+        {/* Data */}
+        {!loading &&
+          trainings.length > 0 &&
+          trainings.map((item, index) => (
+            <div key={item.id || index} className="mb-4">
+              <div className="row g-4">
+                {/* LEFT */}
+                <div className="col-md-6">
+                  <div className="mb-4">
+                    <small className="text-muted">Training Name</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {item.training_name || '-'}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <small className="text-muted">Training Start Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {item.start_date
+                        ? new Date(item.start_date).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT */}
+                <div className="col-md-6">
+                  <div className="mb-4">
+                    <small className="text-muted">Training Type</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {item.training_type || '-'}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <small className="text-muted">Training End Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {item.end_date
+                        ? new Date(item.end_date).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CERTIFICATE */}
+                <div className="col-12">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <small className="text-muted">Certificate</small>
+                      <div className="fw-semibold">
+                        {item.certificate_name || 'No document uploaded'}
+                      </div>
+                    </div>
+
+                    {item.certificate && (
+                      <CButton
+                        size="sm"
+                        variant="outline"
+                        href={item.certificate}
+                        download
+                      >
+                        <CIcon icon={cilCloudDownload} />
+                      </CButton>
+                    )}
+                  </div>
+                </div>
+
+                {/* DESCRIPTION */}
+                <div className="col-12">
+                  <small className="text-muted">Description</small>
+                  <div className="fw-semibold border-bottom pb-2">
+                    {item.description || '-'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+      </CCardBody>
+    </CCol>
+  )
+}
+
+export default TrainingView

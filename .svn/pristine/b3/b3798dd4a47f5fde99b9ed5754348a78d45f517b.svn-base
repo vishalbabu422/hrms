@@ -1,0 +1,101 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+const WoDesgnMapping = sequelize.define(
+  "WoDesgnMapping",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    work_order_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+
+    sac_code: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+
+    req_person_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    duration_days: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    monthly_unit_rate: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    deployment_from: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    deployment_to: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    cgst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    sgst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    igst_amount: {
+      type: DataTypes.DECIMAL(15, 2),
+      allowNull: false,
+    },
+
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
+    created_by: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+
+    modified_by: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  },
+  {
+    tableName: "wo_desgn_mapping",
+    schema: "pmu",
+    timestamps: true,
+    createdAt: "created",
+    updatedAt: "updated_at",
+  }
+);
+
+WoDesgnMapping.associate = (models) => {
+
+  WoDesgnMapping.belongsTo(models.WorkOrder, {
+    foreignKey: "work_order_id",
+    onDelete: "CASCADE",
+  });
+
+};
+
+module.exports = WoDesgnMapping;

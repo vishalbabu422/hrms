@@ -1,0 +1,276 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CTooltip,
+  CSpinner,
+} from '@coreui/react'
+
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilDescription } from '@coreui/icons'
+
+import SimpleBar from 'simplebar-react'
+import { toast } from 'react-toastify'
+import api from '../../api/axios'
+
+import SortableHeaderCell from '../components/sort-table-header'
+import AppPagination from '../components/app-pagination'
+import TableEmptyState from '../components/table-empty'
+import PageHeader from '../components/form-header'
+import ActionButton from '../components/action-button'
+
+const Index = () => {
+  const navigate = useNavigate()
+
+  const [sort, setSort] = useState({ key: 'id', order: 'desc' })
+  const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
+
+  const [page, setPage] = useState(1)
+  const [limit] = useState(LIMIT)
+  const [totalPages, setTotalPages] = useState(1)
+
+  const [search, setSearch] = useState('')
+  const [gstCodes, setGstCodes] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  /* ================= FETCH ================= */
+
+  const fetchGstCodes = async () => {
+    try {
+      setLoading(true)
+
+      const params = {
+        sort: `${sort.key} ${sort.order}`,
+        page,
+        limit,
+      }
+
+      if (search.length >= 3) {
+        params.search = search
+      }
+
+      const response = await api.get('/admin/gst-code/index', { params })
+
+      setGstCodes(response.data?.data?.GstCodeList ?? [])
+      setTotalPages(response.data?.totalPages ?? 1)
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to fetch GST Codes')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, sort])
+
+  useEffect(() => {
+    if (search.length === 0 || search.length >= 3) {
+      fetchGstCodes()
+    }
+  }, [search, sort, page])
+
+  /* ================= SORT ================= */
+
+  const handleSort = (key) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+        : { key, order: 'asc' }
+    )
+  }
+
+  /* ================= DELETE ================= */
+
+  const confirmDelete = (id) => {
+    if (!window.confirm('Are you sure you want to delete this GST Code?')) return
+    handleDelete(id)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/admin/gst-code/delete/${id}`)
+      toast.success('GST Code deleted successfully')
+      fetchGstCodes()
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Delete failed')
+    }
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CContainer fluid className="py-4">
+      <PageHeader
+        title="GST Codes"
+        searchValue={search}
+        onSearchChange={setSearch}
+        onAddClick={() => navigate('/gst-code/add')}
+        addLabel="Add GST Code"
+      />
+
+      <CCard className="shadow border-0 rounded-4">
+        <CCardBody>
+          <SimpleBar autoHide>
+            <CTable hover responsive align="middle">
+              <CTableHead style={{ backgroundColor: '#f8f9fc' }}>
+                <SortableHeaderCell
+                  label="Code Type"
+                  sortKey="code_type"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell label="Code" sortKey="code" sort={sort} onSort={handleSort} />
+                <SortableHeaderCell
+                  label="Description"
+                  sortKey="description"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="GST Rate"
+                  sortKey="gst_rate"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="CGST Rate"
+                  sortKey="cgst_rate"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="SGST Rate"
+                  sortKey="sgst_rate"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="IGST Rate"
+                  sortKey="igst_rate"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="Cess Rate"
+                  sortKey="cess_rate"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="Effective From"
+                  sortKey="effective_from"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="Effective To"
+                  sortKey="effective_to"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <SortableHeaderCell
+                  label="Status"
+                  sortKey="is_active"
+                  sort={sort}
+                  onSort={handleSort}
+                />
+                <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+              </CTableHead>
+
+              <CTableBody>
+                {loading ? (
+                  <CTableRow>
+                    <CTableDataCell colSpan={13} className="text-center py-4">
+                      <CSpinner size="sm" />
+                    </CTableDataCell>
+                  </CTableRow>
+                ) : gstCodes.length > 0 ? (
+                  gstCodes.map((item, index) => (
+                    <CTableRow key={item.id}>
+                      <CTableDataCell>
+                        {(page - 1) * limit + index + 1}
+                      </CTableDataCell>
+
+                      <CTableDataCell>{item.code_type}</CTableDataCell>
+                      <CTableDataCell>{item.code}</CTableDataCell>
+                      <CTableDataCell>{item.description}</CTableDataCell>
+                      <CTableDataCell>{Number(item.gst_rate).toFixed(2)}%</CTableDataCell>
+                      <CTableDataCell>{Number(item.cgst_rate).toFixed(2)}%</CTableDataCell>
+                      <CTableDataCell>{Number(item.sgst_rate).toFixed(2)}%</CTableDataCell>
+                      <CTableDataCell>{Number(item.igst_rate).toFixed(2)}%</CTableDataCell>
+                      <CTableDataCell>{Number(item.cess_rate).toFixed(2)}%</CTableDataCell>
+
+                      <CTableDataCell>
+                        {item.effective_from
+                          ? new Date(item.effective_from).toLocaleDateString('en-IN')
+                          : '-'}
+                      </CTableDataCell>
+
+                      <CTableDataCell>
+                        {item.effective_to
+                          ? new Date(item.effective_to).toLocaleDateString('en-IN')
+                          : '-'}
+                      </CTableDataCell>
+
+                      <CTableDataCell>
+                        {item.is_active ? (
+                          <CIcon icon={cilCheckCircle} className="text-success" />
+                        ) : (
+                          <CIcon icon={cilXCircle} className="text-danger" />
+                        )}
+                      </CTableDataCell>
+
+                      <CTableDataCell>
+                        <div className="d-flex justify-content-center gap-2">
+                          <ActionButton
+                            color="primary"
+                            icon={cilDescription}
+                            onClick={() => navigate(`/gst-code/preview/${item.id}`)}
+                          />
+                          <ActionButton
+                            color="primary"
+                            icon={cilPencil}
+                            onClick={() => navigate(`/gst-code/edit/${item.id}`)}
+                          />
+                          {item.is_active && (
+                            <ActionButton
+                              color="danger"
+                              icon={cilTrash}
+                              onClick={() => confirmDelete(item.id)}
+                            />
+                          )}
+                        </div>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))
+                ) : (
+                  <TableEmptyState colSpan={13} />
+                )}
+              </CTableBody>
+            </CTable>
+          </SimpleBar>
+
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        </CCardBody>
+      </CCard>
+    </CContainer>
+  )
+}
+
+export default Index

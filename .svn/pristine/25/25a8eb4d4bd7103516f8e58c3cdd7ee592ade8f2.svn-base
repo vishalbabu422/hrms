@@ -1,0 +1,164 @@
+import React from 'react'
+
+const Documents = ({ 
+  step,
+  selectedDocType,
+  setSelectedDocType,
+  selectedFile,
+  setSelectedFile,
+  documents,
+  setDocuments
+}) => {
+
+  const handleFileSelect = (file) => {
+    if (!file) return
+    setSelectedFile(file)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file) setSelectedFile(file)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleAddDocument = () => {
+    if (!selectedDocType || !selectedFile) {
+      alert('Please select document type and file')
+      return
+    }
+
+    setDocuments([
+      ...documents,
+      {
+        type: selectedDocType,
+        file: selectedFile,
+      },
+    ])
+
+    setSelectedDocType('')
+    setSelectedFile(null)
+  }
+
+  const handleRemoveDocument = (indexToRemove) => {
+    setDocuments(documents.filter((_, i) => i !== indexToRemove))
+  }
+
+  return (
+    <>
+      {step === 9 && (
+        <div className="step-content">
+          <div className="card shadow-sm p-4">
+            <div className="row g-3">
+              {/* Document Type */}
+              <div className="col-md-12">
+                <label className="form-label">Document Type</label>
+
+                <select
+                  className="form-select"
+                  value={selectedDocType}
+                  onChange={(e) => setSelectedDocType(e.target.value)}
+                >
+                  <option value="">Select Document Type</option>
+                  <option value="PHOTO">Photo</option>
+                  <option value="RESUME">Resume</option>
+                  <option value="PAN_FILE">PAN Card</option>
+                  <option value="AADHAAR_FILE">Aadhaar Card</option>
+                  <option value="VOTER_ID_FILE">Voter ID</option>
+                  <option value="BIRTH_CERT">Birth Certificate</option>
+                  <option value="DRIVING_LICENSE">Driving License</option>
+                  <option value="WORK_PERMIT">Work Permit</option>
+                  <option value="POLICY_DOCUMENT">Policy Document</option>
+                  <option value="SALARY_SLIP">Salary Slip</option>
+                  <option value="FORM16">Form 16</option>
+                  <option value="POLICE_VERIFICATION">Police Verification</option>
+                  <option value="DECLARATION">Declaration</option>
+                </select>
+              </div>
+
+              {/* Upload Box */}
+              <div className="col-12">
+                <label className="form-label">Upload File</label>
+
+                <div
+                  className="border rounded p-5 text-center"
+                  style={{
+                    cursor: 'pointer',
+                    background: '#fafafa',
+                    borderStyle: 'dashed',
+                  }}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onClick={() => document.getElementById('hiddenFileInput').click()}
+                >
+                  {selectedFile ? (
+                    <div className="text-success fw-semibold">{selectedFile.name}</div>
+                  ) : (
+                    <div className="text-muted">Drag & Drop file here or Click to Browse</div>
+                  )}
+                </div>
+
+                <input
+                  id="hiddenFileInput"
+                  type="file"
+                  hidden
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) => handleFileSelect(e.target.files[0])}
+                />
+              </div>
+
+              {/* Add Button */}
+              <div className="col-12 text-end">
+                <button type="button" className="btn btn-primary" onClick={handleAddDocument}>
+                  Add Document
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Document Table */}
+          {documents.length > 0 && (
+            <div className="card mt-4 shadow-sm p-3">
+              <h6 className="fw-semibold mb-3">Uploaded Documents</h6>
+
+              <div className="table-responsive">
+                <table className="table table-bordered align-middle">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Document Type</th>
+                      <th>File Name</th>
+                      <th width="100">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {documents.map((doc, index) => (
+                      <tr key={index}>
+                        <td>{doc.type}</td>
+                        <td>{doc.file.name}</td>
+
+                        <td>
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleRemoveDocument(index)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+export default Documents

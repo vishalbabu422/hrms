@@ -1,0 +1,91 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+const GstCodeMaster = sequelize.define(
+  "GstCodeMaster",
+  {
+    id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+
+    code_type: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+
+    code: {
+      type: DataTypes.STRING(10),
+      allowNull: false,
+    },
+
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+
+    gst_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    cgst_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    sgst_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    igst_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    cess_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    other_rate: {
+      type: DataTypes.DECIMAL(5, 2),
+      defaultValue: 0.0,
+    },
+
+    effective_from: {
+      type: DataTypes.DATEONLY,
+      allowNull: false,
+    },
+
+    effective_to: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
+    created: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+
+    modified: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    schema: "pmu",
+    tableName: "hsn_master",
+    timestamps: false, // because you're handling created/modified manually
+  }
+);
+
+module.exports = GstCodeMaster;

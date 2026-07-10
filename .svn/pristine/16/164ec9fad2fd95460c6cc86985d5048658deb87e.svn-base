@@ -1,0 +1,42 @@
+import { validateFields } from "../utils/validator";
+
+export const validateAddress = (data, type = "Address") => {
+  const rules = {
+    address_line1: {
+      required: true,
+      message: `${type}: Address is required`,
+    },
+
+    city: {
+      maxLength: 100,
+      message: `${type}: City max 100 characters`,
+    },
+
+    district: {
+      maxLength: 100,
+      message: `${type}: District max 100 characters`,
+    },
+
+    state: {
+      maxLength: 100,
+      message: `${type}: State max 100 characters`,
+    },
+
+    country: {
+      maxLength: 100,
+      message: `${type}: Country max 100 characters`,
+    },
+
+    landmark: {
+      maxLength: 150,
+      message: `${type}: Landmark max 150 characters`,
+    },
+
+    pin_code: {
+      pattern: /^[0-9]{6}$/,
+      message: `${type}: Pin code must be 6 digits`,
+    },
+  };
+
+  return validateFields(data, rules);
+};

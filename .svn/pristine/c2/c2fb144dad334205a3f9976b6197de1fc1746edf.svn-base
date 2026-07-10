@@ -1,0 +1,282 @@
+import { CModal, CModalBody, CModalFooter, CButton } from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import api from '../../api/axios'
+
+const SalaryDispatchModal = ({
+  visible,
+  onClose,
+  employeeId,
+  month,
+  year,
+  salaryStructureId,
+  onSubmit,
+}) => {
+  const [txnNo, setTxnNo] = useState('')
+
+  const [salaryData, setSalaryData] = useState(null)
+
+  const monthYearLabel = new Date(year, month - 1).toLocaleString('default', {
+    month: 'long',
+    year: 'numeric',
+  })
+
+  const fetchSalaryData = async () => {
+    try {
+      const res = await api.post('employee-salary-register-monthly/generate', {
+        employee_id: employeeId,
+        month,
+        year,
+        salary_structure_id: salaryStructureId,
+      })
+
+      setSalaryData(res?.data?.data || null)
+    } catch (error) {
+      console.error(error)
+
+      toast.error(error?.response?.data?.message || 'Failed to generate salary')
+    }
+  }
+
+  useEffect(() => {
+    if (visible && employeeId && month && year && salaryStructureId) {
+      fetchSalaryData()
+    }
+  }, [visible, employeeId, month, year, salaryStructureId])
+
+  const handleSubmit = () => {
+    if (!txnNo) {
+      toast.error('Transaction Number is required')
+      return
+    }
+
+    onSubmit?.({
+      transaction_no: txnNo,
+      employee_id: employeeId,
+      month,
+      year,
+      salary_structure_id: salaryStructureId,
+      salary_data: salaryData,
+    })
+
+    setTxnNo('')
+  }
+
+  return (
+    <CModal visible={visible} onClose={onClose} size="lg">
+      <CModalBody
+        style={{
+          padding: '30px',
+          background: '#fff',
+        }}
+      >
+        {/* MONTH YEAR */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <strong>{monthYearLabel}</strong>
+        </div>
+
+        <br />
+
+        {/* HEADER */}
+        <p>
+          <strong>Dear Employee,</strong>
+        </p>
+
+        <p>
+          <strong>Sub: Salary Structure</strong>
+        </p>
+
+        <p>Please find below your salary structure details for the selected period.</p>
+
+        {/* TABLE */}
+        <table
+          style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            border: '1px solid #000',
+          }}
+        >
+          <thead>
+            <tr>
+              <th
+                colSpan="2"
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                SALARY BREAKUP
+              </th>
+            </tr>
+
+            <tr>
+              <th
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                Component
+              </th>
+
+              <th
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                Amount
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {salaryData?.components?.map((component) => (
+              <tr key={component.component_id}>
+                <td
+                  style={{
+                    border: '1px solid #000',
+                    padding: '6px',
+                  }}
+                >
+                  {component.name}
+                </td>
+
+                <td
+                  style={{
+                    border: '1px solid #000',
+                    padding: '6px',
+                  }}
+                >
+                  ₹ {Number(component.amount).toFixed(2)}
+                </td>
+              </tr>
+            ))}
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>Gross Earnings</strong>
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>₹ {Number(salaryData?.gross_earnings || 0).toFixed(2)}</strong>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>Total Deductions</strong>
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>₹ {Number(salaryData?.total_deductions || 0).toFixed(2)}</strong>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>Net Salary</strong>
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>₹ {Number(salaryData?.net_salary || 0).toFixed(2)}</strong>
+              </td>
+            </tr>
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>CTC</strong>
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '6px',
+                }}
+              >
+                <strong>₹ {Number(salaryData?.ctc || 0).toFixed(2)}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <br />
+
+        <p style={{ fontSize: '12px' }}>Kindly verify the above details before submission.</p>
+
+        <br />
+
+        <p>
+          For Company <br />
+          <strong>Authorized Signatory</strong>
+        </p>
+
+        {/* TRANSACTION */}
+        <div className="mt-3">
+          <label>
+            <strong>Transaction Number</strong>
+          </label>
+
+          <input
+            className="form-control"
+            value={txnNo}
+            onChange={(e) => setTxnNo(e.target.value)}
+          />
+        </div>
+      </CModalBody>
+
+      <CModalFooter>
+        <CButton color="secondary" onClick={onClose}>
+          Close
+        </CButton>
+
+        <CButton color="primary" onClick={handleSubmit}>
+          Submit
+        </CButton>
+      </CModalFooter>
+    </CModal>
+  )
+}
+
+export default SalaryDispatchModal

@@ -1,0 +1,447 @@
+import {
+  CBadge,
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+} from '@coreui/react'
+
+const SalaryBreakdownView = ({ employee }) => {
+  const earnings = [
+    {
+      component: 'Basic Salary',
+      monthly: 60000,
+      annual: 720000,
+    },
+    {
+      component: 'HRA',
+      monthly: 30000,
+      annual: 360000,
+    },
+    {
+      component: 'Professional Development Allowance',
+      monthly: 19847,
+      annual: 238164,
+    },
+    {
+      component: 'Leave Encashment',
+      monthly: 4577,
+      annual: 54924,
+    },
+  ]
+
+  const employerContribution = [
+    {
+      component: 'Company PF Contribution',
+      monthly: 1800,
+      annual: 21600,
+    },
+    {
+      component: 'Gratuity',
+      monthly: 2886,
+      annual: 34632,
+    },
+    {
+      component: 'Medical Insurance Premium',
+      monthly: 840,
+      annual: 10080,
+    },
+  ]
+
+  const deductions = [
+    {
+      component: 'Provident Fund',
+      monthly: 1800,
+      annual: 21600,
+    },
+    {
+      component: 'Professional Tax',
+      monthly: 200,
+      annual: 2400,
+    },
+    {
+      component: 'Income Tax',
+      monthly: 4500,
+      annual: 54000,
+    },
+  ]
+
+  const formatCurrency = (amount) => {
+    return Number(amount || 0).toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  }
+
+  const earningsMonthly = earnings.reduce((a, b) => a + b.monthly, 0)
+  const earningsAnnual = earnings.reduce((a, b) => a + b.annual, 0)
+
+  const deductionMonthly = deductions.reduce((a, b) => a + b.monthly, 0)
+  const deductionAnnual = deductions.reduce((a, b) => a + b.annual, 0)
+
+  const contributionMonthly = employerContribution.reduce((a, b) => a + b.monthly, 0)
+  const contributionAnnual = employerContribution.reduce((a, b) => a + b.annual, 0)
+
+  const netMonthly = earningsMonthly - deductionMonthly
+  const netAnnual = earningsAnnual - deductionAnnual
+
+  const ctcMonthly = earningsMonthly + contributionMonthly
+  const ctcAnnual = earningsAnnual + contributionAnnual
+
+  return (
+    <>
+      {/* TOP SUMMARY */}
+      <CRow className="mb-3">
+        <CCol md={4}>
+          <CCard>
+            <CCardBody>
+              <div className="text-muted small">Monthly Gross</div>
+
+              <h5 className="fw-bold mb-0 text-primary">₹ {formatCurrency(earningsMonthly)}</h5>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard>
+            <CCardBody>
+              <div className="text-muted small">Monthly Net</div>
+
+              <h5 className="fw-bold mb-0 text-success">₹ {formatCurrency(netMonthly)}</h5>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard>
+            <CCardBody>
+              <div className="text-muted small">Annual CTC</div>
+
+              <h5 className="fw-bold mb-0 text-info">₹ {formatCurrency(ctcAnnual)}</h5>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      {/* EMPLOYEE DETAILS */}
+      <CCard className="mb-3">
+        <CCardBody className="py-3">
+          <CRow className="text-center align-items-center">
+            <CCol md={4} className="text-center">
+              <div className="text-muted small mb-1">Employee ID</div>
+
+              <div className="fw-semibold fs-6">{employee?.employee_code || 'EMP-1001'}</div>
+            </CCol>
+
+            <CCol md={4} className="text-center">
+              <div className="text-muted small mb-1">Designation</div>
+
+              <div className="fw-semibold fs-6">{employee?.designation || 'Senior Developer'}</div>
+            </CCol>
+
+            <CCol md={4} className="text-center">
+              <div className="text-muted small mb-1">Effective From</div>
+
+              <div className="fw-semibold fs-6">{employee?.effective_from || '01-04-2026'}</div>
+            </CCol>
+          </CRow>
+        </CCardBody>
+      </CCard>
+
+      {/* MONTHLY & ANNUAL BREAKDOWN */}
+      <CRow>
+        {/* MONTHLY */}
+        <CCol md={6}>
+          <CCard className="mb-3">
+            <CCardBody>
+              <h5
+                className="fw-bold mb-3"
+                style={{
+                  color: '#4f46e5',
+                }}
+              >
+                Monthly Breakdown
+              </h5>
+
+              <CTable bordered hover responsive align="middle">
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>Salary Component</CTableHeaderCell>
+
+                    <CTableHeaderCell className="text-end">Monthly Amount</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+
+                <CTableBody>
+                  {/* EARNINGS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#eef2ff',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Earnings
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {earnings.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.monthly)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  <CTableRow
+                    style={{
+                      background: '#ecfdf5',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Gross Earnings</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-success">
+                      ₹ {formatCurrency(earningsMonthly)}
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {/* BENEFITS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#eff6ff',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Employer Benefits & Contributions
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {employerContribution.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.monthly)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  {/* DEDUCTIONS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#fef2f2',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Deductions
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {deductions.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.monthly)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  <CTableRow
+                    style={{
+                      background: '#fef2f2',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Total Deductions</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-danger">
+                      ₹ {formatCurrency(deductionMonthly)}
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  <CTableRow
+                    style={{
+                      background: '#ede9fe',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Net Salary</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-primary">
+                      ₹ {formatCurrency(netMonthly)}
+                    </CTableDataCell>
+                  </CTableRow>
+                </CTableBody>
+              </CTable>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* ANNUAL */}
+        <CCol md={6}>
+          <CCard className="mb-3">
+            <CCardBody>
+              <h5
+                className="fw-bold mb-3"
+                style={{
+                  color: '#2563eb',
+                }}
+              >
+                Annual Breakdown
+              </h5>
+
+             <CTable
+  bordered
+  hover
+  responsive
+  align="middle"
+  size="sm"
+>
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>Salary Component</CTableHeaderCell>
+
+                    <CTableHeaderCell className="text-end">Annual Amount</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+
+                <CTableBody>
+                  {/* EARNINGS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#eef2ff',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Earnings
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {earnings.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.annual)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  <CTableRow
+                    style={{
+                      background: '#ecfdf5',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Gross Earnings</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-success">
+                      ₹ {formatCurrency(earningsAnnual)}
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {/* BENEFITS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#eff6ff',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Employer Benefits & Contributions
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {employerContribution.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.annual)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  {/* DEDUCTIONS */}
+                  <CTableRow>
+                    <CTableDataCell
+                      colSpan={2}
+                      style={{
+                        background: '#fef2f2',
+                        fontWeight: '700',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Deductions
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  {deductions.map((item, index) => (
+                    <CTableRow key={index}>
+                      <CTableDataCell>{item.component}</CTableDataCell>
+
+                      <CTableDataCell className="text-end">
+                        ₹ {formatCurrency(item.annual)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))}
+
+                  <CTableRow
+                    style={{
+                      background: '#fef2f2',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Total Deductions</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-danger">
+                      ₹ {formatCurrency(deductionAnnual)}
+                    </CTableDataCell>
+                  </CTableRow>
+
+                  <CTableRow
+                    style={{
+                      background: '#ede9fe',
+                      fontWeight: '700',
+                    }}
+                  >
+                    <CTableDataCell>Cost To Company (CTC)</CTableDataCell>
+
+                    <CTableDataCell className="text-end text-primary">
+                      ₹ {formatCurrency(ctcAnnual)}
+                    </CTableDataCell>
+                  </CTableRow>
+                </CTableBody>
+              </CTable>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </>
+  )
+}
+
+export default SalaryBreakdownView

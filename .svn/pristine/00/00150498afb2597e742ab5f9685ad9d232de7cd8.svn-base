@@ -1,0 +1,646 @@
+import {
+  CRow,
+  CCol,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CCard,
+  CCardBody,
+} from '@coreui/react'
+
+import { useState, useEffect } from 'react'
+import './FinancialRegister.css'
+import {
+  getActiveSalaryStructures,
+  getSalaryStructureById,
+} from '../../services/salaryStructureService'
+import api from '../../api/axios'
+
+const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar']
+
+const currentYear = new Date().getFullYear()
+
+const yearOptions = Array.from({ length: 4 }, (_, index) => currentYear - index)
+
+const FinancialRegister = () => {
+  const currentMonthIndex = 3
+
+  const [employees, setEmployees] = useState([])
+
+  const [salaryStructures, setSalaryStructures] = useState([])
+
+  const [filters, setFilters] = useState({
+    year: String(new Date().getFullYear()),
+    structure: '',
+    employee: '',
+  })
+
+  const [selectedEmployeeData, setSelectedEmployeeData] = useState(null)
+
+  const [highlight, setHighlight] = useState(false)
+  const [financialData, setFinancialData] = useState(null)
+
+  useEffect(() => {
+    fetchSalaryStructures()
+  }, [])
+
+  const fetchSalaryStructures = async () => {
+    try {
+      const response = await getActiveSalaryStructures()
+
+      const structures = response?.data?.data || []
+
+      setSalaryStructures(structures)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const fetchEmployeesByStructure = async (salaryStructureId) => {
+    try {
+      const response = await getSalaryStructureById(salaryStructureId)
+
+      const employeeList = response?.data?.data?.empSalaryStructures || []
+
+      setEmployees(employeeList)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  /* ================= HANDLE CHANGE ================= */
+
+  const handleChange = async (e) => {
+    const { name, value } = e.target
+
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    if (name === 'structure') {
+      setFilters((prev) => ({
+        ...prev,
+        structure: value,
+        employee: '',
+      }))
+
+      await fetchEmployeesByStructure(value)
+    }
+  }
+  /* ================= SEARCH ================= */
+
+  const handleSearch = async () => {
+    try {
+      if (!filters.employee) {
+        alert('Please select employee')
+        return
+      }
+
+      const response = await api.post('/employee-salary-register-financial/generate', {
+        employee_id: filters.employee,
+        financial_year: Number(filters.year),
+      })
+
+      const data = response?.data?.data
+
+      setFinancialData(data)
+
+      setSelectedEmployeeData({
+        name: data.employee_name,
+      })
+
+      setHighlight(true)
+
+      setTimeout(() => {
+        setHighlight(false)
+      }, 1500)
+    } catch (error) {
+      console.error(error)
+      alert('Failed to generate register')
+    }
+  }
+
+  const monthLookup = {}
+
+  financialData?.monthly_salary?.forEach((item) => {
+    const map = {
+      4: 'Apr',
+      5: 'May',
+      6: 'Jun',
+      7: 'Jul',
+      8: 'Aug',
+      9: 'Sep',
+      10: 'Oct',
+      11: 'Nov',
+      12: 'Dec',
+      1: 'Jan',
+      2: 'Feb',
+      3: 'Mar',
+    }
+
+    monthLookup[map[item.month]] = item
+  })
+  const componentRows = []
+  const addonRows = []
+
+  financialData?.monthly_salary?.forEach((month) => {
+    month.components?.forEach((component) => {
+      if (!componentRows.find((c) => c.code === component.code)) {
+        componentRows.push({
+          code: component.code,
+          label: component.name,
+          rowType: 'component',
+          componentType: component.type, // EARNING / DEDUCTION
+        })
+      }
+    })
+
+    month.addons?.forEach((addon) => {
+      if (!addonRows.find((a) => a.code === addon.code)) {
+        addonRows.push({
+          code: addon.code,
+          label: addon.name,
+          rowType: 'addon',
+        })
+      }
+    })
+  })
+
+  componentRows.sort((a, b) => {
+    const order = {
+      BASIC: 1,
+      HRA: 2,
+    }
+
+    return (order[a.code] || 999) - (order[b.code] || 999)
+  })
+
+  // const salaryRows = [
+  //   ...componentRows,
+
+  //   // Bonus / Addons pehle
+  //   ...addonRows,
+
+  //   {
+  //     label: 'Gross Earnings',
+  //     type: 'gross',
+  //   },
+
+  //   {
+  //     label: 'Total Deductions',
+  //     type: 'deduction',
+  //   },
+
+  //   {
+  //     label: 'Net Salary',
+  //     type: 'net',
+  //     highlight: true,
+  //   },
+  // ]
+
+  const salaryRows = [
+    ...componentRows,
+
+    {
+      label: 'Gross Earnings',
+      type: 'gross',
+      highlight: true,
+    },
+
+    ...addonRows,
+
+    {
+      label: 'Net Salary',
+      type: 'net',
+      highlight: true,
+    },
+  ]
+
+  return (
+    <CCard className="border-0 shadow-sm rounded-4">
+      <CCardBody
+        className="p-4"
+        style={{
+          paddingBottom: '32px',
+        }}
+      >
+        {/* ================= FILTERS ================= */}
+
+        <CRow
+          className="mb-4 p-3 rounded-4 align-items-end"
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #edf1f5',
+          }}
+        >
+          {/* YEAR */}
+          <CCol md={3}>
+            <CFormLabel
+              className="fw-semibold mb-2"
+              style={{
+                color: '#374151',
+              }}
+            >
+              Year
+            </CFormLabel>
+
+            <CFormSelect
+              name="year"
+              value={filters.year}
+              onChange={handleChange}
+              style={{
+                height: '45px',
+                borderRadius: '10px',
+              }}
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </CFormSelect>
+          </CCol>
+          {/* SALARY STRUCTURE */}
+
+          <CCol md={3}>
+            <CFormLabel
+              className="fw-semibold mb-2"
+              style={{
+                color: '#374151',
+              }}
+            >
+              Salary Structure
+            </CFormLabel>
+
+            <CFormSelect
+              name="structure"
+              value={filters.structure}
+              onChange={handleChange}
+              style={{
+                height: '45px',
+                borderRadius: '10px',
+              }}
+            >
+              <option value="">Select Salary Structure</option>
+
+              {salaryStructures.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </CFormSelect>
+          </CCol>
+
+          {/* EMPLOYEE */}
+
+          <CCol md={3}>
+            <CFormLabel
+              className="fw-semibold mb-2"
+              style={{
+                color: '#374151',
+              }}
+            >
+              Employee
+            </CFormLabel>
+
+            <CFormSelect
+              name="employee"
+              value={filters.employee}
+              onChange={handleChange}
+              style={{
+                height: '45px',
+                borderRadius: '10px',
+              }}
+            >
+              {/* STRUCTURE A */}
+
+              <option value="">Select Employee</option>
+
+              {employees.map((item) => (
+                <option key={item.employee.id} value={item.employee.id}>
+                  {item.employee.first_name} {item.employee.last_name}
+                </option>
+              ))}
+
+              {/* STRUCTURE B */}
+
+              {filters.structure === '2' && (
+                <>
+                  <option value="Rohit Verma">Rohit Verma</option>
+
+                  <option value="Priya Singh">Priya Singh</option>
+
+                  <option value="Karan Mehta">Karan Mehta</option>
+                </>
+              )}
+            </CFormSelect>
+          </CCol>
+
+          {/* SEARCH */}
+
+          <CCol md={3}>
+            <CButton
+              color="primary"
+              onClick={handleSearch}
+              style={{
+                height: '45px',
+                minWidth: '120px',
+                borderRadius: '10px',
+                fontWeight: '600',
+              }}
+            >
+              Search
+            </CButton>
+          </CCol>
+        </CRow>
+
+        {/* ================= EMPLOYEE INFO ================= */}
+
+        {selectedEmployeeData && (
+          <>
+            <div className="d-flex justify-content-between align-items-start mb-4 flex-wrap">
+              <div>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    color: '#6b7280',
+                    marginBottom: '4px',
+                  }}
+                >
+                  Employee Name
+                </div>
+
+                <h5 className={`fw-bold mb-0 ${highlight ? 'employee-highlight' : ''}`}>
+                  {financialData?.employee_name}
+                </h5>
+              </div>
+
+              <div
+                className="px-3 py-2 rounded-3"
+                style={{
+                  background: '#eef2ff',
+                  color: '#4338ca',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  minWidth: '220px',
+                  textAlign: 'center',
+                }}
+              >
+                Financial Year : {filters.year} - {Number(filters.year) + 1}
+              </div>
+            </div>
+
+            {/* ================= TABLE ================= */}
+
+            <div
+              className={highlight ? 'table-highlight' : ''}
+              style={{
+                borderRadius: '16px',
+                overflow: 'hidden',
+                border: '1px solid #edf1f5',
+                marginBottom: '20px',
+              }}
+            >
+              <CTable
+                hover
+                style={{
+                  width: '100%',
+                  borderCollapse: 'separate',
+                  borderSpacing: 0,
+                  background: '#fff',
+                  tableLayout: 'fixed',
+                  marginBottom: 0,
+                }}
+              >
+                {/* HEADER */}
+
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell
+                      style={{
+                        background: '#f8fafc',
+                        width: '140px',
+                        textAlign: 'center',
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        color: '#374151',
+                        border: '1px solid #edf1f5',
+                        padding: '12px',
+                      }}
+                    >
+                      Salary Component
+                    </CTableHeaderCell>
+
+                    {months.map((m) => {
+                      const isProjected = months.indexOf(m) > currentMonthIndex
+
+                      return (
+                        <CTableHeaderCell
+                          key={m}
+                          // className={isProjected ? 'projected-cell' : ''}
+                          className={isProjected ? 'projected-header' : ''}
+                          style={{
+                            background: '#f8fafc',
+
+                            textAlign: 'center',
+
+                            fontWeight: '600',
+
+                            width: '82px',
+
+                            fontSize: '14px',
+
+                            border: '1px solid #edf1f5',
+
+                            padding: '12px 10px',
+
+                            color: isProjected ? '#9ca3af' : '#111827',
+
+                            opacity: isProjected ? 0.85 : 1,
+                          }}
+                        >
+                          {m}
+                        </CTableHeaderCell>
+                      )
+                    })}
+
+                    <CTableHeaderCell
+                      style={{
+                        background: '#eef2ff',
+                        textAlign: 'center',
+                        fontWeight: '700',
+                        width: '110px',
+                        color: '#4338ca',
+                        border: '1px solid #dbe4ff',
+                        padding: '12px',
+                        fontSize: '14px',
+                      }}
+                    >
+                      Total
+                    </CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+
+                {/* BODY */}
+                <CTableBody>
+                  {salaryRows.map((row, idx) => {
+                    return (
+                      <CTableRow
+                        key={idx}
+                        style={{
+                          // background: row.highlight ? '#f5f7ff' : idx % 2 ? '#fafbfc' : '#fff',
+
+                          background:
+                            row.type === 'gross'
+                              ? '#E8F5E9'
+                              : row.type === 'net'
+                                ? '#E8F0FE'
+                                : '#fff',
+                        }}
+                      >
+                        <CTableDataCell
+                          className="text-center fw-semibold"
+                          style={{
+                            border: '1px solid #edf1f5',
+                            padding: '12px',
+                          }}
+                        >
+                          {row.label}
+                        </CTableDataCell>
+
+                        {months.map((monthName) => {
+                          const monthData = monthLookup[monthName]
+
+                          let value = 0
+
+                          if (monthData) {
+                            if (row.type === 'gross') {
+                              value = monthData.gross_earnings
+                            } else if (row.type === 'deduction') {
+                              value = monthData.total_deductions
+                            } else if (row.type === 'net') {
+                              value = monthData.net_salary
+                            } else {
+                              // const component = monthData.components?.find(
+                              //   (c) => c.code === row.code,
+                              // )
+
+                              // value = component?.amount || 0
+
+                              if (row.rowType === 'addon') {
+                                const addon = monthData.addons?.find((a) => a.code === row.code)
+
+                                value = addon?.amount || 0
+                              } else {
+                                const component = monthData.components?.find(
+                                  (c) => c.code === row.code,
+                                )
+
+                                value = component?.amount || 0
+                              }
+                            }
+                          }
+
+                          const isProjected = monthData?.is_structure_mapped && !monthData?.dispatch
+
+                          const isUnmapped = !monthData?.is_structure_mapped
+
+                          return (
+                            <CTableDataCell
+                              key={monthName}
+                              // className={`text-center ${row.highlight ? 'fw-bold' : ''}`}
+                              className={`text-center ${
+                                row.highlight ? 'fw-bold' : ''
+                              } ${isProjected ? 'projected-cell' : ''}`}
+                              style={{
+                                border: '1px solid #edf1f5',
+                                padding: '12px 10px',
+                                textAlign: 'center',
+                                verticalAlign: 'middle',
+
+                                background: isProjected
+                                  ? '#f3f4f6'
+                                  : row.highlight
+                                    ? '#f5f7ff'
+                                    : '#fff',
+
+                                color: isProjected ? '#9ca3af' : isUnmapped ? '#d1d5db' : '#111827',
+                              }}
+                            >
+                              <span className="financial-amount">
+                                <span
+                                  style={{
+                                    color:
+                                      row.componentType === 'DEDUCTION' ? '#dc2626' : '#16a34a',
+                                    fontWeight: 700,
+                                    marginRight: '2px',
+                                  }}
+                                >
+                                  {row.componentType === 'DEDUCTION' ? '-' : '+'}
+                                </span>
+                                ₹ {Number(value).toFixed(2)}
+                              </span>
+                            </CTableDataCell>
+                          )
+                        })}
+
+                        <CTableDataCell
+                          className="fw-bold text-center"
+                          style={{
+                            border: '1px solid #edf1f5',
+                          }}
+                        >
+                          ₹{' '}
+                          {months
+                            .reduce((sum, monthName) => {
+                              const monthData = monthLookup[monthName]
+
+                              if (!monthData) return sum
+
+                              let value = 0
+
+                              if (row.type === 'gross') {
+                                value = monthData.gross_earnings
+                              } else if (row.type === 'deduction') {
+                                value = monthData.total_deductions
+                              } else if (row.type === 'net') {
+                                value = monthData.net_salary
+                              } else {
+                                // const component = monthData.components?.find(
+                                //   (c) => c.code === row.code,
+                                // )
+
+                                // value = component?.amount || 0
+
+                                const component =
+                                  monthData.components?.find((c) => c.code === row.code) ||
+                                  monthData.addons?.find((a) => a.code === row.code)
+
+                                value = component?.amount || 0
+                              }
+
+                              return sum + Number(value)
+                            }, 0)
+                            .toFixed(2)}
+                        </CTableDataCell>
+                      </CTableRow>
+                    )
+                  })}
+                </CTableBody>
+              </CTable>
+            </div>
+          </>
+        )}
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default FinancialRegister

@@ -1,0 +1,66 @@
+const { EmployeeWorkOrderLeave, Employee, WorkOrder } = require("../../../models");
+const AppError = require("../../../utils/appError");
+const { Op } = require("sequelize");
+
+// GET
+exports.getEmployeeWOLeave = async (queryOptions) => {
+  if (queryOptions.where.employee_id) {
+    queryOptions.where.employee_id = {
+      [Op.in]: queryOptions.where.employee_id,
+    };
+  }
+
+  return await EmployeeWorkOrderLeave.findAll({
+    ...queryOptions,
+    where: {
+      ...queryOptions.where,
+    },
+  });
+};
+
+// POST
+exports.assignEmployeeWOLeave = async (data, transaction) => {
+
+  const { employee_id, wo_id, month, year } = data;
+
+  // Validate employee
+  const employee = await Employee.findByPk(employee_id, { transaction });
+  if (!employee) throw new AppError("Employee not found", 404);
+
+  // Validate work order
+  const workOrder = await WorkOrder.findByPk(wo_id, { transaction });
+  if (!workOrder) throw new AppError("Work Order not found", 404);
+
+  // Prevent duplicate
+  const existing = await EmployeeWorkOrderLeave.findOne({
+    where: {
+      employee_id,
+      wo_id,
+      month,
+      year,
+    },
+    transaction,
+  });
+
+  if (existing) {
+    throw new AppError(
+      "Record already exists for this employee & work order in given month/year",
+      400
+    );
+  }
+
+  return await EmployeeWorkOrderLeave.create(data, { transaction });
+};
+
+exports.updateEmployeeWOLeave = async (leaveId, data, transaction) => {
+  const [updatedRows] = await EmployeeWorkOrderLeave.update(data, {
+    where: { id: leaveId },
+    transaction,
+  });
+
+  if (updatedRows === 0) {
+    throw new Error("Update failed");
+  }
+
+  return await EmployeeWorkOrderLeave.findByPk(leaveId, { transaction });
+};

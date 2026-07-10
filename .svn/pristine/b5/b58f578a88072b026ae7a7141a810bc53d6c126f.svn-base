@@ -1,0 +1,107 @@
+export const initialState = {
+    step: 0,
+
+    skills: [
+        {
+            skill_name: "",
+            experience_years: "",
+            remarks: "",
+        },
+    ],
+
+    health: {
+        blood_group: "",
+        medical_conditions: "",
+        remarks: "",
+    },
+
+    vaccinations: [
+        {
+            vaccine_name: "",
+            vaccination_date: "",
+        },
+    ],
+
+    vehicles: [
+        {
+            vehicle_details: "",
+            vehicle_registration_number: "",
+            registration_issue_date: "",
+            registration_expiry_date: "",
+            vehicle_category: ""
+        }
+    ],
+
+    hobbies: [
+        {
+            hobby: "",
+            remarks: ""
+        }
+    ],
+
+    achievements: [
+        {
+            achievement_date: "",
+            achievement: "",
+            achievement_remarks: ""
+        }
+    ],
+
+    assets: [
+        {
+            asset_name: "",
+            asset_code: "",
+            asset_issue_date: "",
+            quantity_issued: "",
+            should_be_returned: false,
+            remarks: ""
+        }
+    ],
+
+    languages: [
+        {
+            language_name: "",
+            can_read: false,
+            can_write: false,
+            can_speak: false,
+            proficiency: ""
+        }
+    ],
+
+    passport: {
+        passport_number: "",
+        passport_issue_date: "",
+        passport_expiry_date: "",
+        passport_place_of_issue: "",
+        passport_issuing_country: "",
+        passport_type: "",
+        visa_issuing_authority: "",
+        visa_start_date: "",
+        visa_end_date: ""
+    },
+
+    disciplines: [
+        {
+            offence: "",
+            offence_date: "",
+            disciplinary_action: "",
+            remarks: ""
+        }
+    ],
+
+    exams: [
+        {
+            exam_name: "",
+            year: "",
+            result_status: "",
+        },
+    ],
+
+    trainings: [
+        {
+            training_name: "",
+            institute: "",
+            year: "",
+        },
+    ],
+};

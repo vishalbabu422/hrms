@@ -1,0 +1,63 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+
+  const EmpanelmentDesignation = sequelize.define(
+    "EmpanelmentDesignation",
+    {
+      id: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+        primaryKey: true,
+        autoIncrement: true,
+      },
+
+      empanelment_id_fk: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+      },
+
+      type: {
+        type: DataTypes.STRING(100),
+        allowNull: false,
+      },
+
+      designation: {
+        type: DataTypes.STRING(150),
+        allowNull: false,
+      },
+
+      qualification: {
+        type: DataTypes.TEXT,
+        allowNull: false,
+      },
+
+      exp_in_years: {
+        type: DataTypes.DECIMAL(4, 1),
+        allowNull: false,
+      },
+
+      is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
+
+      created: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+
+      modified: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW,
+      },
+    },
+    {
+      schema: "pmu",
+      tableName: "empanelment_designation",
+      timestamps: false, // kyunki tum already created & modified columns use kar rahe ho
+    }
+  );
+
+  module.exports = EmpanelmentDesignation;
+

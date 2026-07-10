@@ -1,0 +1,183 @@
+import React, { useEffect, useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CBadge,
+  CButton,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPlus, cilDescription } from '@coreui/icons'
+import { useParams } from 'react-router-dom'
+import api from '../../api/axios'
+import DeploymentTableModal from '../components/deployment-table-modal'
+import AddEditEmployeeModal from '../components/add-edit-employee-modal'
+
+const EmpDeployment = () => {
+  const { id } = useParams()
+  const [loading, setLoading] = useState(false)
+  const [workOrder, setWorkOrder] = useState({})
+
+  const fetchWorkOrderById = async () => {
+    try {
+      setLoading(true)
+
+      const response = await api.get(
+        `admin/workorder/${id}?models=WoDesgnMappings.Designation%2CWoDesgnMappings.GstCodeMaster%2CWoDesgnMappings.EmployeeWorkOrderDeployments&modelFilter=%7B%7D`,
+      )
+      
+      setWorkOrder(response.data?.data || [])
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to fetch Work Order')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchWorkOrderById()
+  }, [])
+
+  const [selectedDeployment, setSelectedDeployment] = useState(null)
+
+  /* modal state */
+
+  const [addEditVisible, setAddEditVisible] = useState(false)
+  const [tableVisible, setTableVisible] = useState(false)
+
+  const [editEmployee, setEditEmployee] = useState(null)
+
+  const openAddModal = (deploymentId) => {
+    setSelectedDeployment(deploymentId)
+    setEditEmployee(null)
+    setAddEditVisible(true)
+  }
+
+  const openTableModal = (deploymentId) => {
+    setSelectedDeployment(deploymentId)
+    setTableVisible(true)
+  }
+
+  const openEditModal = (deploymentId, employee) => {
+    setSelectedDeployment(deploymentId)
+    setEditEmployee(employee)
+    setAddEditVisible(true)
+  }
+
+  return (
+    <>
+      <h4 className="mb-4 fw-semibold">
+        Employee Deployment - Work Order {workOrder.work_order_no}
+      </h4>
+
+      <CCard className="border rounded-3 shadow-sm">
+        <CCardBody>
+          <CTable hover responsive>
+            <CTableHead style={{ background: '#f5f6f8' }}>
+              <CTableRow>
+                <CTableHeaderCell>Designation</CTableHeaderCell>
+                <CTableHeaderCell>Total</CTableHeaderCell>
+                <CTableHeaderCell>Deployed</CTableHeaderCell>
+                <CTableHeaderCell>Vacant</CTableHeaderCell>
+                <CTableHeaderCell>Action</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {workOrder?.WoDesgnMappings?.map((item) => {
+                // const vacant =
+                //   item?.employees?.length === 0 || item?.employees === NaN ? 0 : item.req_person_count - item?.employees?.length
+
+                const vacant = item.req_person_count
+                const deployed = 0
+                return (
+                  <CTableRow key={item.id}>
+                    <CTableDataCell>{item?.Designation?.designation}</CTableDataCell>
+
+                    <CTableDataCell>
+                      <CBadge
+                        style={{
+                          backgroundColor: item.req_person_count > 0 ? '#f8d7da' : '#d1e7dd',
+                          color: item.req_person_count > 0 ? '#842029' : '#0f5132',
+                        }}
+                      >
+                        {item.req_person_count}
+                      </CBadge>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CBadge
+                        style={{
+                          backgroundColor: deployed > 0 ? '#f8d7da' : '#d1e7dd',
+                          color: deployed > 0 ? '#842029' : '#0f5132',
+                        }}
+                      >
+                        {deployed}
+                      </CBadge>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CBadge
+                        style={{
+                          backgroundColor: vacant > 0 ? '#f8d7da' : '#d1e7dd',
+                          color: vacant > 0 ? '#842029' : '#0f5132',
+                        }}
+                      >
+                        {vacant}
+                      </CBadge>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CButton
+                        size="sm"
+                        variant="ghost"
+                        color="primary"
+                        disabled={vacant === 0}
+                        onClick={() => openAddModal(item.id)}
+                      >
+                        <CIcon icon={cilPlus} />
+                      </CButton>
+
+                      <CButton
+                        size="sm"
+                        variant="ghost"
+                        color="primary"
+                        className="ms-2"
+                        disabled={deployed === 0}
+                        onClick={() => openTableModal(item.id)}
+                      >
+                        <CIcon icon={cilDescription} />
+                      </CButton>
+                    </CTableDataCell>
+                  </CTableRow>
+                )
+              })}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      <AddEditEmployeeModal
+        visible={addEditVisible}
+        setVisible={setAddEditVisible}
+        deployment={selectedDeployment}
+        editEmployee={editEmployee}
+      />
+
+      <DeploymentTableModal
+        visible={tableVisible}
+        setVisible={setTableVisible}
+        deployment={selectedDeployment}
+        onEdit={openEditModal}
+      />
+    </>
+  )
+}
+
+export default EmpDeployment

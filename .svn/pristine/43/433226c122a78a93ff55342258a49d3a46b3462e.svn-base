@@ -1,0 +1,460 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CModal,
+  CModalBody,
+  CModalFooter,
+} from '@coreui/react'
+import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
+
+const SalaryRegister = () => {
+  const [type, setType] = useState('')
+  const [filters, setFilters] = useState({
+    month: '',
+    year: '',
+    structure: '',
+  })
+
+  const cell = {
+    border: '1px solid #000',
+    padding: '6px',
+  }
+
+  const [salaryData, setSalaryData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
+  const [searched, setSearched] = useState(false)
+  const [payslipModal, setPayslipModal] = useState(false)
+  const [dispatchModal, setDispatchModal] = useState(false)
+  const [selectedRow, setSelectedRow] = useState(null)
+  const [txnNo, setTxnNo] = useState('')
+
+  /* ================= LOAD DATA ================= */
+
+  useEffect(() => {
+    const data = JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+    setSalaryData(data)
+  }, [])
+
+  /* ================= HANDLERS ================= */
+
+  const handleTypeChange = (e) => {
+    setType(e.target.value)
+    setFilters({ month: '', year: '', structure: '' })
+    setFilteredData([])
+    setSearched(false)
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSearch = () => {
+    let data = [...salaryData]
+
+    data = data.filter((item) => {
+      return (
+        (!filters.month || Number(item.month) === Number(filters.month)) &&
+        (!filters.year || Number(item.year) === Number(filters.year)) &&
+        (!filters.structure || Number(item.salary_structure_id) === Number(filters.structure))
+      )
+    })
+
+    setFilteredData(data)
+    setSearched(true)
+  }
+
+  /* ================= ACTIONS ================= */
+
+ const handleDispatchSubmit = () => {
+  if (!txnNo) {
+    toast.error('Enter transaction number')
+    return
+  }
+
+  let data = JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+  const updated = data.map((emp) =>
+    emp.id === selectedRow.id
+      ? {
+          ...emp,
+          status: 'DISPATCHED',
+          transaction_no: txnNo,
+        }
+      : emp
+  )
+
+  // save
+  localStorage.setItem('empSalaryStructure', JSON.stringify(updated))
+
+  // 🔥 update UI without reload
+  setSalaryData(updated)
+  setFilteredData(updated)
+
+  // close modal
+  setDispatchModal(false)
+  setTxnNo('')
+
+  // ✅ toast WILL show now
+  toast.success('Dispatched Successfully')
+}
+
+
+  const handlePayslip = (row) => {
+    toast.info(`Payslip generated for ${row.employee_name}`)
+  }
+
+  const handleDownload = (row) => {
+    toast.info(`Downloading payslip for ${row.employee_name}`)
+  }
+
+  /* ================= UI ================= */
+
+ const handleGenerate = () => {
+  if (!selectedRow) return
+
+  let data = JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+  const updated = data.map((emp) =>
+    emp.id === selectedRow.id
+      ? { ...emp, status: 'GENERATED' }
+      : emp
+  )
+
+  // save
+  localStorage.setItem('empSalaryStructure', JSON.stringify(updated))
+
+  // 🔥 update UI WITHOUT reload (better)
+  setSalaryData(updated)
+  setFilteredData(updated)
+
+  // close modal
+  setPayslipModal(false)
+
+  // toast
+  toast.success('Payslip Generated')
+}
+  return (
+    <CCard>
+      <CCardBody>
+        <h5 className="mb-3">Salary Register</h5>
+
+        {/* TYPE */}
+        <CRow className="mb-3">
+          <CCol md={4}>
+            <CFormLabel>Type</CFormLabel>
+            <CFormSelect onChange={handleTypeChange}>
+              <option value="">Select</option>
+              <option value="monthly">Monthly</option>
+              <option value="monthly">Financial</option>
+            </CFormSelect>
+          </CCol>
+        </CRow>
+
+        {/* FILTERS */}
+        {type === 'monthly' && (
+          <CRow className="mb-4">
+            <CCol md={3}>
+              <CFormLabel>Month</CFormLabel>
+              <CFormSelect name="month" onChange={handleChange}>
+                <option value="1">Jan</option>
+                <option value="2">Feb</option>
+                <option value="3">Mar</option>
+                <option value="4">Apr</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3}>
+              <CFormLabel>Year</CFormLabel>
+              <CFormSelect name="year" onChange={handleChange}>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3}>
+              <CFormLabel>Salary Structure</CFormLabel>
+              <CFormSelect name="structure" onChange={handleChange}>
+                <option value="1">Structure A</option>
+                <option value="2">Structure B</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3} className="d-flex align-items-end">
+              <CButton color="primary" onClick={handleSearch}>
+                Search
+              </CButton>
+            </CCol>
+          </CRow>
+        )}
+
+        {/* TABLE */}
+        {type === 'monthly' &&
+          searched &&
+          (filteredData.length === 0 ? (
+            <div className="text-center text-danger">No data found</div>
+          ) : (
+            <CTable bordered hover>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell>Employee</CTableHeaderCell>
+                  <CTableHeaderCell>CTC</CTableHeaderCell>
+                  <CTableHeaderCell>Gross</CTableHeaderCell>
+                  <CTableHeaderCell>Deduction</CTableHeaderCell>
+                  <CTableHeaderCell>Net Pay</CTableHeaderCell>
+                  <CTableHeaderCell>Working Days</CTableHeaderCell>
+                  <CTableHeaderCell>Paid Days</CTableHeaderCell>
+                  <CTableHeaderCell>LOP</CTableHeaderCell>
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                {filteredData.map((item) => (
+                  <CTableRow key={item.id}>
+                    <CTableDataCell>{item.employee_name}</CTableDataCell>
+                    <CTableDataCell>₹ {item.ctc}</CTableDataCell>
+                    <CTableDataCell>₹ {item.gross_earnings}</CTableDataCell>
+                    <CTableDataCell>₹ {item.total_deductions}</CTableDataCell>
+                    <CTableDataCell>₹ {item.net_salary}</CTableDataCell>
+                    <CTableDataCell>{item.working_days}</CTableDataCell>
+                    <CTableDataCell>{item.paid_days}</CTableDataCell>
+                    <CTableDataCell>{item.lop_days}</CTableDataCell>
+                    <CTableDataCell>{item.status || 'PENDING'}</CTableDataCell>
+
+                    <CTableDataCell>
+                      <div className="d-flex gap-2">
+                        {(!item.status || item.status === 'PENDING') && (
+                          <CButton
+                            size="sm"
+                            color="success"
+                            onClick={() => {
+                              setSelectedRow(item)
+                              setDispatchModal(true)
+                            }}
+                          >
+                            Dispatch
+                          </CButton>
+                        )}
+
+                        {item.status === 'DISPATCHED' && (
+                          <CButton
+                            size="sm"
+                            color="info"
+                            onClick={() => {
+                              setSelectedRow(item)
+                              setPayslipModal(true)
+                            }}
+                          >
+                            Generate Payslip
+                          </CButton>
+                        )}
+
+                        {item.status === 'GENERATED' && (
+                          <>
+                            <CButton size="sm" style={{ background: '#6c757d', border: 'none', color: '#fff' }}>
+                              View
+                            </CButton>
+                            <CButton size="sm" style={{ background: '#343a40', border: 'none', color: '#fff' }}>
+                              Download
+                            </CButton>
+                          </>
+                        )}
+                      </div>
+                    </CTableDataCell>
+                  </CTableRow>
+                ))}
+              </CTableBody>
+            </CTable>
+          ))}
+
+        {/* DISPATCH PAYSLIP MODAL */}
+        <CModal visible={dispatchModal} onClose={() => setDispatchModal(false)} size="xl">
+          <CModalBody style={{ padding: '30px', background: '#fff' }}>
+            {/* HEADER */}
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <strong>To,</strong>
+                <br />
+                <strong>{selectedRow?.employee_name}</strong>
+              </div>
+              <div>
+                <strong>Date:</strong> {new Date().toLocaleDateString()}
+              </div>
+            </div>
+
+            <br />
+
+            <p>
+              <strong>Dear {selectedRow?.employee_name},</strong>
+            </p>
+
+            <p>
+              <strong>Sub: Revised Salary Structure</strong>
+            </p>
+
+            <p>We would like to inform you that your revised salary structure is as given below:</p>
+
+            {/* TABLE (MATCHES YOUR PDF) */}
+            <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+              <thead>
+                <tr>
+                  <th colSpan="2" style={cell}>
+                    COST TO THE COMPANY
+                  </th>
+                </tr>
+                <tr>
+                  <th style={cell}>Components</th>
+                  <th style={cell}>Monthly</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr>
+                  <td style={cell}>Basic</td>
+                  <td style={cell}>₹ {Math.round(selectedRow?.ctc * 0.5)}</td>
+                </tr>
+                <tr>
+                  <td style={cell}>HRA</td>
+                  <td style={cell}>₹ {Math.round(selectedRow?.ctc * 0.25)}</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Transport Allowance</td>
+                  <td style={cell}>₹ 1600</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Professional Development Allowance</td>
+                  <td style={cell}>₹ {Math.round(selectedRow?.ctc * 0.1)}</td>
+                </tr>
+                <tr>
+                  <td style={cell}>
+                    <strong>Gross</strong>
+                  </td>
+                  <td style={cell}>
+                    <strong>₹ {selectedRow?.ctc}</strong>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td style={cell}>
+                    <strong>Statutory Benefits</strong>
+                  </td>
+                  <td style={cell}></td>
+                </tr>
+
+                <tr>
+                  <td style={cell}>Company PF Contribution</td>
+                  <td style={cell}>₹ 1800</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Leave Encashment</td>
+                  <td style={cell}>₹ 1675</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Mediclaim Insurance</td>
+                  <td style={cell}>₹ 840</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Accidental Insurance</td>
+                  <td style={cell}>₹ 50</td>
+                </tr>
+                <tr>
+                  <td style={cell}>Gratuity</td>
+                  <td style={cell}>₹ 1111</td>
+                </tr>
+
+                <tr>
+                  <td style={cell}>
+                    <strong>COST TO COMPANY</strong>
+                  </td>
+                  <td style={cell}>
+                    <strong>₹ {selectedRow?.ctc + 5000}</strong>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <br />
+
+            <p style={{ fontSize: '12px' }}>
+              Kindly share your acceptance. If no response, it will be considered accepted.
+            </p>
+
+            <br />
+
+            <p>
+              For Company
+              <br />
+              <strong>Authorized Signatory</strong>
+            </p>
+
+            {/* TRANSACTION */}
+            <div className="mt-3">
+              <label>
+                <strong>Transaction Number</strong>
+              </label>
+              <input
+                className="form-control"
+                value={txnNo}
+                onChange={(e) => setTxnNo(e.target.value)}
+              />
+            </div>
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton color="primary" onClick={handleDispatchSubmit}>
+              Submit
+            </CButton>
+          </CModalFooter>
+        </CModal>
+
+        {/* 🔥 GENERATE PAYSLIP MODAL */}
+        <CModal visible={payslipModal} onClose={() => setPayslipModal(false)} size="lg">
+          <CModalBody style={{ padding: '25px' }}>
+            <h5 className="text-center">Payslip Preview</h5>
+            <hr />
+
+            <p>
+              <strong>Employee:</strong> {selectedRow?.employee_name}
+            </p>
+            <p>
+              <strong>CTC:</strong> ₹ {selectedRow?.ctc}
+            </p>
+            <p>
+              <strong>Net Salary:</strong> ₹ {selectedRow?.net_salary}
+            </p>
+            <p>
+              <strong>Transaction No:</strong> {selectedRow?.transaction_no}
+            </p>
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton color="success" onClick={handleGenerate}>
+              Generate
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default SalaryRegister

@@ -1,0 +1,25 @@
+const express = require("express");
+const router = express.Router();
+const validate = require("../middlewares/validate");
+
+// controllers
+const adminController = require("./../controllers/adminController");
+
+// validation files
+
+// const {
+//   dashboardCountQuerySchema,
+//   dashYearlyReportQuerySchema,
+// } = require("../validators/admin-dashboard.schema");
+
+// Routes
+
+// router.route("/recentlyCreated").get(
+//   //authController.protect,
+//   //authController.restrictTo("Manager/Admin", "System Admin"),
+//   adminDashboardController.getRecentCreatedList
+// );
+
+
+
+module.exports = router;

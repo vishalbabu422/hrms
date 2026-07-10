@@ -1,0 +1,108 @@
+// hooks/leaveCalculation.js
+
+const getMonthName = (monthNum) => {
+  const date = new Date(2000, monthNum - 1, 1)
+  return date.toLocaleString('default', { month: 'short' })
+}
+
+export const getMonthMeta = (monthValue) => {
+  if (!monthValue) return {}
+
+  const [year, monthNum] = monthValue.split('-')
+  const num = Number(monthNum)
+
+  const monthName = new Date(2000, num - 1, 1).toLocaleString('default', {
+    month: 'short',
+  })
+
+  return {
+    year,
+    monthNum: num,
+    monthName,
+  }
+}
+
+export const getPreviousMonthMeta = (year, monthNum) => {
+  let m = Number(monthNum)
+  let y = Number(year)
+
+  if (m === 1) {
+    m = 12
+    y = y - 1
+  } else {
+    m = m - 1
+  }
+
+  return {
+    monthName: getMonthName(m),
+    year: y.toString(),
+  }
+}
+
+export const getMonthRange = (monthValue) => {
+  if (!monthValue) return {}
+
+  const [year, month] = monthValue.split('-').map(Number)
+
+  const start = new Date(year, month - 1, 1)
+  const end = new Date(year, month, 0)
+
+  return {
+    start: start.toISOString().split('T')[0],
+    end: end.toISOString().split('T')[0],
+  }
+}
+
+export const calculateLeave = ({
+  employee,
+  leaveTaken,
+  holidaysWorked,
+  leavePerMonth,
+  carryForward,
+  previousMonthData,
+  selectedMonth,
+}) => {
+  if (!employee || !selectedMonth) return {}
+
+  const [year, monthNum] = selectedMonth.split('-')
+  const selectedMonthName = getMonthName(Number(monthNum))
+
+  const joiningDate = new Date(employee.EmployeeWorkOrderDeployment?.[0]?.joining_date)
+
+  const joiningMonth = joiningDate.toLocaleString('default', {
+    month: 'short',
+  })
+  const joiningYear = joiningDate.getFullYear().toString()
+
+  // Opening
+  let opening = 0
+
+  if (carryForward) {
+    if (joiningMonth === selectedMonthName && joiningYear === year) {
+      opening = 0
+    } else {
+      const prev = previousMonthData?.[employee.id]
+      opening = prev ? Math.max(0, prev.leave_granted) : 0
+    }
+  }
+
+  // Adjusted
+  const adjusted = Number(leavePerMonth || 0)
+
+  // Inputs
+  const taken = Number(leaveTaken || 0)
+  const worked = Number(holidaysWorked || 0)
+
+  // Granted
+  const granted = opening + adjusted + worked - taken
+
+  // Closing
+  const closing = Math.max(0, granted)
+
+  return {
+    opening,
+    adjusted,
+    granted,
+    closing,
+  }
+}

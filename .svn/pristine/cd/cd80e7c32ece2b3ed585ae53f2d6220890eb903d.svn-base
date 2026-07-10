@@ -1,0 +1,67 @@
+import DivisionFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { CSpinner, CCard, CCardBody } from '@coreui/react'
+
+const Edit = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [initialData, setInitialData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await api.get(`/division/${id}`)
+        setInitialData(mapApiToForm(res.data.data))
+      } catch (err) {
+        console.log(err)
+        toast.error('Failed to load Designation')
+        navigate('/division')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [id])
+
+  const mapApiToForm = (data) => ({
+    division_name: data.division_name ?? '',
+    division_code: data.division_code ?? '',
+
+    is_active: Boolean(data.is_active),
+  })
+
+  const handleUpdate = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+    
+      await api.patch(`/division/${id}`, normalizedPayload)
+      toast.success('Divison updated successfully')
+      navigate('/division')
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to update Division')
+    }
+  }
+
+  if (loading) {
+    return (
+      <CCard>
+        <CCardBody className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+          <CSpinner />
+        </CCardBody>
+      </CCard>
+    )
+  }
+
+  return <DivisionFormComponent initialData={initialData} mode="edit" onSubmit={handleUpdate} />
+}
+
+export default Edit

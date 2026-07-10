@@ -1,0 +1,307 @@
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  CCard,
+  CCardHeader,
+  CCardBody,
+  CRow,
+  CCol,
+  CFormSelect,
+  CFormInput,
+  CButton,
+  CAlert,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CBadge,
+} from '@coreui/react'
+
+import './leave.css'
+
+const LeaveRecord = () => {
+  const [workOrder, setWorkOrder] = useState('')
+  const [month, setMonth] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [employeeData, setEmployeeData] = useState({})
+
+  const dropdownRef = useRef(null)
+
+  const workOrderEmployees = {
+    'WO-001': ['John', 'Priya', 'Amit'],
+    'WO-002': ['Rahul', 'Sneha'],
+  }
+
+  const employeesList = workOrder ? workOrderEmployees[workOrder] || [] : []
+
+  const isAllSelected =
+    employeesList.length > 0 && selectedEmployees.length === employeesList.length
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    setSelectedEmployees([])
+  }, [workOrder])
+
+  useEffect(() => {
+    const data = {}
+    selectedEmployees.forEach((emp) => {
+      data[emp] = {
+        leaveTaken: 0,
+        holidaysWorked: 0,
+      }
+    })
+    setEmployeeData(data)
+  }, [selectedEmployees])
+
+  const handleEmployeeToggle = (emp) => {
+    if (selectedEmployees.includes(emp)) {
+      setSelectedEmployees(selectedEmployees.filter((e) => e !== emp))
+    } else {
+      setSelectedEmployees([...selectedEmployees, emp])
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(employeesList)
+    }
+  }
+
+  const handleInputChange = (emp, field, value) => {
+    setEmployeeData((prev) => ({
+      ...prev,
+      [emp]: {
+        ...prev[emp],
+        [field]: value,
+      },
+    }))
+  }
+
+  const showTable = workOrder && month && selectedEmployees.length > 0
+
+  const handleSave = () => {
+    console.log(employeeData)
+    alert('Frontend only — data logged in console')
+  }
+
+  return (
+    <CCard
+      style={{
+        borderRadius: '12px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+      }}
+    >
+      <CCardHeader>
+        <strong>Leave Record</strong>
+      </CCardHeader>
+
+      <CCardBody>
+        {/* Filters */}
+        <CRow className="mb-3">
+          <CCol md={4}>
+            <CFormSelect value={workOrder} onChange={(e) => setWorkOrder(e.target.value)}>
+              <option value="">Select Work Order</option>
+              <option value="WO-001">WO-001</option>
+              <option value="WO-002">WO-002</option>
+            </CFormSelect>
+          </CCol>
+
+          {/* Multi Select */}
+          <CCol md={4}>
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <div
+                className="form-control d-flex flex-wrap gap-1"
+                style={{
+                  minHeight: '40px',
+                  cursor: 'pointer',
+                  borderRadius: '8px',
+                  padding: '6px',
+                }}
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                {selectedEmployees.length === 0 && (
+                  <span style={{ color: '#6c757d' }}>Select Employees</span>
+                )}
+
+                {selectedEmployees.slice(0, 2).map((emp, i) => (
+                  <CBadge color="primary" key={i}>
+                    {emp}
+                  </CBadge>
+                ))}
+
+                {selectedEmployees.length > 2 && (
+                  <CBadge color="secondary">+{selectedEmployees.length - 2} more</CBadge>
+                )}
+              </div>
+
+              {showDropdown && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    background: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '10px',
+                    zIndex: 1000,
+                    marginTop: '6px',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
+                    padding: '12px',
+                  }}
+                >
+                  <div style={{ marginBottom: '8px', fontWeight: '500' }}>
+                    <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />{' '}
+                    Select All
+                  </div>
+
+                  <hr />
+
+                  {employeesList.map((emp, index) => (
+                    <div key={index} style={{ marginBottom: '6px' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployees.includes(emp)}
+                        onChange={() => handleEmployeeToggle(emp)}
+                      />{' '}
+                      {emp}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CCol>
+
+          <CCol md={4}>
+            <CFormSelect value={month} onChange={(e) => setMonth(e.target.value)}>
+              <option value="">Select Month/Year</option>
+              <option>Jan 2026</option>
+              <option>Feb 2026</option>
+            </CFormSelect>
+          </CCol>
+        </CRow>
+
+        {/* Note */}
+        {showTable && (
+          <CAlert color="info">
+            Employee can take <strong>1.5 days</strong> leave per month with carry-forward.
+          </CAlert>
+        )}
+
+        {/* Employee Tables */}
+        {showTable &&
+          selectedEmployees.map((emp) => {
+            const data = employeeData[emp] || {}
+
+            const openingBalance = 0
+            const leaveAdjusted = 1.5
+            const leaveGranted = openingBalance + leaveAdjusted
+
+            const closingBalance =
+              leaveGranted + Number(data.holidaysWorked || 0) - Number(data.leaveTaken || 0)
+
+            return (
+              <div
+                key={emp}
+                style={{
+                  borderRadius: '10px',
+                  padding: '16px',
+                  background: '#fff',
+                  boxShadow: '0 3px 10px rgba(0,0,0,0.06)',
+                  marginBottom: '16px',
+                }}
+              >
+                <h6 style={{ marginBottom: '10px' }}>👤 {emp}</h6>
+
+                <CTable bordered hover>
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>Category</CTableHeaderCell>
+                      <CTableHeaderCell>{month}</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+
+                  <CTableBody>
+                    <CTableRow>
+                      <CTableDataCell>Opening Balance</CTableDataCell>
+                      <CTableDataCell>{openingBalance}</CTableDataCell>
+                    </CTableRow>
+
+                    <CTableRow>
+                      <CTableDataCell>No. of Leave Taken</CTableDataCell>
+                      <CTableDataCell>
+                        <CFormInput
+                          type="number"
+                          value={data.leaveTaken || 0}
+                          onChange={(e) => handleInputChange(emp, 'leaveTaken', e.target.value)}
+                        />
+                      </CTableDataCell>
+                    </CTableRow>
+
+                    <CTableRow>
+                      <CTableDataCell>No. of Holidays Worked</CTableDataCell>
+                      <CTableDataCell>
+                        <CFormInput
+                          type="number"
+                          value={data.holidaysWorked || 0}
+                          onChange={(e) => handleInputChange(emp, 'holidaysWorked', e.target.value)}
+                        />
+                      </CTableDataCell>
+                    </CTableRow>
+
+                    <CTableRow>
+                      <CTableDataCell>Leave Adjusted</CTableDataCell>
+                      <CTableDataCell>{leaveAdjusted}</CTableDataCell>
+                    </CTableRow>
+
+                    <CTableRow>
+                      <CTableDataCell>Leave Granted</CTableDataCell>
+                      <CTableDataCell>{leaveGranted}</CTableDataCell>
+                    </CTableRow>
+
+                    <CTableRow>
+                      <CTableDataCell>
+                        <strong>Closing Balance</strong>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <strong>{closingBalance}</strong>
+                      </CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
+              </div>
+            )
+          })}
+
+        {/* Save */}
+        {showTable && (
+          <div className="text-end mt-3">
+            <CButton
+              color="primary"
+              style={{
+                padding: '8px 20px',
+                borderRadius: '8px',
+              }}
+              onClick={handleSave}
+            >
+              Save
+            </CButton>
+          </div>
+        )}
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default LeaveRecord

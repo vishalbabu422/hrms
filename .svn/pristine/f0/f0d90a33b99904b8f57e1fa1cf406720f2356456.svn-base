@@ -1,0 +1,307 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CFormTextarea,
+  CRow,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import InFormLabel from '../../components/InFormLabel'
+import EmpanelmentSelect from '../components/empanelment-select'
+import VendorSelect from '../components/vendor-select'
+import api from '../../api/axios'
+import { validateWorkOrder } from '../../validations/workOrderValidation'
+
+const WorkOrderFormComponent = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData)
+  const [errors, setErrors] = useState({})
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === '' ? null : name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  useEffect(() => {
+    const fetchVendorDetails = async () => {
+      try {
+        if (formData.vendor_id_fk != null) {
+          const response = await api.get(`/admin/vendor/${formData.vendor_id_fk}`)
+          const vendor = response.data?.data
+          setFormData((prev) => ({
+            ...prev,
+            // issued_to_name: vendor?.vendor_name,
+            issued_to_address: vendor?.address_line1,
+            issued_to_contact: vendor?.contact_person,
+            issued_to_phone: vendor?.contact_phone,
+            issued_to_email: vendor?.contact_email,
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to fetch Vendor:', error)
+      }
+    }
+
+    fetchVendorDetails()
+  }, [formData?.vendor_id_fk])
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
+
+  if (!formData) return null
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    const validationErrors = validateWorkOrder(formData)
+    setErrors(validationErrors)
+
+    if (Object.keys(validationErrors).length) {
+      console.log(validationErrors)
+      return
+    }
+
+    onSubmit(formData)
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardBody>
+            <CForm className="row g-3" onSubmit={handleSubmit}>
+              <CCol md={6}>
+                <EmpanelmentSelect
+                  name="empanelment_id_fk"
+                  value={formData.empanelment_id_fk}
+                  onChange={handleChange}
+                  label={
+                    <>
+                      Empanelment <span className="text-danger">*</span>
+                    </>
+                  }
+                  placeholder="Select Empanelment"
+                  invalid={!!errors.empanelment_id_fk}
+                  feedback={errors.empanelment_id_fk}
+                />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel>
+                  Work Order No <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="work_order_no"
+                  value={formData.work_order_no || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.work_order_no}
+                  feedback={errors.work_order_no}
+                  placeholder="Enter Work Order No"
+                  maxLength={255}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Date <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  type="date"
+                  name="work_order_date"
+                  value={formData.work_order_date || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.work_order_date}
+                  feedback={errors.work_order_date}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Project No <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="project_no"
+                  value={formData.project_no || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.project_no}
+                  feedback={errors.project_no}
+                  placeholder="Enter Project No"
+                  maxLength={255}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>PI No</CFormLabel>
+                <CFormInput
+                  name="pi_number"
+                  placeholder="Enter PI No"
+                  value={formData.pi_number || ''}
+                  onChange={handleChange}
+                  maxLength={255}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Project Name <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="project_name"
+                  value={formData.project_name || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.project_name}
+                  feedback={errors.project_name}
+                  placeholder="Enter Project Name"
+                  maxLength={255}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Status <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active ?? '')}
+                  onChange={handleChange}
+                  invalid={!!errors.is_active}
+                  feedback={errors.is_active}
+                >
+                  <option value="">Select Status</option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </CFormSelect>
+              </CCol>
+              <InFormLabel labelName="Issued To" icon="cilBuilding">
+                <CCol md={12} className="mb-3">
+<VendorSelect
+  name="vendor_id_fk"
+  value={formData?.vendor_id_fk}
+  onChange={handleChange}
+  label="Vendor"
+  placeholder="Select Vendor"
+  colSize={12}
+/>
+                  <CFormLabel>
+                    Name <span className="text-danger">*</span>
+                  </CFormLabel>
+
+                  <CFormInput
+                    name="issued_to_name"
+                    value={formData.issued_to_name || ''}
+                    onChange={handleChange}
+                    invalid={!!errors.issued_to_name}
+                    feedback={errors.issued_to_name}
+                    placeholder="Enter Name"
+                    maxLength={255}
+                  />
+                </CCol>
+
+                <CCol md={12} className="mb-3">
+                  <CFormLabel>Address</CFormLabel>
+                  <CFormTextarea
+                    name="issued_to_address"
+                    placeholder="Enter Address"
+                    value={formData.issued_to_address || ''}
+                    onChange={handleChange}
+                    disabled
+                    required
+                  />
+                </CCol>
+
+                <div className="d-flex gap-3">
+                  <CCol md={6} className="mb-3">
+                    <CFormLabel>Email</CFormLabel>
+                    <CFormInput
+                      type="email"
+                      name="issued_to_email"
+                      placeholder="Enter Email"
+                      value={formData.issued_to_email || ''}
+                      onChange={handleChange}
+                      disabled
+                      required
+                      maxLength={255}
+                    />
+                  </CCol>
+                  <CCol md={6} className="mb-3">
+                    <CFormLabel>Phone</CFormLabel>
+                    <CFormInput
+                      name="issued_to_phone"
+                      placeholder="Enter Phone No"
+                      value={formData.issued_to_phone || ''}
+                      onChange={handleChange}
+                      disabled
+                      required
+                      maxLength={50}
+                      pattern="[0-9]{10,15}"
+                      title="Enter valid phone number"
+                    />
+                  </CCol>
+                </div>
+              </InFormLabel>
+              <InFormLabel labelName="Contact Person" icon="cilUser">
+                <CCol md={12} className="mb-3">
+                  <CFormInput
+                    name="contact_name"
+                    value={formData.contact_name || ''}
+                    onChange={handleChange}
+                    invalid={!!errors.contact_name}
+                    feedback={errors.contact_name}
+                    placeholder="Enter Name"
+                    maxLength={255}
+                  />
+                </CCol>
+                <div className="d-flex gap-3">
+                  <CCol md={6} className="mb-3">
+                    <CFormInput
+                      name="contact_email"
+                      value={formData.contact_email || ''}
+                      onChange={handleChange}
+                      invalid={!!errors.contact_email}
+                      feedback={errors.contact_email}
+                      placeholder="Enter Email"
+                    />
+                  </CCol>
+                  <CCol md={6} className="mb-3">
+                    <CFormInput
+                      name="contact_number"
+                      value={formData.contact_number || ''}
+                      onChange={handleChange}
+                      invalid={!!errors.contact_number}
+                      feedback={errors.contact_number}
+                      placeholder="Enter Phone No"
+                    />
+                  </CCol>
+                </div>
+              </InFormLabel>
+
+              <CCol md={12}>
+                <CButton type="submit" className="btn btn-primary">
+                  {mode === 'edit' ? 'Update' : 'Create'}
+                </CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default WorkOrderFormComponent

@@ -1,0 +1,46 @@
+import EmpSalaryStructureForm from './form-component'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = (payload) => {
+    try {
+      // 🔹 Get existing data
+      const existing = JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+      // 🔹 payload = array of selected employees
+      const newItems = payload.map((item) => ({
+        ...item,
+        id: Date.now() + Math.random(), // unique id
+        is_active: true,
+      }))
+
+      // 🔹 Merge old + new
+      const updatedData = [...existing, ...newItems]
+
+      // 🔹 Save
+      localStorage.setItem('empSalaryStructure', JSON.stringify(updatedData))
+
+      // 🔹 Success + redirect
+      toast.success('Created successfully')
+      navigate('/emp-salary-structure')
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to create')
+    }
+  }
+
+  const initialData = {
+    employee_id: '',
+    salary_structure_id: '',
+    ctc: '',
+    effective_from: '',
+    is_active: true,
+  }
+
+  return <EmpSalaryStructureForm initialData={initialData} mode="create" onSubmit={handleSubmit} />
+}
+
+export default Add

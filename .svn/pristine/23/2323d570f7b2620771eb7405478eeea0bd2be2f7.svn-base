@@ -1,0 +1,64 @@
+import api from "../api/axios";
+
+/**
+ * Get all documents of an employee
+ */
+export const getEmployeeDocuments = (employeeId) => {
+    return api.get(`/employee/${employeeId}/documents`);
+};
+
+
+/**
+ * Get single document metadata
+ */
+export const getEmployeeDocument = (employeeId, documentId) => {
+    return api.get(`/employee/${employeeId}/documents/${documentId}`);
+};
+
+
+/**
+ * Upload employee document
+ */
+export const uploadEmployeeDocument = (employeeId, formData) => {
+    return api.post(
+        `/employee/${employeeId}/documents`,
+        formData,
+        {
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+};
+
+
+/**
+ * Update document metadata
+ */
+export const updateEmployeeDocument = (employeeId, documentId, data) => {
+    return api.put(
+        `/employee/${employeeId}/documents/${documentId}`,
+        data
+    );
+};
+
+
+/**
+ * Soft delete document
+ */
+export const deleteEmployeeDocument = (employeeId, documentId) => {
+    return api.delete(`/employee/${employeeId}/documents/${documentId}`);
+};
+
+
+/**
+ * Download document
+ */
+export const downloadEmployeeDocument = (employeeId, documentId) => {
+    return api.get(
+        `/employee/${employeeId}/documents/${documentId}/download`,
+        {
+            responseType: "blob"
+        }
+    );
+};

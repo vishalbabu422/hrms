@@ -1,0 +1,26 @@
+const router = require("express").Router({ mergeParams: true });
+
+const controller = require("./employeeSalaryStructure.controller");
+
+const { protect, restrictTo,checkPermission } = require("../../../middlewares/authMiddleware");
+
+const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
+
+router.use(protect);
+
+router
+  .route("/")
+  .get(restrictTo(...ROLES), checkPermission("EMP_SAL_STRUCT.READ"), controller.getEmployeeSalaryStructures)
+  .post(restrictTo(...ROLES), checkPermission("EMP_SAL_STRUCT.CREATE"), controller.createEmployeeSalaryStructure);
+
+router
+  .route("/:id")
+  .get(restrictTo(...ROLES), checkPermission("EMP_SAL_STRUCT.READ"), controller.getEmployeeSalaryStructureById)
+  .patch(restrictTo(...ROLES),  checkPermission("EMP_SAL_STRUCT.UPDATE"), controller.updateEmployeeSalaryStructure)
+  .delete(restrictTo(...ROLES),  checkPermission("EMP_SAL_STRUCT.DELETE"), controller.deleteEmployeeSalaryStructure);
+
+router
+  .route("/:id/workorder/:wo_id")
+  .get(restrictTo(...ROLES), checkPermission("EMP_SAL_STRUCT.READ"), controller.getEmployeeSalaryStructureByWorkOrder);
+
+module.exports = router;

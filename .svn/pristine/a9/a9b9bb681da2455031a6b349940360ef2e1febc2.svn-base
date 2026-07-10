@@ -1,0 +1,292 @@
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CBadge,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CFormLabel,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPlus, cilDescription, cilPencil, cilTrash } from '@coreui/icons'
+import { useParams } from 'react-router-dom'
+
+const EmpDeployment = () => {
+  const { id } = useParams()
+
+  const employeeOptions = [
+    { id: 1, name: 'Riddhi', email: 'rk@gmail.com', contact: '9999999999' },
+    { id: 2, name: 'Vinay', email: 'vinay@gmail.com', contact: '8888888888' },
+    { id: 3, name: 'Ravi', email: 'ravi@gmail.com', contact: '7777777777' },
+  ]
+
+  const [deployments, setDeployments] = useState([
+    { id: 101, designation: 'Engineer', totalPositions: 5, employees: [] },
+    { id: 102, designation: 'Developer', totalPositions: 3, employees: [] },
+  ])
+
+  const [visible, setVisible] = useState(false)
+  const [viewModal, setViewModal] = useState(false)
+  const [selectedDeployment, setSelectedDeployment] = useState(null)
+  const [formData, setFormData] = useState(null)
+  const [editMode, setEditMode] = useState(false)
+
+  const openAddModal = (deployment) => {
+    setSelectedDeployment(deployment)
+    setFormData(null)
+    setEditMode(false)
+    setVisible(true)
+  }
+
+  const openEditModal = (deployment, emp) => {
+    setSelectedDeployment(deployment)
+    setFormData(emp)
+    setEditMode(true)
+    setVisible(true)
+  }
+
+  const handleSave = () => {
+    if (!formData) return
+
+    const updated = deployments.map((item) => {
+      if (item.id === selectedDeployment.id) {
+        if (editMode) {
+          return {
+            ...item,
+            employees: item.employees.map((emp) => (emp.id === formData.id ? formData : emp)),
+          }
+        } else {
+          const exists = item.employees.some((emp) => emp.id === formData.id)
+          if (exists) {
+            alert('Employee already deployed')
+            return item
+          }
+
+          return {
+            ...item,
+            employees: [...item.employees, formData],
+          }
+        }
+      }
+      return item
+    })
+
+    setDeployments(updated)
+    setVisible(false)
+  }
+
+  const handleDelete = (deploymentId, empId) => {
+  const updated = deployments.map((item) => {
+    if (item.id === deploymentId) {
+      return {
+        ...item,
+        employees: item.employees.filter((emp) => emp.id !== empId),
+      }
+    }
+    return item
+  })
+
+  setDeployments(updated)
+
+  // 🔥 IMPORTANT: also update selectedDeployment
+  const updatedSelected = updated.find((item) => item.id === deploymentId)
+  setSelectedDeployment(updatedSelected)
+}
+
+  return (
+    <>
+      <h4 className="mb-4 fw-semibold">Employee Deployment - Work Order {id}</h4>
+
+      <CCard className="border rounded-3 shadow-sm">
+        <CCardBody>
+          <CTable hover responsive>
+            <CTableHead style={{ background: '#f5f6f8' }}>
+              <CTableRow>
+                <CTableHeaderCell>Designation</CTableHeaderCell>
+                <CTableHeaderCell>Vacant</CTableHeaderCell>
+                <CTableHeaderCell>Action</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {deployments.map((item) => {
+                const vacant = item.totalPositions - item.employees.length
+
+                return (
+                  <CTableRow key={item.id}>
+                    <CTableDataCell>
+                      {item.designation} ({item.totalPositions})
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CBadge
+                        style={{
+                          backgroundColor: vacant > 0 ? '#f8d7da' : '#d1e7dd',
+                          color: vacant > 0 ? '#842029' : '#0f5132',
+                        }}
+                      >
+                        {vacant}
+                      </CBadge>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CButton
+                        size="sm"
+                        variant="ghost"
+                        color="primary"
+                        disabled={vacant === 0}
+                        onClick={() => openAddModal(item)}
+                      >
+                        <CIcon icon={cilPlus} />
+                      </CButton>
+
+                      <CButton
+                        size="sm"
+                        variant="ghost"
+                        color="primary"
+                        className="ms-2"
+                        onClick={() => {
+                          setSelectedDeployment(item)
+                          setViewModal(true)
+                        }}
+                      >
+                        <CIcon icon={cilDescription} />
+                      </CButton>
+                    </CTableDataCell>
+                  </CTableRow>
+                )
+              })}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      {/* Add/Edit Modal */}
+      <CModal visible={visible} onClose={() => setVisible(false)} alignment="center">
+        <CModalHeader>
+          <CModalTitle>{editMode ? 'Edit Employee' : 'Add Employee'}</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CFormSelect
+            label="Employee Name "
+            value={formData?.id || ''}
+            disabled={editMode}
+            onChange={(e) => {
+              const emp = employeeOptions.find((x) => x.id === Number(e.target.value))
+              setFormData({
+                ...emp,
+                joining: '',
+                relieving: '',
+              })
+            }}
+          >
+            <option value="">Select Employee</option>
+            {employeeOptions.map((emp) => (
+              <option key={emp.id} value={emp.id}>
+                {emp.name}
+              </option>
+            ))}
+          </CFormSelect>
+          <CFormLabel className="mt-2">Email</CFormLabel>
+          <CFormInput value={formData?.email || ''} disabled={editMode} />
+
+          <CFormLabel className="mt-2">Contact</CFormLabel>
+          <CFormInput value={formData?.contact || ''} disabled={editMode} />
+
+         <CFormInput
+  type="date"
+  label="Joining Date"
+  className="mt-2"
+  value={formData?.joining || ''}
+  disabled={editMode}   // disable only in edit mode
+  onChange={(e) =>
+    setFormData({ ...formData, joining: e.target.value })
+  }
+/>
+
+          <CFormLabel className="mt-2">Relieving Date</CFormLabel>
+          <CFormInput
+            type="date"
+            value={formData?.relieving || ''}
+            onChange={(e) => setFormData({ ...formData, relieving: e.target.value })}
+          />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="primary" onClick={handleSave}>
+            Save
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* View Modal */}
+      <CModal visible={viewModal} onClose={() => setViewModal(false)} size="lg">
+        <CModalHeader>
+          <CModalTitle>Deployed Employees</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CTable bordered hover>
+            <CTableHead>
+              <CTableRow>
+                <CTableHeaderCell>Name</CTableHeaderCell>
+                <CTableHeaderCell>Email</CTableHeaderCell>
+                <CTableHeaderCell>Contact</CTableHeaderCell>
+                <CTableHeaderCell>Joining</CTableHeaderCell>
+                <CTableHeaderCell>Relieving</CTableHeaderCell>
+                <CTableHeaderCell>Action</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {selectedDeployment?.employees.map((emp) => (
+                <CTableRow key={emp.id}>
+                  <CTableDataCell>{emp.name}</CTableDataCell>
+                  <CTableDataCell>{emp.email}</CTableDataCell>
+                  <CTableDataCell>{emp.contact}</CTableDataCell>
+                  <CTableDataCell>{emp.joining}</CTableDataCell>
+                  <CTableDataCell>{emp.relieving}</CTableDataCell>
+                  <CTableDataCell>
+                    <CButton
+                      size="sm"
+                      variant="ghost"
+                      color="primary"
+                      onClick={() => openEditModal(selectedDeployment, emp)}
+                    >
+                      <CIcon icon={cilPencil} />
+                    </CButton>
+
+                    <CButton
+                      size="sm"
+                      variant="ghost"
+                      color="primary"
+                      className="ms-2"
+                      onClick={() => handleDelete(selectedDeployment.id, emp.id)}
+                    >
+                      <CIcon icon={cilTrash} />
+                    </CButton>
+                  </CTableDataCell>
+                </CTableRow>
+              ))}
+            </CTableBody>
+          </CTable>
+        </CModalBody>
+      </CModal>
+    </>
+  )
+}
+
+export default EmpDeployment

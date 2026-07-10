@@ -1,0 +1,243 @@
+import {
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CPagination,
+  CPaginationItem,
+  CTooltip,
+  CButton,
+} from '@coreui/react'
+
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilPlus, cilDescription } from '@coreui/icons'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import SortableHeaderCell from '../components/sort-table-header'
+import PageHeader from '../components/form-header'
+
+const Index = () => {
+  const [sort, setSort] = useState({
+    key: 'employee_code',
+    order: 'asc',
+  })
+
+  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
+
+  const handleSort = (key) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+        : { key, order: 'asc' },
+    )
+  }
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 15
+
+    doc.setFontSize(14)
+    doc.text('Employee List', 10, 10)
+
+    const data = [
+      {
+        employee_code: 'EMP-1015',
+        full_name: 'Rahul Verma',
+        email: 'rahul@pmu.in',
+        contact_no: '9812345678',
+        status: 'Active',
+        hr_verified: 'Verified',
+        onboarded_on: '05 Feb 2025',
+      },
+    ]
+
+    data.forEach((emp, index) => {
+      doc.text(`${index + 1}. ${emp.employee_code} - ${emp.full_name} - ${emp.email}`, 10, y)
+      y += 8
+    })
+
+    doc.save('employee-list.pdf')
+  }
+
+  const handleExportExcel = () => {
+    const data = [
+      {
+        'Sr No': 1,
+        'Emp Code': 'EMP-1015',
+        'Full Name': 'Rahul Verma',
+        Email: 'rahul@pmu.in',
+        Contact: '9812345678',
+        Status: 'Active',
+        'HR Verified': 'Verified',
+        'Onboarded On': '05 Feb 2025',
+      },
+    ]
+
+    const worksheet = XLSX.utils.json_to_sheet(data)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'employee-list.xlsx')
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+       
+        <PageHeader
+          title="Employee Listing"
+          searchValue={search}
+          onSearchChange={setSearch}
+          onAddClick={() => navigate('/hrm/add')}
+          addLabel="Add Employee"
+          showExport
+          onExportPDF={handleExportPDF}
+          onExportExcel={handleExportExcel}
+        />
+
+        <CCard className="shadow border-0 rounded-4">
+          <CCardBody>
+            <CTable striped hover responsive>
+              <CTableHead>
+                <CTableRow>
+                  <SortableHeaderCell label="S.No" sortKey="id" sort={sort} onSort={handleSort} />
+
+                  <SortableHeaderCell
+                    label="Emp Code"
+                    sortKey="employee_code"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Full Name"
+                    sortKey="full_name"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Email"
+                    sortKey="email"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Contact"
+                    sortKey="contact_no"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Status"
+                    sortKey="status"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="HR Verified"
+                    sortKey="hr_verified"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Onboarded On"
+                    sortKey="onboarded_on"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                <CTableRow>
+                  <CTableDataCell>1</CTableDataCell>
+                  <CTableDataCell>EMP-1015</CTableDataCell>
+                  <CTableDataCell>Rahul Verma</CTableDataCell>
+                  <CTableDataCell>rahul@pmu.in</CTableDataCell>
+                  <CTableDataCell>9812345678</CTableDataCell>
+                  <CTableDataCell>Active</CTableDataCell>
+                  <CTableDataCell>Verified</CTableDataCell>
+                  <CTableDataCell>05 Feb 2025</CTableDataCell>
+
+                  <CTableDataCell>
+                    <div className="d-flex gap-2">
+                      <CTooltip content="Edit">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                      </CTooltip>
+
+                      <CTooltip content="Add Additional Details">
+                        <CButton
+                          color="primary"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigate('/hrm/more-details')}
+                        >
+                          <CIcon icon={cilPlus} />
+                        </CButton>
+                      </CTooltip>
+
+                      <CTooltip content="View">
+                        <CButton
+                          color="info"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigate('/hrm/preview')}
+                        >
+                          <CIcon icon={cilDescription} />
+                        </CButton>
+                      </CTooltip>
+
+                      <CTooltip content="Delete">
+                        <CButton color="danger" size="sm" variant="ghost">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTooltip>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              </CTableBody>
+            </CTable>
+
+            <CPagination className="justify-content-end mt-3">
+              <CPaginationItem disabled>&laquo;</CPaginationItem>
+              <CPaginationItem active>1</CPaginationItem>
+              <CPaginationItem disabled>&raquo;</CPaginationItem>
+            </CPagination>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default Index

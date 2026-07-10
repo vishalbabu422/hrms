@@ -1,0 +1,79 @@
+import WorkOrderFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+
+const edit = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [initialData, setInitialData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchResourceData = async () => {
+      try {
+        const res = await api.get(`/admin/workorder/${id}`)
+        const mapped = mapApiToForm(res.data.data)
+        setInitialData(mapped)
+      } catch (err) {
+        console.log(err)
+        console.log('error here')
+        toast.error('Failed to load Work Order')
+        navigate('/work-order')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchResourceData()
+  }, [id])
+
+  const mapApiToForm = (data) => ({
+    empanelment_id_fk: data.empanelment_id_fk ?? '',
+    work_order_no: data.work_order_no ?? '',
+    work_order_date: data.work_order_date ?? null,
+    project_no: data.project_no ?? '',
+    pi_number: data.pi_number ?? '',
+    project_name: data.project_name ?? '',
+    vendor_id_fk: data.vendor_id_fk ?? '',
+    issued_to_name: data.issued_to_name ?? '',
+    issued_to_address: data.issued_to_address ?? '',
+    issued_to_contact: data.issued_to_contact ?? '',
+    issued_to_phone: data.issued_to_phone ?? '',
+    issued_to_email: data.issued_to_email ?? '',
+
+    contact_name: data.contact_name ?? '',
+    contact_number: data.contact_number ?? '',
+    contact_email: data.contact_email ?? '',
+
+    total_amt: data.total_amt ?? 0,
+    total_cgst_amt: data.total_cgst_amt ?? 0,
+    total_sgst_amt: data.total_sgst_amt ?? 0,
+    total_igst_amt: data.total_igst_amt ?? 0,
+    grand_total: data.grand_total ?? 0,
+
+    doc_path: data.doc_path ?? '',
+    remarks: data.remarks ?? '',
+    is_active: data?.is_active !== undefined ? Boolean(data.is_active) : true,
+  })
+
+  const handleUpdate = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+      await api.patch(`/admin/workorder/edit/${id}`, normalizedPayload)
+      toast.success('Work Order updated successfully')
+      navigate('/work-order')
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to update Work Order')
+    }
+  }
+
+  return <WorkOrderFormComponent initialData={initialData} mode="edit" onSubmit={handleUpdate} />
+}
+
+export default edit

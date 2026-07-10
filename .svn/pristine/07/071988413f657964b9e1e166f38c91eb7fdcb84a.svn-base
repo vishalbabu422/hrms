@@ -1,0 +1,394 @@
+import React, { useState, useEffect } from 'react'
+import api from '../../../api/axios'
+
+const BasicInfo = () => {
+  const [step, setStep] = useState(0)
+  const [designations, setDesignations] = useState([])
+  const [divisions, setDivisions] = useState([])
+
+  const [employeeDetails, setEmployeeDetails] = useState({
+    // DB fields
+    employee_code: '',
+    attendance_code: '',
+    password_hash: '',
+
+    salutation: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+
+    email: '',
+    contact_no: '',
+
+    date_of_joining: '',
+    probation_end_date: '',
+    confirmation_date: '',
+    date_of_exit: '',
+    notice_period_days: '',
+
+    // keep your existing UI fields (for future APIs)
+    employeeType: '',
+    designation: '',
+    division: '',
+    modeOfWorking: '',
+    stateOfWorking: '',
+    employeeCategory: '',
+
+    dateOfBirth: '',
+    fathersName: '',
+    mothersName: '',
+    maritalStatus: '',
+    gender: '',
+
+    relievingDate: '',
+    gazetted: false,
+  })
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+
+    setEmployeeDetails({
+      ...employeeDetails,
+      [name]: type === 'checkbox' ? checked : value,
+    })
+  }
+
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [divisionResponse, designationResponse] = await Promise.all([
+          api.get('/division?fields=id%2Cdivision_name'),
+          api.get('/designation?fields=id%2Cdesignation_name'),
+        ])
+
+        setDivisions(divisionResponse.data.data || [])
+        setDesignations(designationResponse.data.data || [])
+      } catch (error) {
+        console.error('Failed to fetch dropdown data:', error)
+      }
+    }
+
+    fetchDropdownData()
+  }, [])
+
+  return (
+    <>
+      {step === 0 && (
+        <div className="step-content">
+          <div className="row g-3">
+            <div className="col-md-2">
+              <label className="form-label">Salutation</label>
+              <select
+                className="form-select"
+                name="salutation"
+                value={employeeDetails.salutation}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Mr">Mr</option>
+                <option value="Ms">Ms</option>
+                <option value="Mrs">Mrs</option>
+                <option value="Dr">Dr</option>
+              </select>
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">First Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="first_name"
+                value={employeeDetails.first_name}
+                onChange={handleChange}
+                maxLength={50}
+                required
+              />
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Middle Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="middleName"
+                value={employeeDetails.middleName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Last Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="lastName"
+                value={employeeDetails.lastName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Employee Type</label>
+              <select
+                className="form-select"
+                name="employeeType"
+                value={employeeDetails.employeeType}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Payroll">Payroll</option>
+                <option value="Contractual">Contractual</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Designation</label>
+              <select
+                className="form-select"
+                name="designation"
+                value={employeeDetails.designation}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                {designations.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.designation_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Division</label>
+              <select
+                className="form-select"
+                name="division"
+                value={employeeDetails.division}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                {divisions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.division_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Mode of Working</label>
+              <select
+                className="form-select"
+                name="modeOfWorking"
+                value={employeeDetails.modeOfWorking}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Office">Office</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Work From Home">Work From Home</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">State of Working</label>
+              <select
+                className="form-select"
+                name="stateOfWorking"
+                value={employeeDetails.stateOfWorking}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Delhi">Delhi</option>
+                <option value="Haryana">Haryana</option>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Employee Category</label>
+              <select
+                className="form-select"
+                name="employeeCategory"
+                value={employeeDetails.employeeCategory}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Skilled">Skilled</option>
+                <option value="Semi Skilled">Semi Skilled</option>
+                <option value="Unskilled">Unskilled</option>
+                <option value="Technical">Technical</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Email Address</label>
+              <input
+                type="email"
+                className="form-control"
+                name="emailAddress"
+                value={employeeDetails.emailAddress}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Contact No</label>
+              <input
+                type="tel"
+                className="form-control"
+                name="contactNo"
+                value={employeeDetails.contactNo}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Date of Birth</label>
+              <input
+                type="date"
+                className="form-control"
+                name="dateOfBirth"
+                value={employeeDetails.dateOfBirth}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Fathers Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="fathersName"
+                value={employeeDetails.fathersName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Mothers Name</label>
+              <input
+                type="text"
+                className="form-control"
+                name="mothersName"
+                value={employeeDetails.mothersName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Marital Status</label>
+              <select
+                className="form-select"
+                name="maritalStatus"
+                value={employeeDetails.maritalStatus}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Separated">Separated</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Gender</label>
+              <select
+                className="form-select"
+                name="gender"
+                value={employeeDetails.gender}
+                onChange={handleChange}
+              >
+                <option value="">Select</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Date Of Joining</label>
+              <input
+                type="date"
+                className="form-control"
+                name="dateOfJoining"
+                value={employeeDetails.dateOfJoining}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Probation End Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="probationEndDate"
+                value={employeeDetails.probationEndDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Confirmation Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="confirmationDate"
+                value={employeeDetails.confirmationDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Resignation Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="resignationDate"
+                value={employeeDetails.resignationDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Relieving Date</label>
+              <input
+                type="date"
+                className="form-control"
+                name="relievingDate"
+                value={employeeDetails.relievingDate}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Notice Period (Days)</label>
+              <input
+                type="number"
+                className="form-control"
+                name="noticePeriodDays"
+                value={employeeDetails.noticePeriodDays}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-6 d-flex align-items-center">
+              <div className="form-check mt-4">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  name="gazetted"
+                  checked={employeeDetails.gazetted}
+                  onChange={handleChange}
+                />
+                <label className="form-check-label">Gazetted</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export default BasicInfo

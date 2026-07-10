@@ -1,0 +1,12 @@
+const catchAsync = require("../../utils/catchAsync");
+const modulesService = require("./module.service");
+
+exports.getAllModules = catchAsync(async (req, res) => {
+  const data = await modulesService.getAllModules(req.query);
+
+  res.status(200).json({
+    status: "success",
+    results: data.length,
+    data: data
+  });
+});

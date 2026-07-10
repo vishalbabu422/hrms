@@ -1,0 +1,171 @@
+const AppError = require("../utils/appError");
+const catchAsync = require("../utils/catchAsync");
+const { verifyToken } = require("../utils/jwt");
+const { Employee, RoleMaster, Permission } = require("../models");
+
+exports.protect = catchAsync(async (req, res, next) => {
+  //1) Getting token and check of its exist
+  //console.log(req.headers.authorization);
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
+
+  if (!token) {
+    return next(
+      new AppError("You are not logged in! Please login to get access!", 401)
+    );
+  }
+
+  //2) Verification token
+  let decoded;
+
+  try {
+    decoded = verifyToken(token);
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      return next(new AppError("Token expired", 401));
+    }
+    if (err.name === "JsonWebTokenError") {
+      return next(new AppError("Invalid token", 401));
+    }
+  }
+
+  //3) Check if user still exists
+  const currentUser = await Employee.findByPk(decoded.id, {
+    include: [{
+      model: RoleMaster,
+      include: [{
+        model: Permission,
+        through: { attributes: [] }
+      }]
+    }]
+  });
+
+  if (!currentUser) {
+    return next(
+      new AppError("User no longer exists.", 401)
+    );
+  }
+
+  // Extract roles
+  const roles = currentUser.RoleMasters || [];
+
+  // Extract permissions
+  const permissions = [];
+  roles.forEach(role => {
+    role.Permissions.forEach(p => {
+      permissions.push(p.permission_key);
+    });
+  });
+
+  // Check if any role is super admin
+  const isSuperAdmin = roles.some(r => r.is_super_admin);
+
+  //Grant Access to protected route
+  req.user = currentUser;
+  res.locals.user = currentUser;
+  req.userRoles = roles.map(r => r.role_code);
+  req.userPermissions = [...new Set(permissions)];
+  req.isSuperAdmin = isSuperAdmin;
+
+  next();
+});
+
+exports.restrictTo = (...allowedRoles) => {
+  return (req, res, next) => {
+
+    const userRoles = req.userRoles || [];
+
+    const hasRole = userRoles.some(role =>
+      allowedRoles.includes(role)
+    );
+
+    if (!hasRole) {
+      return next(
+        new AppError("You don't have permission", 403)
+      );
+    }
+
+    next();
+  };
+};
+
+exports.checkPermission = (permissionKey) => {
+  return (req, res, next) => {
+
+    if (req.isSuperAdmin) {
+      return next();
+    }
+
+    const permissions = req.userPermissions || [];
+
+    if (!permissions.includes(permissionKey)) {
+      return next(new AppError("Permission denied", 403));
+    }
+
+    next();
+  };
+};
+
+exports.checkOrgScope = (getOrgIdFromRequest) => {
+  return (req, res, next) => {
+
+    if (req.isSuperAdmin) {
+      return next();
+    }
+
+    if (typeof getOrgIdFromRequest !== "function") {
+      return next(new AppError("Org resolver function missing", 500));
+    }
+
+    const targetOrgId = getOrgIdFromRequest(req);
+
+    if (!targetOrgId) {
+      return next(new AppError("Organization ID required", 400));
+    }
+
+    if (Number(req.user.organization_id) !== Number(targetOrgId)) {
+      return next(new AppError("Access denied for this organization", 403));
+    }
+
+    next();
+  };
+};
+
+exports.checkEmployeeOrgScope = async (req, res, next) => {
+  if (req.isSuperAdmin) return next();
+
+  const { employeeId } = req.params;
+
+  const employee = await Employee.findByPk(employeeId, {
+    attributes: ["id", "organization_id"]
+  });
+
+  if (!employee) {
+    return next(new AppError("Employee not found", 404));
+  }
+
+  if (Number(employee.organization_id) !== Number(req.user.organization_id)) {
+    return next(new AppError("Access denied for this organization", 403));
+  }
+
+  req.employee = employee;
+
+  next();
+};
+
+exports.injectOrgScope = () => {
+  return (req, res, next) => {
+    if (req.isSuperAdmin) return next();
+
+    req.orgScopeFilter = {
+      organization_id: req.user.organization_id
+    };
+
+    next();
+  };
+};

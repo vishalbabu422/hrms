@@ -1,0 +1,76 @@
+import { CCol, CFormLabel } from '@coreui/react'
+import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import Select from 'react-select'
+import api from '../../api/axios'
+import './OrganizationSelect.css'
+
+
+
+const OrganizationSelect = ({
+  name = 'organization_id',
+  value = '',
+  onChange,
+  label = 'Organisation',
+  placeholder = 'Select Organisation',
+  disabled = false,
+  colSize = 12,
+}) => {
+  const [orgList, setOrgList] = useState([])
+  const user = useSelector((state) => state.auth.user)
+
+  useEffect(() => {
+    const fetchOrg = async () => {
+      try {
+        const response = await api.get('/admin/organization/index', {
+          params: {
+            fields: 'id,org_name',
+          },
+        })
+
+        setOrgList(response?.data?.data?.organizationList || [])
+      } catch (error) {
+        console.error('Failed to fetch Organisation:', error)
+      }
+    }
+
+    fetchOrg()
+  }, [])
+
+  if (!user?.isSuperAdmin) return null
+
+  const options = orgList.map((item) => ({
+    value: item.id,
+    label: item.org_name,
+  }))
+
+
+return (
+    <CCol md={colSize}>
+      <CFormLabel>{label}</CFormLabel> 
+
+      <Select
+        name={name}
+        options={options}
+        placeholder={placeholder}
+        isSearchable
+        isClearable
+        isDisabled={disabled}
+        classNamePrefix="react-select"
+        value={
+          options.find((option) => String(option.value) === String(value)) || null
+        }
+        onChange={(selected) =>
+          onChange({
+            target: {
+              name,
+              value: selected ? selected.value : '',
+            },
+          })
+        }
+      />
+    </CCol>
+  )
+}
+
+export default OrganizationSelect

@@ -1,0 +1,100 @@
+import { CCard, CCardBody, CNav, CNavItem, CNavLink } from '@coreui/react'
+import { useState, useEffect } from 'react'
+import MonthlyRegister from './MonthlyRegister'
+import FinancialRegister from './FinancialRegister'
+
+const SalaryRegister = () => {
+  const [activeTab, setActiveTab] = useState('monthly')
+
+  // ✅ ADD THIS
+  const [salaryData, setSalaryData] = useState([])
+
+  // ✅ DUMMY DATA
+  useEffect(() => {
+    const dummyData = [
+      {
+        id: 1,
+        employee_name: 'Amit Sharma',
+        month: 1,
+        net_salary: 40000,
+        gross_earnings: 45000,
+        total_deductions: 5000,
+        status: 'Generated',
+      },
+      {
+        id: 2,
+        employee_name: 'Amit Sharma',
+        month: 2,
+        net_salary: 42000,
+        gross_earnings: 47000,
+        total_deductions: 5000,
+        status: 'Generated',
+      },
+      {
+        id: 3,
+        employee_name: 'Neha Verma',
+        month: 1,
+        net_salary: 48000,
+        gross_earnings: 55000,
+        total_deductions: 7000,
+        status: 'Generated',
+      },
+      {
+        id: 4,
+        employee_name: 'Neha Verma',
+        month: 2,
+        net_salary: 50000,
+        gross_earnings: 58000,
+        total_deductions: 8000,
+        status: 'Generated',
+      },
+    ]
+
+    setSalaryData(dummyData)
+  }, [])
+
+  return (
+    <CCard>
+      <CCardBody>
+        <h5 className="mb-3">Salary Register</h5>
+
+        {/* TABS */}
+        <CNav variant="tabs" className="mb-3">
+          <CNavItem>
+            <CNavLink
+              active={activeTab === 'monthly'}
+              onClick={() => setActiveTab('monthly')}
+              style={{ cursor: 'pointer' }}
+            >
+              Monthly
+            </CNavLink>
+          </CNavItem>
+
+          <CNavItem>
+            <CNavLink
+              active={activeTab === 'financial'}
+              onClick={() => setActiveTab('financial')}
+              style={{ cursor: 'pointer' }}
+            >
+              Financial Year
+            </CNavLink>
+          </CNavItem>
+        </CNav>
+
+        {/* CONTENT */}
+        {activeTab === 'monthly' && (
+          <MonthlyRegister
+            data={salaryData}
+            setSalaryData={setSalaryData}
+          />
+        )}
+
+        {activeTab === 'financial' && (
+          <FinancialRegister data={salaryData} />
+        )}
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default SalaryRegister

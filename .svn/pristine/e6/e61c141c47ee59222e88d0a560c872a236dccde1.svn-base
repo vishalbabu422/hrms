@@ -1,0 +1,272 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+} from '@coreui/react'
+import { useState } from 'react'
+
+const EmpSalaryStructureForm = ({ onSubmit }) => {
+  const [selectedGroup, setSelectedGroup] = useState('')
+  const [selectedStructure, setSelectedStructure] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState({})
+  const [selectAll, setSelectAll] = useState(false)
+  const [globalDate, setGlobalDate] = useState('')
+
+  const employees = [
+    { id: 1, name: 'Shrikant' },
+    { id: 2, name: 'Vishal' },
+    { id: 3, name: 'Akansha' },
+    { id: 4, name: 'Saurabh' },
+  ]
+
+  const show = selectedGroup && selectedStructure
+
+  /* ================= HANDLERS ================= */
+
+  const handleCheckbox = (id) => {
+    const updated = {
+      ...selectedEmployees,
+      [id]: {
+        ...selectedEmployees[id],
+        checked: !selectedEmployees[id]?.checked,
+      },
+    }
+
+    setSelectedEmployees(updated)
+
+    const allSelected = employees.every(
+      (emp) => updated[emp.id]?.checked
+    )
+    setSelectAll(allSelected)
+  }
+
+  const handleSelectAll = () => {
+    const newValue = !selectAll
+    setSelectAll(newValue)
+
+    const updated = {}
+    employees.forEach((emp) => {
+      updated[emp.id] = {
+        ...selectedEmployees[emp.id],
+        checked: newValue,
+      }
+    })
+
+    setSelectedEmployees(updated)
+  }
+
+  const handleChange = (id, field, value) => {
+    setSelectedEmployees((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleApplyDateToSelected = () => {
+    if (!globalDate) {
+      alert('Please select a date first')
+      return
+    }
+
+    const updated = { ...selectedEmployees }
+
+    employees.forEach((emp) => {
+      if (updated[emp.id]?.checked) {
+        updated[emp.id].effective_from = globalDate
+      }
+    })
+
+    setSelectedEmployees(updated)
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    const finalData = Object.entries(selectedEmployees)
+      .filter(([_, v]) => v.checked)
+      .map(([id, v]) => ({
+        employee_id: Number(id),
+        ctc: v.value,
+        effective_from: v.effective_from,
+      }))
+
+    onSubmit(finalData)
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CForm onSubmit={handleSubmit}>
+      <CRow>
+
+        {/* TOP FILTER */}
+        <CCol md={12}>
+          <CCard className="mb-3">
+            <CCardBody>
+              <CRow>
+                <CCol md={6}>
+                  <CFormLabel>Emp Group</CFormLabel>
+                  <CFormSelect onChange={(e) => setSelectedGroup(e.target.value)}>
+                    <option value="">Select</option>
+                    <option value="org">Organisation</option>
+                    <option value="work">Work Order</option>
+                  </CFormSelect>
+                </CCol>
+
+                <CCol md={6}>
+                  <CFormLabel>Salary Structure</CFormLabel>
+                  <CFormSelect onChange={(e) => setSelectedStructure(e.target.value)}>
+                    <option value="">Select</option>
+                    <option value="1">Structure A</option>
+                    <option value="2">Structure B</option>
+                  </CFormSelect>
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* TABLE */}
+        {show && (
+          <CCol md={12}>
+            <CCard>
+              <CCardBody>
+
+                {/* APPLY DATE */}
+                <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
+                  <span>Effective Date:</span>
+
+                  <CFormInput
+                    type="date"
+                    value={globalDate}
+                    onChange={(e) => setGlobalDate(e.target.value)}
+                    style={{ width: '180px' }}
+                  />
+
+                  <CButton
+                    size="sm"
+                    color="primary"
+                    onClick={handleApplyDateToSelected}
+                  >
+                    Apply to Selected
+                  </CButton>
+                </div>
+
+                {/* TABLE */}
+                <table className="table table-bordered align-middle">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50px' }} className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectAll}
+                          onChange={handleSelectAll}
+                        />
+                      </th>
+                      <th>Employee Name</th>
+                      <th style={{ width: '260px' }}>CTC</th>
+                      <th style={{ width: '220px' }}>Effective From</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {employees.map((emp) => {
+                      const selected = selectedEmployees[emp.id] || {}
+
+                      return (
+                        <tr
+                          key={emp.id}
+                          style={{
+                            background: selected.checked
+                              ? '#e7f1ff'
+                              : 'transparent',
+                          }}
+                        >
+                          {/* CHECKBOX */}
+                          <td className="text-center">
+                            <input
+                              type="checkbox"
+                              checked={!!selected.checked}
+                              onChange={() => handleCheckbox(emp.id)}
+                            />
+                          </td>
+
+                          {/* NAME */}
+                          <td>{emp.name}</td>
+
+                          {/* CTC */}
+                          <td>
+                            <div
+                              className="input-group"
+                              style={{ maxWidth: '220px' }}
+                            >
+                              <span className="input-group-text">₹</span>
+                              <CFormInput
+                                type="number"
+                                placeholder="Enter CTC"
+                                value={selected.value || ''}
+                                readOnly={!selected.checked}
+                                style={{
+                                  backgroundColor: '#fff',
+                                  cursor: selected.checked ? 'text' : 'not-allowed',
+                                }}
+                                onChange={(e) =>
+                                  handleChange(emp.id, 'value', e.target.value)
+                                }
+                              />
+                            </div>
+                          </td>
+
+                          {/* DATE */}
+                          <td>
+                            <CFormInput
+                              type="date"
+                              value={selected.effective_from || ''}
+                              readOnly={!selected.checked}
+                              style={{
+                                maxWidth: '180px',
+                                backgroundColor: '#fff',
+                                cursor: selected.checked ? 'pointer' : 'not-allowed',
+                              }}
+                              onChange={(e) =>
+                                handleChange(
+                                  emp.id,
+                                  'effective_from',
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+
+                {/* SAVE */}
+                <div className="text-end mt-3">
+                  <CButton color="primary">
+                    Save
+                  </CButton>
+                </div>
+
+              </CCardBody>
+            </CCard>
+          </CCol>
+        )}
+
+      </CRow>
+    </CForm>
+  )
+}
+
+export default EmpSalaryStructureForm

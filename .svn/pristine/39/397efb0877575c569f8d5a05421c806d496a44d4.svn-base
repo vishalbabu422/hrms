@@ -1,0 +1,59 @@
+const Employee = require("./employee");
+const EmployeeRefreshToken = require("./employeeRefreshToken");
+const RoleMaster = require("./roleMaster");
+const EmployeeRole = require("./employeeRole");
+const EmployeeAchievement = require("./employeeAchievement");
+const EmployeeAddress = require("./employeeAddress");
+const EmployeeAsset = require("./employeeAsset");
+const EmployeeBankDetail = require("./employeeBankDetail");
+const EmployeeDetail = require("./employeeDetail");
+const EmployeeDiscipline = require("./employeeDiscipline");
+const EmployeeExperience = require("./employeeExperience");
+const EmployeeFamilyMember = require("./employeeFamilyMember");
+const EmployeeHealth = require("./employeeHealth");
+const EmployeeHobby = require("./employeeHobbie");
+const EmployeeInsurance = require("./employeeInsurance");
+const EmployeeLanguage = require("./employeeLanguage");
+const EmployeePassportVisaDetail = require("./employeePassportVisaDetail");
+const EmployeeQualification = require("./employeeQualification");
+const EmployeeScreeningTest = require("./employeeScreeningTest");
+const EmployeeSkill = require("./employeeSkill");
+const EmployeeVaccination = require("./employeeVaccination");
+const EmployeeVehicle = require("./employeeVehicle");
+
+
+// Put all models inside object
+const models = {
+    Employee,
+    EmployeeRefreshToken,
+    RoleMaster,
+    EmployeeRole,
+    EmployeeAchievement,
+    EmployeeAddress,
+    EmployeeAsset,
+    EmployeeBankDetail,
+    EmployeeDetail,
+    EmployeeDiscipline,
+    EmployeeExperience,
+    EmployeeFamilyMember,
+    EmployeeHealth,
+    EmployeeHobby,
+    EmployeeInsurance,
+    EmployeeLanguage,
+    EmployeePassportVisaDetail,
+    EmployeeQualification,
+    EmployeeScreeningTest,
+    EmployeeSkill,
+    EmployeeVaccination,
+    EmployeeVehicle
+};
+
+
+// Run associate method if exists
+Object.keys(models).forEach(modelName => {
+    if (models[modelName].associate) {
+        models[modelName].associate(models);
+    }
+});
+
+module.exports = models;

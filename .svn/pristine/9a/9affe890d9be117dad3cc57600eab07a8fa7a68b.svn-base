@@ -1,0 +1,432 @@
+const { Op } = require("sequelize");
+
+const {
+  EmployeeSalaryRegister,
+  EmployeeSalaryRegisterSnapshot,
+  Employee,
+  EmpSalaryStructure,
+  SalaryStructureComponent,
+  SalaryComponent,
+} = require("../../../models");
+
+const AppError = require("../../../utils/appError");
+
+// helper
+const getMonthName = (month) => {
+  return new Date(2025, month - 1, 1).toLocaleString(
+    "en-US",
+    {
+      month: "long",
+    }
+  );
+};
+
+exports.generateFinancialSalary = async (data) => {
+
+  const { employee_id, year } = data;
+
+  // ================================
+  // EMPLOYEE CHECK
+  // ================================
+
+  const employee = await Employee.findOne({
+    where: {
+      id: employee_id,
+      is_deleted: false,
+    },
+
+    attributes: [
+      "id",
+      "first_name",
+      "middle_name",
+      "last_name",
+    ],
+  });
+
+  if (!employee) {
+    throw new AppError("Employee not found", 404);
+  }
+
+  const employee_name = [
+    employee.first_name,
+    employee.middle_name,
+    employee.last_name,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  // ============================================
+  // 1️⃣ CHECK EXISTING MONTHLY SALARY REGISTER
+  // ============================================
+
+  const existingRegisters =
+    await EmployeeSalaryRegister.findAll({
+      where: {
+        employee_id,
+        year,
+        is_deleted: false,
+      },
+
+      order: [["month", "ASC"]],
+    });
+
+  // ============================================
+  // IF SALARY REGISTER EXISTS
+  // ============================================
+
+  if (existingRegisters.length) {
+
+    let totalGross = 0;
+    let totalDeduction = 0;
+    let totalNet = 0;
+
+    const monthlySalary = [];
+
+    for (const register of existingRegisters) {
+
+      const snapshots =
+        await EmployeeSalaryRegisterSnapshot.findAll({
+          where: {
+            employee_salary_register_id:
+              register.id,
+
+            is_deleted: false,
+          },
+
+          order: [["id", "ASC"]],
+        });
+
+      const components = snapshots.map((item) => ({
+        component_id: item.salary_component_id,
+
+        name: item.component_name,
+
+        type: item.component_type,
+
+        amount: Number(item.final_amount || 0),
+
+        source_type: item.source_type,
+      }));
+
+      totalGross += Number(
+        register.gross_earnings || 0
+      );
+
+      totalDeduction += Number(
+        register.total_deductions || 0
+      );
+
+      totalNet += Number(
+        register.net_salary || 0
+      );
+
+      monthlySalary.push({
+        register_id: register.id,
+
+        month: register.month,
+
+        month_name: getMonthName(
+          register.month
+        ),
+
+        gross_earnings: Number(
+          register.gross_earnings || 0
+        ),
+
+        total_deductions: Number(
+          register.total_deductions || 0
+        ),
+
+        net_salary: Number(
+          register.net_salary || 0
+        ),
+
+        status: register.status,
+
+        transaction_number:
+          register.transaction_number,
+
+        transaction_date:
+          register.transaction_date,
+
+        components,
+      });
+    }
+
+    return {
+      is_existing: true,
+
+      employee_id,
+
+      employee_name,
+
+      year,
+
+      total_gross_earnings: totalGross,
+
+      total_deductions: totalDeduction,
+
+      total_net_salary: totalNet,
+
+      monthly_salary: monthlySalary,
+    };
+  }
+
+  // ============================================
+  // 2️⃣ NO REGISTER FOUND
+  // CALCULATE FROM SALARY STRUCTURE
+  // ============================================
+
+  let totalGross = 0;
+
+  let totalDeduction = 0;
+
+  const monthlySalary = [];
+
+  // ============================================
+  // LOOP ALL 12 MONTHS
+  // ============================================
+
+  for (let month = 1; month <= 12; month++) {
+
+    const currentDate =
+      new Date(year, month - 1, 1);
+
+    // ============================================
+    // FIND ACTIVE SALARY STRUCTURE
+    // ============================================
+
+    const empSalary =
+      await EmpSalaryStructure.findOne({
+        where: {
+          employee_id,
+
+          is_deleted: false,
+
+          is_active: true,
+
+          effective_from: {
+            [Op.lte]: currentDate,
+          },
+
+          [Op.or]: [
+            {
+              effective_to: {
+                [Op.gte]: currentDate,
+              },
+            },
+            {
+              effective_to: null,
+            },
+          ],
+        },
+
+        order: [["effective_from", "DESC"]],
+      });
+
+    // skip month if no structure
+    if (!empSalary) {
+      continue;
+    }
+
+    const monthlyCTC =
+      Number(empSalary.ctc || 0) / 12;
+
+    // ============================================
+    // GET STRUCTURE COMPONENTS
+    // ============================================
+
+    const structureComponents =
+      await SalaryStructureComponent.findAll({
+        where: {
+          salary_structure_id:
+            empSalary.salary_structure_id,
+
+          is_deleted: false,
+        },
+
+        include: [
+          {
+            model: SalaryComponent,
+            as: "salaryComponent",
+          },
+        ],
+
+        order: [
+          ["calculation_priority", "ASC"],
+          [
+            {
+              model: SalaryComponent,
+              as: "salaryComponent",
+            },
+            "calculation_priority",
+            "ASC",
+          ],
+        ],
+      });
+
+    if (!structureComponents.length) {
+      continue;
+    }
+
+    let gross = 0;
+
+    let deduction = 0;
+
+    const componentValues = {};
+
+    const components = [];
+
+    // ============================================
+    // COMPONENT CALCULATION LOOP
+    // ============================================
+
+    for (const item of structureComponents) {
+
+      const comp = item.salaryComponent;
+
+      if (!comp) continue;
+
+      const value_type =
+        item.value_type || comp.value_type;
+
+      let amount = 0;
+
+      // ============================================
+      // FIXED
+      // ============================================
+
+      if (value_type === "FIXED") {
+
+        amount = Number(
+          item.amount ?? comp.amount ?? 0
+        );
+      }
+
+      // ============================================
+      // PERCENTAGE
+      // ============================================
+
+      if (value_type === "PERCENTAGE") {
+
+        const percentage = Number(
+          item.percentage ??
+          comp.percentage ??
+          0
+        );
+
+        // BASE = CTC
+        if (comp.base_type === "CTC") {
+
+          amount =
+            (percentage / 100) *
+            monthlyCTC;
+        }
+
+        // BASE = COMPONENT
+        if (comp.base_type === "COMPONENT") {
+
+          const baseVal =
+            componentValues[
+              comp.base_component_id
+            ];
+
+          if (baseVal === undefined) {
+            throw new AppError(
+              `Base component not calculated for ${comp.name}`,
+              400
+            );
+          }
+
+          amount =
+            (percentage / 100) *
+            baseVal;
+        }
+      }
+
+      // store calculated value
+      componentValues[comp.id] = amount;
+
+      // earning / deduction
+      if (comp.type === "EARNING") {
+        gross += amount;
+      } else {
+        deduction += amount;
+      }
+
+      components.push({
+        component_id: comp.id,
+
+        name: comp.name,
+
+        code: comp.code,
+
+        type: comp.type,
+
+        amount,
+      });
+    }
+
+    const net = gross - deduction;
+
+    totalGross += gross;
+
+    totalDeduction += deduction;
+
+    // ============================================
+    // MONTHLY RESPONSE
+    // ============================================
+
+    monthlySalary.push({
+      month,
+
+      month_name: getMonthName(month),
+
+      structure_id:
+        empSalary.salary_structure_id,
+
+      yearly_ctc: Number(empSalary.ctc),
+
+      monthly_ctc: monthlyCTC,
+
+      effective_from:
+        empSalary.effective_from,
+
+      effective_to:
+        empSalary.effective_to,
+
+      gross_earnings: gross,
+
+      total_deductions: deduction,
+
+      net_salary: net,
+
+      components,
+    });
+  }
+
+  // ============================================
+  // FINAL TOTALS
+  // ============================================
+
+  const totalNet =
+    totalGross - totalDeduction;
+
+  return {
+    is_existing: false,
+
+    employee_id,
+
+    employee_name,
+
+    year,
+
+    total_gross_earnings: totalGross,
+
+    total_deductions: totalDeduction,
+
+    total_net_salary: totalNet,
+
+    monthly_salary: monthlySalary,
+  };
+};

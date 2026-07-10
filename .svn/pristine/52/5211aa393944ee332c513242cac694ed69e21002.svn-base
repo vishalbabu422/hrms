@@ -1,0 +1,1968 @@
+import React, { useState } from 'react'
+import profileImage from '../../assets/images/profile-image.png'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CTabContent,
+  CTabPane,
+  CButton,
+  CImage,
+  CListGroup,
+  CListGroupItem,
+  CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import {
+  cilUser,
+  cilLockLocked,
+  cilCalendar,
+  cilClipboard,
+  cilStar,
+  cilMedicalCross,
+  cilPuzzle,
+  cilBadge,
+  cilDevices,
+  cilGlobeAlt,
+  cilContact,
+  cilBalanceScale,
+  cilLocationPin,
+  cilBuilding,
+  cilEducation,
+  cilBank,
+  cilShieldAlt,
+  cilBriefcase,
+  cilFile,
+  cilCloudDownload,
+  cilMap,
+} from '@coreui/icons'
+
+const EmployeeProfile = () => {
+  const [mainTab, setMainTab] = useState('basic')
+  const [sideTab, setSideTab] = useState('basic')
+
+  const qualificationData = [
+    {
+      id: 1,
+      type: 'Degree',
+      name: 'B.Tech',
+      specialization: 'Computer Science',
+      institute: 'Delhi University',
+      year: '2018',
+      percentage: '82%',
+      document: '/documents/btech_certificate.pdf',
+    },
+    {
+      id: 2,
+      type: 'Post Graduation',
+      name: 'M.Tech',
+      specialization: 'Software Engineering',
+      institute: 'IIT Delhi',
+      year: '2021',
+      percentage: '88%',
+      document: '/documents/mtech_certificate.pdf',
+    },
+  ]
+
+  const experienceData = [
+    {
+      id: 1,
+      company: 'Infosys Ltd.',
+      designation: 'Software Engineer',
+      from: 'Jan 2020',
+      to: 'Dec 2023',
+      total: '3 Years',
+      document: '/documents/experience_infosys.pdf',
+    },
+    {
+      id: 2,
+      company: 'TCS',
+      designation: 'Senior Developer',
+      from: 'Jan 2024',
+      to: 'Present',
+      total: '2 Years',
+      document: '/documents/experience_tcs.pdf',
+    },
+  ]
+
+  const languageData = [
+    {
+      id: 1,
+      language_name: 'English',
+      can_read: true,
+      can_write: true,
+      can_speak: true,
+      proficiency: 'Fluent',
+    },
+    {
+      id: 2,
+      language_name: 'Hindi',
+      can_read: true,
+      can_write: true,
+      can_speak: true,
+      proficiency: 'Native',
+    },
+    {
+      id: 3,
+      language_name: 'French',
+      can_read: true,
+      can_write: false,
+      can_speak: true,
+      proficiency: 'Intermediate',
+    },
+  ]
+
+  const achievementData = [
+    {
+      id: 1,
+      date: '15 Aug 2023',
+      achievement: 'Employee of the Year',
+      status: 'Active',
+      remarks: 'Recognized for outstanding leadership and performance.',
+    },
+    {
+      id: 2,
+      date: '10 Jan 2022',
+      achievement: 'Best Innovation Award',
+      status: 'Inctive',
+      remarks: 'Awarded for process automation development.',
+    },
+  ]
+
+  const skillsData = [
+    {
+      id: 1,
+      skill_name: 'React',
+      experience: 3,
+      remarks: 'Worked on enterprise dashboards',
+    },
+    {
+      id: 2,
+      skill_name: 'Java',
+      experience: 2.5,
+      remarks: 'Backend API development',
+    },
+  ]
+
+  const employee = {
+    salutation: 'Ms',
+    firstName: 'Naina',
+    middleName: 'Catherine',
+    lastName: 'Kapoor',
+    employeeType: 'Full Time',
+    designation: 'Software Developer',
+    division: 'IT',
+    modeOfWorking: 'Hybrid',
+    stateOfWorking: 'Delhi',
+    category: 'Regular',
+    email: 'naina@example.com',
+    contact: '9876543210',
+    dob: '14 July 1995',
+    fatherName: 'Rajesh Kumar',
+    motherName: 'Sunita Kumar',
+    maritalStatus: 'Married',
+    gender: 'Female',
+    joiningDate: '10 Jan 2024',
+    probationEnd: '10 Apr 2024',
+    confirmationDate: '10 Apr 2024',
+    resignationDate: '-',
+    relievingDate: '-',
+    noticePeriod: '30',
+    gazetted: false,
+  }
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <CContainer>
+        <CCard className="shadow-sm border-0">
+          <CCardBody>
+            {/* ================= HEADER ================= */}
+            <CRow className="align-items-center mb-4 pt-4">
+              <CCol md={8} className="d-flex align-items-center gap-3">
+                <CImage
+                  src={profileImage}
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: '12px', objectFit: 'cover' }}
+                />
+                <div>
+                  <h4 className="mb-1 fw-bold">Naina Catherine Kapoor</h4>
+                  <div className="text-muted">naina.s@example.com</div>
+                </div>
+              </CCol>
+            </CRow>
+
+            <CRow>
+              {/* ================= SIDE NAV ================= */}
+              <CCol md={2}>
+                <CCard className="border-0 shadow-sm">
+                  <CListGroup flush>
+                    {[
+                      { key: 'basic', label: 'Basic Details' },
+                      { key: 'skills', label: 'Skills' },
+                      { key: 'health', label: 'Health' },
+                      { key: 'vehicle', label: 'Vehicle' },
+                      { key: 'hobbies', label: 'Hobbies' },
+                      { key: 'achievements', label: 'Achievements' },
+                      { key: 'assets', label: 'Assets' },
+                      { key: 'languages', label: 'Languages' },
+                      { key: 'passport', label: 'Passport' },
+                      { key: 'discipline', label: 'Discipline' },
+                    ].map((item) => (
+                      <CListGroupItem
+                        key={item.key}
+                        active={sideTab === item.key}
+                        onClick={() => setSideTab(item.key)}
+                        className="d-flex align-items-center gap-2"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <CIcon icon={item.icon} />
+                        {item.label}
+                      </CListGroupItem>
+                    ))}
+                  </CListGroup>
+                </CCard>
+              </CCol>
+
+              {/* ================= CENTER CONTENT ================= */}
+              {sideTab === 'basic' && (
+                <CCol md={10}>
+                  <CCard className="border-0 shadow-sm">
+                    {/* ================= TOP NAV ================= */}
+                    <CCardHeader className="bg-white border-0">
+                      <CNav variant="tabs">
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'basic'}
+                            onClick={() => setMainTab('basic')}
+                          >
+                            <CIcon icon={cilUser} className="me-2" />
+                            Basic Details
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'address'}
+                            onClick={() => setMainTab('address')}
+                          >
+                            <CIcon icon={cilLocationPin} className="me-2 " />
+                            Address
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'office'}
+                            onClick={() => setMainTab('office')}
+                          >
+                            <CIcon icon={cilBuilding} className="me-2" />
+                            Office
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'qualification'}
+                            onClick={() => setMainTab('qualification')}
+                          >
+                            <CIcon icon={cilEducation} className="me-2" />
+                            Qualification
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink active={mainTab === 'bank'} onClick={() => setMainTab('bank')}>
+                            <CIcon icon={cilBank} className="me-2" />
+                            Bank Details
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'insurance'}
+                            onClick={() => setMainTab('insurance')}
+                          >
+                            <CIcon icon={cilShieldAlt} className="me-2" />
+                            Insurance
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'screening'}
+                            onClick={() => setMainTab('screening')}
+                          >
+                            <CIcon icon={cilClipboard} className="me-2" />
+                            Screening Test
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'experience'}
+                            onClick={() => setMainTab('experience')}
+                          >
+                            <CIcon icon={cilBriefcase} className="me-2" />
+                            Experience
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink active={mainTab === 'ltc'} onClick={() => setMainTab('ltc')}>
+                            <CIcon icon={cilMap} className="me-2" />
+                            LTC
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'documents'}
+                            onClick={() => setMainTab('documents')}
+                          >
+                            <CIcon icon={cilFile} className="me-2" />
+                            Documents
+                          </CNavLink>
+                        </CNavItem>
+                      </CNav>
+                    </CCardHeader>
+
+                    <CCardBody style={{ minHeight: '400px' }}>
+                      {mainTab === 'basic' && (
+                        <div className="row g-4">
+                          {/* LEFT COLUMN */}
+                          <div className="col-md-6">
+                            <div className="mb-4">
+                              <small className="text-muted">Salutation</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.salutation || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">First Name</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.firstName || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Middle Name</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.middleName || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Employee Type</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.employeeType || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Division</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.division || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">State of Working</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.stateOfWorking || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Email Address</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.email || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Date of Birth</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.dob || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Mother's Name</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.motherName || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Gender</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.gender || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Probation End Date</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.probationEnd || '-'}
+                              </div>
+                            </div>
+                            <div className="mb-4">
+                              <small className="text-muted">Relieving Date</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.relievingDate || '-'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* RIGHT COLUMN */}
+                          <div className="col-md-6">
+                            <div className="mb-4">
+                              <small className="text-muted">Last Name</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.lastName || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Designation</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.designation || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Mode of Working</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.modeOfWorking || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Employee Category</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.category || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Contact No</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.contact || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Father's Name</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.fatherName || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Marital Status</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.maritalStatus || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Date Of Joining</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.joiningDate || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Confirmation Date</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.confirmationDate || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Resignation Date</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.resignationDate || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Notice Period (Days)</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.noticePeriod || '-'}
+                              </div>
+                            </div>
+
+                            <div className="mb-4">
+                              <small className="text-muted">Gazetted</small>
+                              <div className="fw-semibold border-bottom pb-2">
+                                {employee.gazetted ? 'Yes' : 'No'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'address' && (
+                        <div className="row g-4">
+                          {/* OFFICE ADDRESS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Correspondence Address
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  <div className="col-12">
+                                    <small className="text-muted">Address</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeAddress || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Landmark</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeLandmark || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">City</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeCity || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">District</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeDistrict || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">State</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeState || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Country</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeCountry || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Pincode</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officePincode || '-'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+
+                          {/* CLIENT OFFICE ADDRESS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Permanent Address
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  <div className="col-12">
+                                    <small className="text-muted">Address</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientAddress || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Landmark</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientLandmark || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">City</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientCity || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">District</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientDistrict || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">State</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientState || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Country</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientCountry || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Pincode</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientPincode || '-'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'office' && (
+                        <div className="row g-4">
+                          {/* OFFICE ADDRESS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Office Address
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  <div className="col-12">
+                                    <small className="text-muted">Address</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeAddress || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Landmark</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeLandmark || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">City</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeCity || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">District</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeDistrict || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">State</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeState || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Country</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officeCountry || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Pincode</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.officePincode || '-'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+
+                          {/* CLIENT OFFICE ADDRESS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Client Office Address
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  <div className="col-12">
+                                    <small className="text-muted">Address</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientAddress || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Landmark</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientLandmark || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">City</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientCity || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">District</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientDistrict || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">State</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientState || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Country</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientCountry || '-'}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-md-3">
+                                    <small className="text-muted">Pincode</small>
+                                    <div className="fw-semibold border-bottom pb-2">
+                                      {employee.clientPincode || '-'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+                        </div>
+                      )}
+                      {mainTab === 'qualification' && (
+                        <div className="mt-2">
+                          <CAccordion alwaysOpen>
+                            {qualificationData.map((item, index) => (
+                              <CAccordionItem
+                                itemKey={index}
+                                key={item.id}
+                                className="mb-3 border rounded-3 shadow-sm"
+                              >
+                                {/* ===== Accordion Header ===== */}
+                                <CAccordionHeader>
+                                  <div className="fw-bold">
+                                    {item.name || '-'} – {item.institute || '-'}
+                                  </div>
+                                </CAccordionHeader>
+
+                                {/* ===== Accordion Body ===== */}
+                                <CAccordionBody>
+                                  <div className="row g-4">
+                                    {/* LEFT COLUMN */}
+                                    <div className="col-md-6">
+                                      <div className="mb-4">
+                                        <small className="text-muted">Qualification Type</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.type || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Specialization</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.specialization || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Board / University</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.board || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Grade</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.grade || '-'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* RIGHT COLUMN */}
+                                    <div className="col-md-6">
+                                      <div className="mb-4">
+                                        <small className="text-muted">Qualification Name</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.name || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Institute Name</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.institute || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Year of Passing</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.year || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Percentage (%)</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.percentage || '-'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* DOCUMENT DOWNLOAD */}
+                                    <div className="col-12 mb-5">
+                                      <div className="d-flex justify-content-between align-items-center ">
+                                        <div>
+                                          <small className="text-muted">Certificate</small>
+                                          <div className="fw-semibold">
+                                            {item.documentName || 'No document uploaded'}
+                                          </div>
+                                        </div>
+
+                                        {item.document && (
+                                          <CButton
+                                            size="sm"
+                                            variant="outline"
+                                            href={item.document}
+                                            download
+                                          >
+                                            <CIcon icon={cilCloudDownload} />
+                                          </CButton>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CAccordionBody>
+                              </CAccordionItem>
+                            ))}
+                          </CAccordion>
+                        </div>
+                      )}
+                      {mainTab === 'bank' && (
+                        <div>
+                          <div className="row g-4">
+                            {/* LEFT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">Bank Name</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.bankName || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Bank Address</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.bankAddress || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">IFSC Code</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.ifscCode || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* RIGHT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">Branch Name</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.branchName || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Account Number</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.accountNumber || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">MICR Code</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.micrCode || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* CANCELLED CHEQUE */}
+                            <div className="col-12">
+                              <div className="d-flex justify-content-between align-items-center ">
+                                <div>
+                                  <small className="text-muted">Cancelled Cheque</small>
+                                  <div className="fw-semibold">
+                                    {employee.chequeFileName || 'No document uploaded'}
+                                  </div>
+                                  {/* <small className="text-muted">
+              Allowed: PDF, JPG, PNG | Max Size: 2MB
+            </small> */}
+                                </div>
+
+                                {employee.chequeDocument && (
+                                  <CButton
+                                    size="sm"
+                                    variant="outline"
+                                    href={employee.chequeDocument}
+                                    download
+                                  >
+                                    <CIcon icon={cilCloudDownload} />
+                                  </CButton>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'insurance' && (
+                        <div className="row g-4">
+                          {/* INSURANCE DETAILS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Insurance Details
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  {/* LEFT COLUMN */}
+                                  <div className="col-md-6">
+                                    <div className="mb-4">
+                                      <small className="text-muted">Insurance Company</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.insuranceCompany || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">From Date</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.fromDate || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Sum Insured</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.sumInsured || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Family Members Covered</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.familyCovered || '-'}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* RIGHT COLUMN */}
+                                  <div className="col-md-6">
+                                    <div className="mb-4">
+                                      <small className="text-muted">Policy Number</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.policyNumber || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">To Date</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.toDate || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Policy Premium</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.policyPremium || '-'}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* POLICY DOCUMENT */}
+                                  <div className="col-4">
+                                    <div className="d-flex justify-content-between align-items-center ">
+                                      <div>
+                                        <small className="text-muted">Policy Document</small>
+                                        <div className="fw-semibold">
+                                          {employee.policyDocumentName || 'No document uploaded'}
+                                        </div>
+                                      </div>
+
+                                      {employee.policyDocument && (
+                                        <CButton
+                                          size="sm"
+                                          variant="outline"
+                                          href={employee.policyDocument}
+                                          download
+                                        >
+                                          <CIcon icon={cilCloudDownload} />
+                                        </CButton>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+
+                          {/* FAMILY MEMBERS */}
+                          <div className="col-12">
+                            <CCard className="border-0 shadow-sm">
+                              <CCardHeader className="bg-light fw-semibold">
+                                Family Members
+                              </CCardHeader>
+
+                              <CCardBody>
+                                <div className="row g-4">
+                                  {/* LEFT COLUMN */}
+                                  <div className="col-md-6">
+                                    <div className="mb-4">
+                                      <small className="text-muted">Relation</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.relation || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Date of Birth</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.familyDob || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">PAN Number</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.familyPan || '-'}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* RIGHT COLUMN */}
+                                  <div className="col-md-6">
+                                    <div className="mb-4">
+                                      <small className="text-muted">Name</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.familyName || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Gender</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.familyGender || '-'}
+                                      </div>
+                                    </div>
+
+                                    <div className="mb-4">
+                                      <small className="text-muted">Is Dependent</small>
+                                      <div className="fw-semibold border-bottom pb-2">
+                                        {employee.isDependent ? 'Yes' : 'No'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </CCardBody>
+                            </CCard>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'screening' && (
+                        <div>
+                          <div className="row g-4">
+                            {/* LEFT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">Test Scheduled Date</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.testScheduledDate || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Marks Secured</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.marksSecured || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* RIGHT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">Test Given Date</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.testGivenDate || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Result</small>
+                                <div
+                                  className={`fw-semibold border-bottom pb-2 ${
+                                    employee.result === 'PASS'
+                                      ? 'text-success'
+                                      : employee.result === 'FAIL'
+                                        ? 'text-danger'
+                                        : ''
+                                  }`}
+                                >
+                                  {employee.result || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* SCREENING MAIL COPY */}
+                            <div className="col-12">
+                              <div className="d-flex justify-content-between align-items-center">
+                                <div>
+                                  <small className="text-muted">Screening Mail Copy</small>
+                                  <div className="fw-semibold">
+                                    {employee.screeningMailName || 'No document uploaded'}
+                                  </div>
+                                </div>
+
+                                {employee.screeningMail && (
+                                  <CButton
+                                    size="sm"
+                                    variant="outline"
+                                    href={employee.screeningMail}
+                                    download
+                                  >
+                                    <CIcon icon={cilCloudDownload} />
+                                  </CButton>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'experience' && (
+                        <div className="mt-2">
+                          <CAccordion alwaysOpen>
+                            {experienceData.map((item, index) => (
+                              <CAccordionItem
+                                itemKey={index}
+                                key={item.id}
+                                className="mb-3 border rounded-3 shadow-sm"
+                              >
+                                {/* Accordion Header */}
+                                <CAccordionHeader>
+                                  <div className="fw-bold">
+                                    {item.company || '-'} – {item.designation || '-'}
+                                  </div>
+                                </CAccordionHeader>
+
+                                {/* Accordion Body */}
+                                <CAccordionBody>
+                                  <div className="row g-4">
+                                    {/* LEFT COLUMN */}
+                                    <div className="col-md-6">
+                                      <div className="mb-4">
+                                        <small className="text-muted">Company Name</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.company || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">Start Date</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.startDate || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">
+                                          Total Experience (Years)
+                                        </small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.totalExperience || '-'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* RIGHT COLUMN */}
+                                    <div className="col-md-6">
+                                      <div className="mb-4">
+                                        <small className="text-muted">Designation</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.designation || '-'}
+                                        </div>
+                                      </div>
+
+                                      <div className="mb-4">
+                                        <small className="text-muted">End Date</small>
+                                        <div className="fw-semibold border-bottom pb-2">
+                                          {item.endDate || '-'}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* EXPERIENCE CERTIFICATE */}
+                                    <div className="col-12">
+                                      <div className="d-flex justify-content-between align-items-center ">
+                                        <div>
+                                          <small className="text-muted">
+                                            Experience Certificate
+                                          </small>
+                                          <div className="fw-semibold">
+                                            {item.documentName || 'No document uploaded'}
+                                          </div>
+                                        </div>
+
+                                        {item.document && (
+                                          <CButton
+                                            size="sm"
+                                            variant="outline"
+                                            href={item.document}
+                                            download
+                                          >
+                                            <CIcon icon={cilCloudDownload} />
+                                          </CButton>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CAccordionBody>
+                              </CAccordionItem>
+                            ))}
+                          </CAccordion>
+                        </div>
+                      )}
+
+                      {/*LTC */}
+
+                      {mainTab === 'ltc' && (
+                        <div>
+                          <div className="row g-4">
+                            {/* LEFT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">Hometown</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.hometown || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">State</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.state || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Nearest Airport</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.nearestAirport || '-'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* RIGHT COLUMN */}
+                            <div className="col-md-6">
+                              <div className="mb-4">
+                                <small className="text-muted">District</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.district || '-'}
+                                </div>
+                              </div>
+
+                              <div className="mb-4">
+                                <small className="text-muted">Nearest Railway</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {employee.nearestRailway || '-'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {mainTab === 'documents' && (
+                        <div>
+                          <div className="row g-4">
+                            <div className="col-md-12">
+                              {/* Resume */}
+                              <div className="mb-4 d-flex justify-content-between align-items-center border-bottom pb-2">
+                                <div>
+                                  <small className="text-muted">Resume</small>
+                                  <div className="fw-semibold">resume_naina.pdf</div>
+                                </div>
+
+                                <CButton
+                                  size="sm"
+                                  variant="outline"
+                                  href="/documents/resume_naina.pdf"
+                                  download
+                                >
+                                  <CIcon icon={cilCloudDownload} />
+                                </CButton>
+                              </div>
+
+                              {/* PAN Card */}
+                              <div className="mb-4 d-flex justify-content-between align-items-center border-bottom pb-2">
+                                <div>
+                                  <small className="text-muted">PAN Card</small>
+                                  <div className="fw-semibold">pan_card.pdf</div>
+                                </div>
+                                <CButton
+                                  size="sm"
+                                  variant="outline"
+                                  href="/documents/pan_card.pdf"
+                                  download
+                                >
+                                  <CIcon icon={cilCloudDownload} />
+                                </CButton>
+                              </div>
+
+                              {/* Aadhaar Card */}
+                              <div className="mb-4 d-flex justify-content-between align-items-center border-bottom pb-2">
+                                <div>
+                                  <small className="text-muted">Aadhaar Card</small>
+                                  <div className="fw-semibold">aadhaar_card.pdf</div>
+                                </div>
+                                <CButton
+                                  size="sm"
+                                  variant="outline"
+                                  href="/documents/aadhaar_card.pdf"
+                                  download
+                                >
+                                  <CIcon icon={cilCloudDownload} />
+                                </CButton>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </CCardBody>
+                  </CCard>
+                </CCol>
+              )}
+
+              {sideTab === 'skills' && (
+                <CCol xs={12} md={10}>
+                  <CCardBody>
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Skills</h5>
+                    </div>
+
+                    <CAccordion alwaysOpen>
+                      {skillsData.map((item, index) => (
+                        <CAccordionItem
+                          itemKey={index}
+                          key={item.id}
+                          className="mb-3 border rounded-3 shadow-sm"
+                        >
+                          <CAccordionHeader>
+                            <div className="fw-bold">{item.skill_name}</div>
+                          </CAccordionHeader>
+
+                          <CAccordionBody>
+                            <div className="row g-4">
+                              <div className="col-12 col-md-6">
+                                <small className="text-muted">Experience (Years)</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {item.experience}
+                                </div>
+                              </div>
+
+                              <div className="col-12 col-md-6">
+                                <small className="text-muted">Remarks</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {item.remarks || '-'}
+                                </div>
+                              </div>
+                            </div>
+                          </CAccordionBody>
+                        </CAccordionItem>
+                      ))}
+                    </CAccordion>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {/* Health */}
+
+            {sideTab === 'health' && (
+  <CCol xs={12} sm={12} md={9} lg={10}>
+    <CCardBody style={{ minHeight: '400px' }}>
+
+      {/* ===== Header ===== */}
+      <div className="section-header mb-4">
+        <div className="section-accent"></div>
+        <h5 className="section-title">Health</h5>
+      </div>
+
+      {/* ================= HEALTH DETAILS ================= */}
+      <CCard className="border-0 shadow-sm mb-4">
+        <CCardHeader className="bg-light fw-semibold">
+          Health Details
+        </CCardHeader>
+
+        <CCardBody>
+          <div className="row g-4">
+
+            {/* Height */}
+            <div className="col-md-6">
+              <small className="text-muted">Height (cm)</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.height || '-'}
+              </div>
+            </div>
+
+            {/* Weight */}
+            <div className="col-md-6">
+              <small className="text-muted">Weight (kg)</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.weight || '-'}
+              </div>
+            </div>
+
+            {/* Has Health Issues */}
+            <div className="col-md-6">
+              <small className="text-muted">Has Health Issues</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.hasHealthIssues ? 'Yes' : 'No'}
+              </div>
+            </div>
+
+            {/* Is Physically Handicapped */}
+            <div className="col-md-6">
+              <small className="text-muted">Is Physically Handicapped</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.isHandicapped ? 'Yes' : 'No'}
+              </div>
+            </div>
+
+            {/* Identification Mark */}
+            <div className="col-12">
+              <small className="text-muted">Identification Mark</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.identificationMark || '-'}
+              </div>
+            </div>
+
+          </div>
+        </CCardBody>
+      </CCard>
+
+      {/* ================= VACCINATION DETAILS ================= */}
+      <CCard className="border-0 shadow-sm">
+        <CCardHeader className="bg-light fw-semibold">
+          Vaccination Details
+        </CCardHeader>
+
+        <CCardBody>
+          <div className="row g-4">
+
+            {/* Vaccination Name */}
+            <div className="col-md-4">
+              <small className="text-muted">Vaccination Name</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.vaccinationName || '-'}
+              </div>
+            </div>
+
+            {/* Vaccination Date */}
+            <div className="col-md-4">
+              <small className="text-muted">Vaccination Date</small>
+              <div className="fw-semibold border-bottom pb-2">
+                {employee.vaccinationDate || '-'}
+              </div>
+            </div>
+
+            {/* Vaccination Document */}
+            <div className="col-md-4">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <small className="text-muted">Document</small>
+                  <div className="fw-semibold">
+                    {employee.vaccinationDocumentName || 'No document uploaded'}
+                  </div>
+                </div>
+
+                {employee.vaccinationDocument && (
+                  <CButton
+                    size="sm"
+                    variant="outline"
+                    href={employee.vaccinationDocument}
+                    download
+                  >
+                    <CIcon icon={cilCloudDownload} />
+                  </CButton>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </CCardBody>
+      </CCard>
+
+    </CCardBody>
+  </CCol>
+)}
+
+              {sideTab === 'vehicle' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Vehicle Details</h5>
+                    </div>
+
+                    <div className="row g-4">
+                      {/* LEFT COLUMN */}
+                      <div className="col-12 col-md-6">
+                        <div className="mb-4">
+                          <small className="text-muted">Vehicle Details</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            Hyundai i20 – DL8CAB1234
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <small className="text-muted">Driving License Number</small>
+                          <div className="fw-semibold border-bottom pb-2">DL0420110149646</div>
+                        </div>
+
+                        <div className="mb-4">
+                          <small className="text-muted">License Issue Date</small>
+                          <div className="fw-semibold border-bottom pb-2">15 January 2018</div>
+                        </div>
+
+                        <div className="mb-4">
+                          <small className="text-muted">License Expiry Date</small>
+                          <div className="fw-semibold border-bottom pb-2">14 January 2038</div>
+                        </div>
+                      </div>
+
+                      {/* RIGHT COLUMN */}
+                      <div className="col-12 col-md-6">
+                        <div className="mb-4">
+                          <small className="text-muted">Vehicle Category</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            LMV (Light Motor Vehicle)
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <small className="text-muted">Professional Membership Details</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            Registered EMT Professional
+                          </div>
+                        </div>
+
+                        <div className="mb-4">
+                          <small className="text-muted">EMT Registration Expiry Date</small>
+                          <div className="fw-semibold border-bottom pb-2">31 December 2026</div>
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'hobbies' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Hobbies</h5>
+                    </div>
+
+                    {/* Hobby 1 */}
+                    <div className="mb-4">
+                      <div className="row">
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Hobby</small>
+                          <div className="fw-semibold border-bottom pb-2">Photography</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Remarks</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            Passionate about landscape photography.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hobby 2 */}
+                    <div className="mb-4">
+                      <div className="row">
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Hobby</small>
+                          <div className="fw-semibold border-bottom pb-2">Traveling</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Remarks</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            Explored 12 states across India.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'achievements' && (
+                <CCol xs={12} md={10}>
+                  <CCardBody>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Achievements</h5>
+                    </div>
+
+                    <CAccordion alwaysOpen>
+                      {achievementData.map((item, index) => (
+                        <CAccordionItem
+                          itemKey={index}
+                          key={item.id}
+                          className="mb-3 border rounded-3 shadow-sm"
+                        >
+                          {/* Header */}
+                          <CAccordionHeader>
+                            <div className="fw-bold">{item.achievement}</div>
+                          </CAccordionHeader>
+
+                          {/* Body */}
+                          <CAccordionBody>
+                            <div className="row g-4">
+                              <div className="col-12 col-md-6">
+                                <small className="text-muted">Achievement Date</small>
+                                <div className="fw-semibold border-bottom pb-2">{item.date}</div>
+                              </div>
+
+                              <div className="col-12 col-md-6">
+                                <small className="text-muted">Status</small>
+                                <div className="fw-semibold border-bottom pb-2">{item.status}</div>
+                              </div>
+
+                              <div className="col-12">
+                                <small className="text-muted">Remarks</small>
+                                <div className="fw-semibold border-bottom pb-2">
+                                  {item.remarks || '-'}
+                                </div>
+                              </div>
+                            </div>
+                          </CAccordionBody>
+                        </CAccordionItem>
+                      ))}
+                    </CAccordion>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'assets' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Assets</h5>
+                    </div>
+
+                    {/* ===== Asset 1 ===== */}
+                    <div className="mb-4">
+                      <div className="row">
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Asset Name</small>
+                          <div className="fw-semibold border-bottom pb-2">Dell Latitude Laptop</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Asset Code</small>
+                          <div className="fw-semibold border-bottom pb-2">DL-IT-2024-001</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Asset Issue Date</small>
+                          <div className="fw-semibold border-bottom pb-2">10 Jan 2024</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Quantity Issued</small>
+                          <div className="fw-semibold border-bottom pb-2">1</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Should Be Returned</small>
+                          <div className="fw-semibold border-bottom pb-2 text-danger">Yes</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Return Expected By</small>
+                          <div className="fw-semibold border-bottom pb-2">31 Dec 2026</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Asset Return Date</small>
+                          <div className="fw-semibold border-bottom pb-2">—</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Quantity Returned</small>
+                          <div className="fw-semibold border-bottom pb-2">0</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Total Damage Worth</small>
+                          <div className="fw-semibold border-bottom pb-2">₹0.00</div>
+                        </div>
+
+                        <div className="col-12 col-md-6">
+                          <small className="text-muted">Remarks</small>
+                          <div className="fw-semibold border-bottom pb-2">
+                            Asset in good condition
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'languages' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Languages</h5>
+                    </div>
+
+                    {languageData.map((item) => (
+                      <div key={item.id} className="mb-4">
+                        <div className="row align-items-center">
+                          {/* Language Name */}
+                          <div className="col-12 col-md-3">
+                            <small className="text-muted">Language</small>
+                            <div className="fw-semibold  pb-2">{item.language_name}</div>
+                          </div>
+
+                          {/* Can Read */}
+                          <div className="col-6 col-md-2 mt-3 mt-md-0">
+                            <div className="d-flex align-items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={item.can_read}
+                                disabled
+                              />
+                              <span>Read</span>
+                            </div>
+                          </div>
+
+                          {/* Can Write */}
+                          <div className="col-6 col-md-2 mt-3 mt-md-0">
+                            <div className="d-flex align-items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={item.can_write}
+                                disabled
+                              />
+                              <span>Write</span>
+                            </div>
+                          </div>
+
+                          {/* Can Speak */}
+                          <div className="col-6 col-md-2 mt-3 mt-md-0">
+                            <div className="d-flex align-items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={item.can_speak}
+                                disabled
+                              />
+                              <span>Speak</span>
+                            </div>
+                          </div>
+
+                          {/* Proficiency */}
+                          <div className="col-12 col-md-3 mt-3 mt-md-0">
+                            <small className="text-muted">Proficiency</small>
+                            <div className="fw-semibold pb-2">{item.proficiency}</div>
+                          </div>
+                        </div>
+
+                        <hr className="mt-4" />
+                      </div>
+                    ))}
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'passport' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Passport & Visa Details</h5>
+                    </div>
+
+                    <div className="row g-4">
+                      {/* Passport Number */}
+                      <div className="col-12 col-md-6 ">
+                        <small className="text-muted">Passport Number</small>
+                        <div className="fw-semibold border-bottom pb-2">N1234567</div>
+                      </div>
+
+                      {/* Passport Type */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Passport Type</small>
+                        <div className="fw-semibold border-bottom pb-2">Ordinary</div>
+                      </div>
+
+                      {/* Issuing Country */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Issuing Country</small>
+                        <div className="fw-semibold border-bottom pb-2">India</div>
+                      </div>
+
+                      {/* Issue Date */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Issue Date</small>
+                        <div className="fw-semibold border-bottom pb-2">10 March 2019</div>
+                      </div>
+
+                      {/* Expiry Date */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Expiry Date</small>
+                        <div className="fw-semibold border-bottom pb-2">09 March 2029</div>
+                      </div>
+
+                      {/* Place of Issue */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Place of Issue</small>
+                        <div className="fw-semibold border-bottom pb-2">New Delhi</div>
+                      </div>
+
+                      {/* Visa Authority */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Visa Issuing Authority</small>
+                        <div className="fw-semibold border-bottom pb-2">UK Embassy</div>
+                      </div>
+
+                      {/* Visa Validity */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Visa Validity</small>
+                        <div className="fw-semibold border-bottom pb-2">
+                          01 Jan 2024 – 31 Dec 2024
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCol>
+              )}
+
+              {sideTab === 'discipline' && (
+                <CCol xs={12} sm={12} md={9} lg={10}>
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    {/* ===== Attractive Header ===== */}
+                    <div className="section-header mb-4">
+                      <div className="section-accent"></div>
+                      <h5 className="section-title">Disciplinary Record</h5>
+                    </div>
+
+                    <div className="row g-4">
+                      {/* Offence */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Offence</small>
+                        <div className="fw-semibold border-bottom pb-2">
+                          Late reporting without prior notice
+                        </div>
+                      </div>
+
+                      {/* Offence Date */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Offence Date</small>
+                        <div className="fw-semibold border-bottom pb-2">15 February 2024</div>
+                      </div>
+
+                      {/* Disciplinary Action */}
+                      <div className="col-12 col-md-6">
+                        <small className="text-muted">Disciplinary Action</small>
+                        <div className="fw-semibold border-bottom pb-2 text-danger">
+                          Written Warning Issued
+                        </div>
+                      </div>
+
+                      {/* Remarks */}
+                      <div className="col-6">
+                        <small className="text-muted">Remarks</small>
+                        <div className="fw-semibold border-bottom pb-2">
+                          Employee counselled and advised to maintain punctuality.
+                        </div>
+                      </div>
+                    </div>
+                  </CCardBody>
+                </CCol>
+              )}
+            </CRow>
+          </CCardBody>
+        </CCard>
+      </CContainer>
+    </div>
+  )
+}
+
+export default EmployeeProfile

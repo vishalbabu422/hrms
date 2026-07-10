@@ -1,0 +1,333 @@
+import React, { useState } from 'react'
+import profileImage from '../../assets/images/profile-image.png'
+import BasicInfo from '../hrm/preview-module/basic-view'
+import AddressView from './preview-module/address-view'
+import OfficeAddressView from './preview-module/officeaddress-view'
+import QualificationView from './preview-module/qualification'
+import BankView from './preview-module/bank'
+import InsuranceView from './preview-module/insurance-view'
+import ScreeningView from './preview-module/screening-view'
+import ExperienceView from './preview-module/experience-view'
+import LtcView from './preview-module/ltc-view'
+import DocumentsView from './preview-module/document-view'
+import SkillsView from './preview-module/skill-view'
+import HealthView from './preview-module/health-view'
+import VehicleView from './preview-module/vehicle-view'
+import HobbiesView from './preview-module/hobbiesview'
+import AchievementsView from './preview-module/achievementview'
+import AssetsView from './preview-module/assests-view'
+import LanguagesView from './preview-module/language-view'
+import PassportView from './preview-module/passport-view'
+import DisciplineView from './preview-module/discipline-view'
+import ExamView from './preview-module/exam-view'
+import TrainingView from './preview-module/training-view'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CButton,
+  CImage,
+  CListGroup,
+  CListGroupItem,
+  CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
+} from '@coreui/react'
+
+import CIcon from '@coreui/icons-react'
+import {
+  cilUser,
+  cilLockLocked,
+  cilCalendar,
+  cilClipboard,
+  cilStar,
+  cilMedicalCross,
+  cilPuzzle,
+  cilBadge,
+  cilDevices,
+  cilGlobeAlt,
+  cilContact,
+  cilBalanceScale,
+  cilLocationPin,
+  cilBuilding,
+  cilEducation,
+  cilBank,
+  cilShieldAlt,
+  cilBriefcase,
+  cilFile,
+  cilCloudDownload,
+  cilMap,
+  cilChart,
+  cilSchool,
+} from '@coreui/icons'
+
+
+const EmployeeProfile = () => {
+  const [mainTab, setMainTab] = useState('basic')
+  const [sideTab, setSideTab] = useState('basic')
+  const [employee, setEmployee] = useState({})
+
+  const [employeeAddress, setEmployeeAddress] = useState({
+    correspondence: {
+      address_line1: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+    },
+    permanent: {
+      address_line1: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+    },
+  })
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      <CContainer>
+        <CCard className="shadow-sm border-0">
+          <CCardBody>
+            {/* ================= HEADER ================= */}
+            <CRow className="align-items-center mb-4 pt-4">
+              <CCol md={8} className="d-flex align-items-center gap-3">
+                <CImage
+                  src={profileImage}
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: '12px', objectFit: 'cover' }}
+                />
+                <div>
+                  <h4 className="mb-1 fw-bold">Naina Catherine Kapoor</h4>
+                  <div className="text-muted">naina.s@example.com</div>
+                </div>
+              </CCol>
+            </CRow>
+
+            <CRow>
+              {/* ================= SIDE NAV ================= */}
+              <CCol md={2}>
+                <CCard className="border-0 shadow-sm">
+                  <CListGroup flush>
+                    {[
+                      { key: 'basic', label: 'Basic Details' },
+                      { key: 'skills', label: 'Skills' },
+                      { key: 'health', label: 'Health' },
+                      { key: 'vehicle', label: 'Vehicle' },
+                      { key: 'hobbies', label: 'Hobbies' },
+                      { key: 'achievements', label: 'Achievements' },
+                      { key: 'assets', label: 'Assets' },
+                      { key: 'languages', label: 'Languages' },
+                      { key: 'passport', label: 'Passport' },
+                      { key: 'discipline', label: 'Discipline' },
+                      { key: 'exam', label: 'Exam' },
+                      { key: 'training', label: 'Training' },
+                    ].map((item) => (
+                      <CListGroupItem
+                        key={item.key}
+                        active={sideTab === item.key}
+                        onClick={() => setSideTab(item.key)}
+                        className="d-flex align-items-center gap-2"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <CIcon icon={item.icon} />
+                        {item.label}
+                      </CListGroupItem>
+                    ))}
+                  </CListGroup>
+                </CCard>
+              </CCol>
+
+              {/* ================= CENTER CONTENT ================= */}
+              {sideTab === 'basic' && (
+                <CCol md={10}>
+                  <CCard className="border-0 shadow-sm">
+                    {/* ================= TOP NAV ================= */}
+                    <CCardHeader className="bg-white border-0">
+                      <CNav variant="tabs">
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'basic'}
+                            onClick={() => setMainTab('basic')}
+                          >
+                            <CIcon icon={cilUser} className="me-2" />
+                            Basic Details
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'address'}
+                            onClick={() => setMainTab('address')}
+                          >
+                            <CIcon icon={cilLocationPin} className="me-2 " />
+                            Address
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'office'}
+                            onClick={() => setMainTab('office')}
+                          >
+                            <CIcon icon={cilBuilding} className="me-2" />
+                            Office
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'qualification'}
+                            onClick={() => setMainTab('qualification')}
+                          >
+                            <CIcon icon={cilEducation} className="me-2" />
+                            Qualification
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink active={mainTab === 'bank'} onClick={() => setMainTab('bank')}>
+                            <CIcon icon={cilBank} className="me-2" />
+                            Bank Details
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'insurance'}
+                            onClick={() => setMainTab('insurance')}
+                          >
+                            <CIcon icon={cilShieldAlt} className="me-2" />
+                            Insurance
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'screening'}
+                            onClick={() => setMainTab('screening')}
+                          >
+                            <CIcon icon={cilClipboard} className="me-2" />
+                            Screening Test
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'experience'}
+                            onClick={() => setMainTab('experience')}
+                          >
+                            <CIcon icon={cilBriefcase} className="me-2" />
+                            Experience
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink active={mainTab === 'ltc'} onClick={() => setMainTab('ltc')}>
+                            <CIcon icon={cilMap} className="me-2" />
+                            LTC
+                          </CNavLink>
+                        </CNavItem>
+
+                        <CNavItem>
+                          <CNavLink
+                            active={mainTab === 'documents'}
+                            onClick={() => setMainTab('documents')}
+                          >
+                            <CIcon icon={cilFile} className="me-2" />
+                            Documents
+                          </CNavLink>
+                        </CNavItem>
+                      </CNav>
+                    </CCardHeader>
+
+                    <CCardBody style={{ minHeight: '400px' }}>
+                      {mainTab === 'basic' && <BasicInfo />}
+
+                      {/*ADDRESS */}
+                      {mainTab === 'address' && <AddressView />}
+
+                      {/*Office */}
+                      {mainTab === 'office' && <OfficeAddressView />}
+
+                      {/*Qualification */}
+
+                      {mainTab === 'qualification' && <QualificationView />}
+
+                      {/*Bank */}
+                      {mainTab === 'bank' && <BankView />}
+
+                      {/*Insurance */}
+                      {mainTab === 'insurance' && <InsuranceView />}
+
+                      {/*screening */}
+                      {mainTab === 'screening' && <ScreeningView />}
+
+                      {/*experience */}
+                      {mainTab === 'experience' && <ExperienceView />}
+
+                      {/*LTC */}
+
+                      {mainTab === 'ltc' && <LtcView />}
+
+                      {/*documents */}
+                      {mainTab === 'documents' && <DocumentsView />}
+                    </CCardBody>
+                  </CCard>
+                </CCol>
+              )}
+
+              {/* skills */}
+              {sideTab === 'skills' && <SkillsView />}
+
+              {/* Health */}
+              {sideTab === 'health' && <HealthView />}
+
+              {/* vehicle */}
+              {sideTab === 'vehicle' && <VehicleView />}
+
+              {/* hobbies */}
+              {sideTab === 'hobbies' && <HobbiesView />}
+
+              {/* achievements */}
+              {sideTab === 'achievements' && <AchievementsView />}
+
+              {/* assets */}
+              {sideTab === 'assets' && <AssetsView />}
+
+              {/* languages */}
+              {sideTab === 'languages' && <LanguagesView />}
+
+              {/* passport */}
+              {sideTab === 'passport' && <PassportView />}
+
+              {/* discipline */}
+              {sideTab === 'discipline' && <DisciplineView />}
+
+              {/* exam */}
+              {sideTab === 'exam' && <ExamView />}
+
+              {/* training */}
+              {sideTab === 'training' && <TrainingView />}
+
+            </CRow>
+          </CCardBody>
+        </CCard>
+      </CContainer>
+    </div>
+  )
+}
+
+export default EmployeeProfile

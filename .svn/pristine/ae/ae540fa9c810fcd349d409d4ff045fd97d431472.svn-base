@@ -1,0 +1,7 @@
+const router = require("express").Router();
+
+router.use("/salary-component", require("./salaryComponent/salaryComponent.routes"));
+router.use("/salary-structure", require("./salaryStructure/salaryStructure.routes"));
+router.use("/employee-salary-structure", require("./employeeSalaryStructure/employeeSalaryStructure.routes"));
+
+module.exports = router;

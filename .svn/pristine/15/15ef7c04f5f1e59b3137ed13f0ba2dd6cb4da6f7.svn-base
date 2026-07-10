@@ -1,0 +1,119 @@
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CForm,
+  CFormLabel,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CRow,
+  CCol,
+} from '@coreui/react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import api from '../../api/axios'
+
+const DesignationFormComponent = () => {
+  const navigate = useNavigate()
+
+  const [loading, setLoading] = useState(false)
+
+  const [formData, setFormData] = useState({
+    designation_name: '',
+    designation_code: '',
+    is_active: true,
+  })
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!formData.designation_name.trim()) {
+      toast.error('Designation Name is required')
+      return
+    }
+
+    if (!formData.designation_code.trim()) {
+      toast.error('Designation Code is required')
+      return
+    }
+
+    try {
+      setLoading(true)
+
+      await api.post('http://localhost:3100/api/v1/designations', formData)
+
+      toast.success('Designation added successfully')
+
+      navigate('/designation')
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        error.response?.data?.message || 'Failed to add designation'
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <CCard>
+      <CCardBody>
+        <CForm onSubmit={handleFormSubmit}>
+          <CRow>
+            <CCol md={4}>
+              <CFormLabel>Designation Name</CFormLabel>
+              <CFormInput
+                type="text"
+                name="designation_name"
+                value={formData.designation_name}
+                onChange={handleChange}
+                placeholder="Enter designation name"
+              />
+            </CCol>
+
+            <CCol md={4}>
+              <CFormLabel>Designation Code</CFormLabel>
+              <CFormInput
+                type="text"
+                name="designation_code"
+                value={formData.designation_code}
+                onChange={handleChange}
+                placeholder="Enter designation code"
+              />
+            </CCol>
+
+            <CCol md={4}>
+              <CFormLabel>Status</CFormLabel>
+              <CFormSelect
+                name="is_active"
+                value={String(formData.is_active)}
+                onChange={handleChange}
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </CFormSelect>
+            </CCol>
+          </CRow>
+
+          <div className="mt-3">
+            <CButton type="submit" color="primary" disabled={loading}>
+              {loading ? 'Saving...' : 'Save'}
+            </CButton>
+          </div>
+        </CForm>
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default DesignationFormComponent

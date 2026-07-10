@@ -1,0 +1,243 @@
+const {
+  SalaryStructure,
+  SalaryStructureComponent,
+  EmpSalaryStructure,
+  Employee,
+  EmployeeSalaryRegister,
+} = require("../../../models");
+const APIFeatures = require("../../../utils/apiFeature");
+const AppError = require("../../../utils/appError");
+
+// GET ALL
+exports.getSalaryStructures = async (queryOptions) => {
+    const { rows, count } =
+        await SalaryStructure.findAndCountAll(queryOptions);
+
+    return {
+        total: count,
+        page: queryOptions.offset / queryOptions.limit + 1,
+        limit: queryOptions.limit,
+        totalPages: Math.ceil(count / queryOptions.limit),
+        results: rows.length,
+        data: rows,
+    };
+};
+
+// GET BY ID
+exports.getSalaryStructureById = async (queryOptions) => {
+  const structure = await SalaryStructure.findOne(queryOptions);
+
+  if (!structure) {
+    throw new AppError("Salary Structure not found", 404);
+  }
+
+  return structure;
+};
+
+// CREATE
+exports.createSalaryStructure = async (data, transaction) => {
+  const { components, ...structureData } = data;
+
+  const existing = await SalaryStructure.findOne({
+    where: { name: structureData.name },
+    transaction,
+  });
+
+  if (existing) {
+    throw new AppError("Salary Structure already exists", 409);
+  }
+
+  const structure = await SalaryStructure.create(structureData, {
+    transaction,
+  });
+
+  if (components?.length) {
+    const componentData = components.map((item) => ({
+      salary_structure_id: structure.id,
+      salary_component_id: item.salary_component_id,
+      value_type: item.value_type,
+      percentage: item.percentage,
+      amount: item.amount,
+      calculation_priority: item.calculation_priority,
+    }));
+
+    await SalaryStructureComponent.bulkCreate(componentData, {
+      transaction,
+    });
+  }
+
+  return structure;
+};
+
+// UPDATE
+const { Op } = require("sequelize");
+
+exports.updateSalaryStructure = async (id, data, transaction) => {
+  const { components, ...structureData } = data;
+
+  const structure = await SalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!structure) {
+    throw new AppError("Salary Structure not found", 404);
+  }
+
+  // 1. Update main table
+  await structure.update(structureData, { transaction });
+
+  // 2. Components sync
+  if (components && components.length) {
+    // old components
+    const existingComponents = await SalaryStructureComponent.findAll({
+      where: { salary_structure_id: id },
+      transaction,
+    });
+
+    const existingMap = {};
+    existingComponents.forEach((item) => {
+      existingMap[item.salary_component_id] = item;
+    });
+
+    const incomingIds = components.map((c) => c.salary_component_id);
+
+    // DELETE removed components
+    await SalaryStructureComponent.destroy({
+      where: {
+        salary_structure_id: id,
+        salary_component_id: {
+          [Op.notIn]: incomingIds,
+        },
+      },
+      transaction,
+    });
+
+    // UPDATE / CREATE
+    for (const comp of components) {
+      if (existingMap[comp.salary_component_id]) {
+        // UPDATE
+        await existingMap[comp.salary_component_id].update(
+          {
+            value_type: comp.value_type,
+            percentage: comp.percentage,
+            amount: comp.amount,
+            calculation_priority: comp.calculation_priority,
+          },
+          { transaction },
+        );
+      } else {
+        // CREATE
+        await SalaryStructureComponent.create(
+          {
+            salary_structure_id: id,
+            salary_component_id: comp.salary_component_id,
+            value_type: comp.value_type,
+            percentage: comp.percentage,
+            amount: comp.amount,
+            calculation_priority: comp.calculation_priority,
+          },
+          { transaction },
+        );
+      }
+    }
+  }
+
+  return structure;
+};
+
+// DELETE
+exports.deleteSalaryStructure = async (id, transaction) => {
+  const structure = await SalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!structure) {
+    throw new AppError("Salary Structure not found", 404);
+  }
+
+  return await structure.update({ is_active: false }, { transaction });
+};
+
+exports.getEmployeeBySalaryStructure = async (
+  salaryStructureId,
+  month,
+  year,
+) => {
+  const structure = await SalaryStructure.findOne({
+    where: {
+      id: salaryStructureId,
+      is_deleted: false,
+    },
+
+    include: [
+      {
+        model: EmpSalaryStructure,
+        as: "empSalaryStructures",
+        required: false,
+
+        where: {
+          is_deleted: false,
+          is_active: true,
+          effective_from: {
+            [Op.gte]: new Date(`${year}-${month}-01`),
+
+            [Op.lt]: new Date(
+              month == 12
+                ? `${Number(year) + 1}-01-01`
+                : `${year}-${Number(month) + 1}-01`,
+            ),
+          },
+        },
+
+        include: [
+          {
+            model: Employee,
+            as: "employee",
+            required: false,
+
+            include: [
+              {
+                model: EmployeeSalaryRegister,
+                as: "employeeSalaryRegisters",
+                required: false,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!structure) {
+    throw new AppError("Salary Structure not found", 404);
+  }
+
+  const normalized = [];
+
+  structure.empSalaryStructures?.forEach((item) => {
+    const emp = item.employee;
+
+    if (!emp) return;
+
+    const name = [emp.first_name, emp.middle_name, emp.last_name]
+      .filter(Boolean)
+      .join(" ");
+
+    const regStatus = emp.employeeSalaryRegisters?.[0]?.status;
+    const slipGenStatus =
+      emp.employeeSalaryRegisters?.[0]?.mon_salaryslip_generated;
+
+    normalized.push({
+      employee_salary_structure_id: item.id,
+      employee_id: emp.id,
+      employee_name: name,
+      ctc: item.ctc,
+      effective_from: item.effective_from,
+      salary_structure_id: item.salary_structure_id,
+      status: slipGenStatus ? "GENERATED" : regStatus ? regStatus : "PENDING",
+      file_path: emp.employeeSalaryRegisters?.[0]?.mon_salaryslip_filepath,
+    });
+  });
+
+  return normalized;
+};

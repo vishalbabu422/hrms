@@ -40,7 +40,7 @@ const Index = () => {
   const navigate = useNavigate()
 
   const [sort, setSort] = useState({
-    key: 'id',
+    key: 'work_order_date',
     order: 'desc',
   })
 
@@ -70,7 +70,7 @@ const Index = () => {
       }
 
       const response = await api.get('/admin/workorder/index', { params })
-
+      console.log(response)
       setWorkOrder(response.data?.data?.workOrderList || [])
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
@@ -201,8 +201,8 @@ const Index = () => {
                     onSort={handleSort}
                   />
                   <SortableHeaderCell
-                    label="PI No"
-                    sortKey="pi_number"
+                    label="Grand Total"
+                    sortKey="grand_total"
                     sort={sort}
                     onSort={handleSort}
                   />
@@ -235,7 +235,7 @@ const Index = () => {
                       <CTableDataCell>{item.work_order_no}</CTableDataCell>
                       <CTableDataCell>{item.work_order_date}</CTableDataCell>
                       <CTableDataCell>{item.project_no}</CTableDataCell>
-                      <CTableDataCell>{item.pi_number}</CTableDataCell>
+                      <CTableDataCell>{item.grand_total}</CTableDataCell>
                       <CTableDataCell>{item.project_name}</CTableDataCell>
                       <CTableDataCell>
                         {item.is_active ? (
@@ -250,6 +250,27 @@ const Index = () => {
                           className="d-flex justify-content-center align-items-center gap-2 flex-wrap"
                           style={{ minWidth: '220px' }}
                         >
+                          {/* DESIGNATION / MANPOWER */}
+                          <CTooltip
+                            content={
+                              item.type === 'MILESTONES_PROJECT_BASIS'
+                                ? 'Add Manpower'
+                                : 'Add Designation'
+                            }
+                            placement="top"
+                          >
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() =>
+                                item.type === 'MILESTONES_PROJECT_BASIS'
+                                  ? navigate(`/work-order/${item.id}/milestones`)
+                                  : navigate(`/work-order/designations/${item.id}`)
+                              }
+                            >
+                              <ActionButton color="primary" icon={cilPlus} />
+                            </div>
+                          </CTooltip>
+                          
                           {/* EMP DEPLOYMENT */}
                           <CTooltip content="Add Emp.Deployment" placement="top">
                             <div
@@ -257,16 +278,6 @@ const Index = () => {
                               onClick={() => navigate(`/work-order/emp-deployment/${item.id}`)}
                             >
                               <ActionButton color="primary" icon={cilUserFollow} />
-                            </div>
-                          </CTooltip>
-
-                          {/* DESIGNATION */}
-                          <CTooltip content="Add Designations" placement="top">
-                            <div
-                              style={{ display: 'inline-block', cursor: 'pointer' }}
-                              onClick={() => navigate(`/work-order/designations/${item.id}`)}
-                            >
-                              <ActionButton color="primary" icon={cilPlus} />
                             </div>
                           </CTooltip>
 

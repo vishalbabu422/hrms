@@ -1,0 +1,226 @@
+import React, { useState, useEffect } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CForm,
+  CFormLabel,
+  CFormInput,
+  CFormSelect,
+  CButton,
+  CRow,
+  CCol,
+  CSpinner,
+} from '@coreui/react'
+
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import api from '../../api/axios'
+
+const DivisionFormComponent = ({ initialData, onSubmit, mode, exportData = [] }) => {
+  const [formData, setFormData] = useState(initialData || {})
+const [parentDivisions, setParentDivisions] = useState([])
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
+
+  useEffect(() => {
+    const fetchParentDivisions = async () => {
+      try {
+        const response = await api.get('/division?parent_division_id=null')
+        setParentDivisions(response.data.data || [])
+      } catch (error) {
+        console.error('Failed to fetch parent divisions:', error)
+      }
+    }
+
+    fetchParentDivisions()
+  }, [])
+
+  if (mode === 'edit' && !formData.division_name) {
+
+
+
+
+    return (
+      <CCard>
+        <CCardBody className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+          <CSpinner />
+        </CCardBody>
+      </CCard>
+    )
+  }
+
+  /* ================= HANDLE CHANGE ================= */
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  /* ================= HANDLE SUBMIT ================= */
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!formData.division_name?.trim()) {
+      alert('Division Name is required')
+      return
+    }
+
+    if (formData.division_name.length > 150) {
+      alert('Division Name cannot exceed 150 characters')
+      return
+    }
+
+    if (formData.division_code?.length > 50) {
+      alert('Division Code cannot exceed 50 characters')
+      return
+    }
+
+    onSubmit(formData)
+  }
+
+  /* ================= EXPORT PDF ================= */
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 20
+
+    doc.setFontSize(14)
+    doc.text('Division List', 10, 10)
+
+    exportData.forEach((item, index) => {
+      doc.text(
+        `${index + 1}. ${item.division_name} (${item.division_code || '-'}) - ${
+          item.is_active ? 'Active' : 'Inactive'
+        }`,
+        10,
+        y,
+      )
+      y += 8
+    })
+
+    doc.save('division-list.pdf')
+  }
+
+  /* ================= EXPORT EXCEL ================= */
+
+  const handleExportExcel = () => {
+    const formattedData = exportData.map((item, index) => ({
+      'Sr No': index + 1,
+      'Division Name': item.division_name,
+      'Division Code': item.division_code || '-',
+      Status: item.is_active ? 'Active' : 'Inactive',
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(formattedData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Divisions')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'division-list.xlsx')
+  }
+
+
+  return (
+    <CCard>
+      <CCardBody>
+        {/* ================= EXPORT BUTTONS ================= */}
+        {exportData.length > 0 && (
+          <div className="d-flex gap-2 mb-3 justify-content-end">
+            <CButton size="sm" color="secondary" onClick={handleExportPDF}>
+              Export PDF
+            </CButton>
+            <CButton size="sm" color="success" onClick={handleExportExcel}>
+              Export Excel
+            </CButton>
+          </div>
+        )}
+
+        {/* ================= FORM ================= */}
+        <CForm onSubmit={handleSubmit}>
+          <CRow>
+            {/* Division Name */}
+            <CCol md={6}>
+              <CFormLabel>Division Name *</CFormLabel>
+              <CFormInput
+                type="text"
+                name="division_name"
+                value={formData.division_name || ''}
+                onChange={handleChange}
+                maxLength={150}
+                placeholder="Enter division name"
+              />
+            </CCol>
+
+            {/* Division Code */}
+            <CCol md={6}>
+              <CFormLabel>Division Code</CFormLabel>
+              <CFormInput
+                type="text"
+                name="division_code"
+                value={formData.division_code || ''}
+                onChange={handleChange}
+                maxLength={50}
+                placeholder="Enter division code"
+              />
+            </CCol>
+
+            {/* Status */}
+            <CCol md={6}>
+              <CFormLabel className="mt-2">Status</CFormLabel>
+              <CFormSelect  
+                name="is_active"
+                value={String(formData.is_active)}
+                onChange={handleChange}
+              >
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormLabel className="mt-2">Parent Division</CFormLabel>
+              <CFormSelect
+                name="parent_division"
+                value={formData.parent_division || ''}
+                onChange={handleChange}
+              >
+                <option value="">Select Parent Division</option>
+                {parentDivisions.map((division) => (
+                  <option key={division.id} value={division.id}>
+                    {division.division_name}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+          </CRow>
+
+          <div className="mt-3">
+            <CButton type="submit" color="primary">
+              {mode === 'create' ? 'Save' : 'Update'}
+            </CButton>
+          </div>
+        </CForm>
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default DivisionFormComponent

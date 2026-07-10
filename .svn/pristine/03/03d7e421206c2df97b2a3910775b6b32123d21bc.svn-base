@@ -1,0 +1,334 @@
+import React, { useEffect, useState } from 'react'
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CButton,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+  CAccordion,
+  CAccordionItem,
+  CAccordionHeader,
+  CAccordionBody,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil } from '@coreui/icons'
+import { useParams } from 'react-router-dom'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+import ViewField from '../components/preview-field'
+import api from '../../api/axios'
+import { calculateAmounts, calculateDuration } from '../../utils/workOrderCalculations'
+
+const WorkOrderPreview = () => {
+  const { id } = useParams()
+
+  const [workOrder, setWorkOrder] = useState([])
+  const [amount, setAmount] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchWorkOrder = async () => {
+      try {
+        setLoading(true)
+
+        const response = await api.get(
+          `/admin/workorder/${id}?models=WoDesgnMappings.GstCodeMaster%2CWoDesgnMappings.Designation&modelFilter=%7B%7D`,
+        )
+
+        setWorkOrder(response.data?.data || [])
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to fetch Work Order')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWorkOrder()
+  }, [])
+
+  const computedDeployments =
+    workOrder?.WoDesgnMappings?.map((d) => {
+      // Duration
+      const duration = calculateDuration(d.deployment_from, d.deployment_to)
+
+      const merged = {
+        ...d,
+        ...duration,
+      }
+
+      // Amounts
+      const amounts = calculateAmounts(merged, {
+        totalAmount: true,
+      })
+
+      return {
+        ...merged,
+        ...amounts,
+      }
+    }) || []
+
+  const totalAmount = computedDeployments.reduce((sum, d) => sum + Number(d.totalAmount || 0), 0)
+
+  const totalIgst = computedDeployments.reduce((sum, d) => sum + Number(d.igst_amount || 0), 0)
+
+  const totalCgst = computedDeployments.reduce((sum, d) => sum + Number(d.cgst_amount || 0), 0)
+
+  const totalSgst = computedDeployments.reduce((sum, d) => sum + Number(d.sgst_amount || 0), 0)
+
+  const grandTotal = totalAmount + totalIgst + totalCgst + totalSgst
+
+  const workorder = {
+    id,
+    work_order_no: 'WO-2026-001',
+    project_name: 'Hospital IT Upgrade Project',
+    date: '18-02-2026',
+    project_no: 'PRJ-1001',
+    pi_no: 'PI-7788',
+
+    issued_to_name: 'Tech Solutions Pvt Ltd',
+    issued_to_address: 'Plot No. 45, Sector 18, Gurugram, Haryana - 122015',
+    issued_to_email: 'info@techsolutions.com',
+    issued_to_phone: '+91-9876543210',
+
+    contact_person_name: 'Rahul Sharma',
+    contact_person_email: 'rahul.sharma@techsolutions.com',
+    contact_person_phone: '+91-9999999999',
+
+    // Deployment Details
+    hsn_code: '998314',
+    description: 'IT Support Services',
+    from: '01-01-2026',
+    to: '31-12-2026',
+    duration: '365 Days',
+    persons: '5',
+    unit_rate: '50000',
+    total_amount: '250000',
+    igst: '18%',
+    cgst: '0%',
+    sgst: '0%',
+    grand_total: '295000',
+  }
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    doc.text('Work Order Details', 10, 10)
+    doc.save('workorder-details.pdf')
+  }
+
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet([workorder])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'WorkOrder')
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
+    saveAs(fileData, 'workorder-details.xlsx')
+  }
+
+  const deploymentEmployees = [
+    {
+      id: 1,
+      name: 'Riddhi',
+      email: 'rk@gmail.com',
+      contact: '9999999999',
+      joining: '2026-02-11',
+      relieving: '2026-02-27',
+    },
+    {
+      id: 2,
+      name: 'Vinay',
+      email: 'vinay@gmail.com',
+      contact: '8888888888',
+      joining: '2026-02-12',
+      relieving: '2026-03-01',
+    },
+    {
+      id: 3,
+      name: 'Ravi',
+      email: 'ravi@gmail.com',
+      contact: '7777777777',
+      joining: '2026-02-15',
+      relieving: '2026-03-10',
+    },
+    {
+      id: 4,
+      name: 'Amit',
+      email: 'amit@gmail.com',
+      contact: '6666666666',
+      joining: '2026-02-18',
+      relieving: '2026-03-12',
+    },
+    {
+      id: 5,
+      name: 'Neha',
+      email: 'neha@gmail.com',
+      contact: '5555555555',
+      joining: '2026-02-20',
+      relieving: '2026-03-15',
+    },
+  ]
+
+  return (
+    <CContainer fluid className="py-4 pb-5">
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="shadow border-0 rounded-4">
+            <CCardBody className="p-4">
+              {/* ================= HEADER ================= */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="fw-bold mb-1 text-primary">{workOrder.work_order_no}</h3>
+                  <div className="text-muted">{workOrder.project_name}</div>
+                </div>
+
+                <div className="d-flex gap-3">
+                  <CDropdown>
+                    <CDropdownToggle color="primary" size="sm">
+                      Export
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={handleExportPDF}>Download PDF</CDropdownItem>
+                      <CDropdownItem onClick={handleExportExcel}>Download Excel</CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </div>
+              </div>
+
+              {/* ================= BASIC DETAILS ================= */}
+              <div className="mb-4 p-4 rounded-3 bg-light">
+                <h5 className="fw-bold mb-3 text-dark">Basic Details</h5>
+                <CRow>
+                  <CRow className="g-2">
+                    <ViewField label="Work Order No" value={workOrder.work_order_no} />
+                    <ViewField label="Date" value={workOrder.work_order_date} />
+                    <ViewField label="Project No" value={workOrder.project_no} />
+                    <ViewField label="PI No" value={workOrder.pi_no} />
+                    <ViewField label="Project Name" value={workOrder.project_name} />
+                    <ViewField label="Issued To" value={workOrder.issued_to_name} />
+                    <ViewField label="Issued To Address" value={workOrder.issued_to_address} />
+                    <ViewField label="Issued To Contact" value={workOrder.issued_to_contact} />
+                    <ViewField label="Issued To Phone" value={workOrder.issued_to_phone} />
+                    <ViewField label="Contact Person" value={workOrder.contact_name} />
+                    <ViewField label="Contact Email" value={workOrder.contact_email} />
+                    <ViewField label="Contact Phone" value={workOrder.contact_number} />
+                  </CRow>
+                </CRow>
+              </div>
+
+              {/* ================= DEPLOYMENT CARD ================= */}
+              {computedDeployments && (
+                <CCard className="mb-4 shadow-sm border-0 rounded-3">
+                  <CCardBody>
+                    {/* DEPLOYMENT 1 */}
+                    {computedDeployments.map((desgns, key) => {
+                      return (
+                        <div className="mb-4 pb-3 border-bottom" key={key + 1}>
+                          <h6 className="fw-bold mb-3 ">Deployment #{key + 1}</h6>
+
+                          <CRow className="g-3">
+                            <ViewField label="GST Code" value={desgns.GstCodeMaster.code} />
+                            <ViewField label="Designation" value={desgns.Designation.designation} />
+                            <ViewField label="Duration" value={desgns.duration_days} />
+                            <ViewField label="Persons" value={desgns.req_person_count} />
+                            <ViewField label="Unit Rate" value={desgns.monthly_unit_rate} />
+                            <ViewField
+                              label="Total Amount"
+                              value={desgns.totalAmount?.toFixed(2)}
+                            />
+                            <ViewField label="IGST" value={desgns.igst_amount} />
+                            <ViewField label="CGST" value={desgns.cgst_amount} />
+                            <ViewField label="SGST" value={desgns.sgst_amount} />
+                          </CRow>
+                          <CAccordion className="mt-4">
+                            <CAccordionItem itemKey={1}>
+                              <CAccordionHeader>Deployed Employees</CAccordionHeader>
+
+                              <CAccordionBody>
+                                <CTable hover responsive className="align-middle">
+                                  <CTableHead style={{ background: '#f8f9fc' }}>
+                                    <CTableRow>
+                                      <CTableHeaderCell>Name</CTableHeaderCell>
+                                      <CTableHeaderCell>Email</CTableHeaderCell>
+                                      <CTableHeaderCell>Contact</CTableHeaderCell>
+                                      <CTableHeaderCell>Joining</CTableHeaderCell>
+                                      <CTableHeaderCell>Relieving</CTableHeaderCell>
+                                    </CTableRow>
+                                  </CTableHead>
+
+                                  <CTableBody>
+                                    {deploymentEmployees.length > 0 ? (
+                                      deploymentEmployees.map((emp, index) => (
+                                        <CTableRow key={index}>
+                                          <CTableDataCell>{emp.name}</CTableDataCell>
+                                          <CTableDataCell>{emp.email}</CTableDataCell>
+                                          <CTableDataCell>{emp.contact}</CTableDataCell>
+                                          <CTableDataCell>{emp.joining}</CTableDataCell>
+                                          <CTableDataCell>{emp.relieving}</CTableDataCell>
+                                        </CTableRow>
+                                      ))
+                                    ) : (
+                                      <CTableRow>
+                                        <CTableDataCell
+                                          colSpan={5}
+                                          className="text-center text-muted"
+                                        >
+                                          No Employees Deployed
+                                        </CTableDataCell>
+                                      </CTableRow>
+                                    )}
+                                  </CTableBody>
+                                </CTable>
+                              </CAccordionBody>
+                            </CAccordionItem>
+                          </CAccordion>
+                        </div>
+                      )
+                    })}
+                  </CCardBody>
+                </CCard>
+              )}
+              {/* ================= TAX SUMMARY CARD ================= */}
+              <CCard className="mb-4 shadow-sm border-0 rounded-3">
+                <CCardBody>
+                  <h5 className="fw-bold mb-3 ">Total</h5>
+                  <CRow className="g-2">
+                    <ViewField label="Total Amount" value={totalAmount.toFixed(2)} />
+                    <ViewField label="IGST" value={totalIgst.toFixed(2)} />
+                    <ViewField label="CGST" value={totalCgst.toFixed(2)} />
+                    <ViewField label="SGST" value={totalSgst.toFixed(2)} />
+                  </CRow>
+
+                  <CRow></CRow>
+                </CCardBody>
+              </CCard>
+
+              {/* ================= GRAND TOTAL CARD ================= */}
+              <CCard className="shadow-sm border-0 rounded-3 bg-light">
+                <CCardBody>
+                  <h5 className="fw-bold text-dark">Grand Total</h5>
+                  <h5 className="fw-bold text-success mt-2">₹ {grandTotal.toFixed(2)}</h5>
+                </CCardBody>
+              </CCard>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default WorkOrderPreview

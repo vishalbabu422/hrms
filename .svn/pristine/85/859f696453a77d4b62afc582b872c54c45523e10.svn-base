@@ -1,0 +1,12 @@
+import api from '../api/axios'
+
+/**
+ * Get employee health details
+ */
+export const getEmployeeHealth = async (employeeId) => {
+  if (!employeeId) {
+    throw new Error('Employee ID is required')
+  }
+
+  return await api.get(`/employee/${employeeId}/health`)
+}

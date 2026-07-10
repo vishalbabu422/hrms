@@ -4,7 +4,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
 // UserDashboard
 
-const UserDashboard = React.lazy(() => import('./views/userdashboard/UserDashboard'))
+const UserDashboard = React.lazy(() => import('./views/userdashboard/userdashboard'))
 
 //----------------------------------------------------------//
 
@@ -63,8 +63,10 @@ const WorkOrderIndex = React.lazy(() => import('./views/work-order/index'))
 const WorkOrderAdd = React.lazy(() => import('./views/work-order/add'))
 const WorkOrderEdit = React.lazy(() => import('./views/work-order/edit'))
 const WorkOrderPreview = React.lazy(() => import('./views/work-order/preview'))
-const WorkOrderDesignation = React.lazy(() => import('./views/work-order/designations'))
+// const WorkOrderDesignation = React.lazy(() => import('./views/work-order/designations'))
 const WorkOrderEmpDeployment = React.lazy(() => import('./views/work-order/emp-deployment'))
+const WorkOrderDesignation = React.lazy(() => import('./views/work-order/designations'))
+const WorkOrderMilestones = React.lazy(() => import('./views/work-order/milestones'))
 
 /* leave record */
 const leaverecord = React.lazy(() => import('./views/leave-record/leave'))
@@ -119,15 +121,6 @@ const empSalaryStructureEdit = React.lazy(() => import('./views/emp-salary-struc
 
 /* Employee Salary Register */
 const salaryRegister = React.lazy(() => import('./views/emp-salary-register/salary-register'))
-
-// /* Salary Addon */
-// const salaryAddonIndex = React.lazy(() => import('./views/salary-addon'))
-// const salaryAddonAdd = React.lazy(() => import('./views/salary-addon/add'))
-// const salaryAddonEdit = React.lazy(() => import('./views/salary-addon/edit'))
-
-// const employeeAddon = React.lazy(() =>
-//   import('./views/salary-addon/employeeaddon')
-// )
 
 /* Salary Addon */
 const salaryAddonIndex = React.lazy(() => import('./views/salary-addon'))
@@ -210,6 +203,8 @@ const routes = [
   { path: '/work-order/edit/:id', name: 'Edit', element: WorkOrderEdit },
   { path: '/work-order/preview/:id', name: 'preview', element: WorkOrderPreview },
   { path: '/work-order/designations/:id', name: 'Designations', element: WorkOrderDesignation },
+  { path: '/work-order/:id/milestones', name: 'milestones', element: WorkOrderMilestones },
+
   {
     path: '/work-order/emp-deployment/:id',
     name: 'Emp-Deployment',
@@ -320,6 +315,8 @@ const routes = [
     name: 'Employee Addon',
     element: employeeAddon,
   },
+
+  /* Profile */
 
   {
     path: '/profile',

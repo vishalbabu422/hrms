@@ -1,0 +1,6 @@
+// services/passportService.js
+import api from '../api/axios'
+
+export const getEmployeePassportVisa = (employeeId) => {
+  return api.get(`/employee/${employeeId}/passport-visa`)
+}

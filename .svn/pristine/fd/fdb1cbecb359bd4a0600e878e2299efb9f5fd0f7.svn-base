@@ -1,0 +1,54 @@
+const router = require("express").Router();
+
+const {
+    createExamination,
+    getAllExaminations,
+    getExamination,
+    updateExamination,
+    deleteExamination
+} = require("./examination.controller");
+
+const {
+    protect,
+    restrictTo,
+    checkPermission,
+    injectOrgScope
+} = require("../../../middlewares/authMiddleware");
+
+const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
+
+router.use(protect);
+
+router
+    .route("/")
+    .get(
+        restrictTo(...ROLES),
+        //checkPermission("EXAM_VIEW"),
+        injectOrgScope(),
+        getAllExaminations
+    )
+    .post(
+        restrictTo(...ROLES),
+        //checkPermission("EXAM_CREATE"),
+        createExamination
+    );
+
+router
+    .route("/:id")
+    .get(
+        restrictTo(...ROLES),
+        //checkPermission("EXAM_VIEW"),
+        getExamination
+    )
+    .put(
+        restrictTo(...ROLES),
+        //checkPermission("EXAM_UPDATE"),
+        updateExamination
+    )
+    .delete(
+        restrictTo(...ROLES),
+        //checkPermission("EXAM_DELETE"),
+        deleteExamination
+    );
+
+module.exports = router;

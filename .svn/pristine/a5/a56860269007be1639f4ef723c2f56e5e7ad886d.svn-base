@@ -1,0 +1,23 @@
+export const validateEmpSalaryStructure = (data, type = 'Employee Salary') => {
+  const errors = {}
+
+  if (!data.employee_id) {
+    errors.employee_id = `${type}: Employee is required`
+  }
+
+  if (!data.salary_structure_id) {
+    errors.salary_structure_id = `${type}: Salary structure is required`
+  }
+
+  if (!data.ctc) {
+    errors.ctc = `${type}: CTC is required`
+  } else if (isNaN(data.ctc) || Number(data.ctc) <= 0) {
+    errors.ctc = `${type}: CTC must be a valid number`
+  }
+
+  if (!data.effective_from) {
+    errors.effective_from = `${type}: Effective date is required`
+  }
+
+  return errors
+}

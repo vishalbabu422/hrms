@@ -1,0 +1,68 @@
+import ExamFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { CSpinner, CCard, CCardBody } from '@coreui/react'
+const Edit = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [initialData, setInitialData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchExaminationData = async () => {
+      try {
+        const res = await api.get(`/examinations/${id}`)
+        const mapped = mapApiToForm(res.data.data)
+        setInitialData(mapped)
+      } catch (err) {
+        toast.error('Failed to load examination')
+        navigate('/examination')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchExaminationData()
+  }, [id])
+
+  const mapApiToForm = (data) => ({
+    exam_name: data.exam_name ?? '',
+    exam_type: data.exam_type ?? '',
+    passing_marks: data.passing_marks ?? '',
+    is_active: data?.is_active !== undefined ? Boolean(data.is_active) : true,
+  })
+
+
+
+
+  const handleUpdate = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+      await api.put(`/examinations/${id}`, normalizedPayload)
+      toast.success('Examination updated successfully')
+      navigate('/examination')
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to update Examination')
+    }
+  }
+
+  if (loading) {
+    return (
+      <CCard>
+        <CCardBody className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+          <CSpinner />
+        </CCardBody>
+      </CCard>
+    )
+  }
+
+  return <ExamFormComponent initialData={initialData} mode="edit" onSubmit={handleUpdate} />
+}
+
+export default Edit

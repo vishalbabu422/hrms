@@ -1,0 +1,5884 @@
+BEGIN;
+CREATE SCHEMA IF NOT EXISTS pmu;
+
+----------------------------------------------------------------- Organizations ----------------------------------------------------------------- 
+
+CREATE TABLE pmu.organizations (
+    id BIGSERIAL PRIMARY KEY,
+
+    org_name VARCHAR(200) NOT NULL,
+    org_code VARCHAR(50) UNIQUE NOT NULL,
+
+    contact_email VARCHAR(120),
+    contact_phone VARCHAR(30),
+
+    address TEXT,
+
+    is_active BOOLEAN DEFAULT true,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO pmu.organizations(
+	id, org_name, org_code, contact_email, contact_phone, address)
+	VALUES (1, 'New Organization', 'ORG_NEW', 'info@neworg.com', '9999999999', '');
+
+----------------------------- Company ----------------------------------------------------------------- 
+
+CREATE TABLE pmu.company_master (
+    id BIGSERIAL PRIMARY KEY,
+	organization_id BIGINT REFERENCES pmu.organizations(id)	ON DELETE CASCADE,
+    company_name VARCHAR(255) NOT NULL,
+    company_code VARCHAR(50) UNIQUE,
+
+    company_type VARCHAR(50) CHECK (
+        company_type IN (
+            'PRIVATE_LIMITED',
+            'PUBLIC_LIMITED',
+            'LLP',
+            'PROPRIETORSHIP',
+            'PARTNERSHIP',
+            'GOVERNMENT',
+            'NGO',
+            'OTHER'
+        )
+    ),
+
+    incorporation_date DATE,
+    official_email VARCHAR(150),
+    official_phone VARCHAR(30),
+    website VARCHAR(150),
+
+    address_line1 TEXT,
+    address_line2 TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'India',
+    pincode VARCHAR(15),
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+
+-------------------------------- GST  --------------------------------------------------
+
+CREATE TABLE pmu.gst_master (
+    id              BIGSERIAL PRIMARY KEY,
+    code_type       CHARACTER VARYING(10) NOT NULL,      
+    code            CHARACTER VARYING(10) NOT NULL,      
+    description     TEXT NOT NULL,              
+    gst_rate        NUMERIC(5,2) DEFAULT 0.00, 
+    cgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    sgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    igst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    cess_rate       NUMERIC(5,2) DEFAULT 0.00,
+	other_rate      NUMERIC(5,2) DEFAULT 0.00,
+    effective_from  DATE NOT NULL,
+    effective_to    DATE,
+    is_active       BOOLEAN DEFAULT TRUE,
+    created     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      TIMESTAMP WITH TIME ZONE DEFAULT now(),
+	UNIQUE (code_type, code),
+	
+	CONSTRAINT gst_master_effective_date_check
+    CHECK (effective_to IS NULL OR effective_to >= effective_from)
+);
+
+
+-------------------------------- EMPANELMENT  --------------------------------------------------
+
+CREATE TABLE pmu.empanelment_master (
+    id                  BIGSERIAL PRIMARY KEY,
+	organization_id 	BIGINT REFERENCES pmu.organizations(id)	ON DELETE CASCADE,
+    category            CHARACTER VARYING(20) NOT NULL,    
+    empanelment_no      CHARACTER VARYING(50) NOT NULL,
+	amc					NUMERIC(5,2) DEFAULT 0.00,
+	agm					NUMERIC(5,2) DEFAULT 0.00,	
+	date        		DATE NOT NULL,
+	shortcode			CHARACTER VARYING(255) NOT NULL,
+	rfe					CHARACTER VARYING(255) NOT NULL,
+    effective_from      DATE NOT NULL,
+    effective_to        DATE,
+	leaves_per_month  	NUMERIC(3,1) NOT NULL CHECK (leaves_per_month >= 0), 
+	carry_forward		BOOLEAN DEFAULT FALSE,
+	leave_category		CHARACTER VARYING(150) NOT NULL,
+	maternity_leaves	BOOLEAN,
+	remarks				TEXT,
+	doc_path			CHARACTER VARYING(255),
+	is_active           BOOLEAN DEFAULT TRUE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+	
+	CONSTRAINT empanelment_master_effective_date_check
+    CHECK (effective_to IS NULL OR effective_to >= effective_from)
+);
+
+CREATE TABLE pmu.emp_ext_mapping (
+    id                  BIGSERIAL PRIMARY KEY, 
+    empanelment_id_fk   BIGINT REFERENCES pmu.empanelment_master(id) ON DELETE CASCADE NOT NULL,
+	ext_date        	DATE,
+	doc_path			CHARACTER VARYING(255),
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.empanelment_designation (
+    id              	BIGSERIAL PRIMARY KEY,
+	empanelment_id_fk   BIGINT REFERENCES pmu.empanelment_master(id) ON DELETE CASCADE NOT NULL,
+    type            	CHARACTER VARYING(100) NOT NULL,      
+    designation     	CHARACTER VARYING(150) NOT NULL,      
+    qualification   	TEXT NOT NULL, 
+    exp_in_years    	NUMERIC(4,1) NOT NULL, 
+    is_active       	BOOLEAN DEFAULT TRUE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.resource_rate (
+    id                          	BIGSERIAL PRIMARY KEY,
+    desgn_id_fk                 	BIGINT REFERENCES pmu.empanelment_designation(id) ON DELETE CASCADE NOT NULL,
+    unit_rate_incl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    agency_margin_percent       	NUMERIC(5,2) DEFAULT 0.00,
+    agency_amount               	NUMERIC(15,2) DEFAULT 0.00,
+    unit_rate_excl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    nicsi_margin_percent        	NUMERIC(5,2) DEFAULT 0.00,
+    nicsi_margin_amount         	NUMERIC(15,2) DEFAULT 0.00,
+    total_amount                	NUMERIC(15,2) NOT NULL,
+    gst_code_fk                		BIGINT REFERENCES pmu.gst_master(id) ON DELETE CASCADE NOT NULL,
+    cgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    sgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    igst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    total_gst_amount            	NUMERIC(15,2) DEFAULT 0.00,
+    final_amount                	NUMERIC(15,2) NOT NULL,
+	is_active       				BOOLEAN DEFAULT TRUE,
+    created                     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at                    	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+
+-------------------------------- VENDOR  --------------------------------------------------
+
+CREATE TABLE pmu.vendor_master (
+    id BIGSERIAL PRIMARY KEY,
+	organization_id BIGINT REFERENCES pmu.organizations(id)	ON DELETE CASCADE,
+	empanelment_id_fk BIGINT REFERENCES pmu.empanelment_master(id) ON DELETE CASCADE NOT NULL,
+    vendor_name VARCHAR(255) NOT NULL,
+    vendor_code VARCHAR(50) UNIQUE ,
+
+    vendor_type VARCHAR(50) CHECK (
+        vendor_type IN (
+            'INDIVIDUAL',
+            'PROPRIETORSHIP',
+            'PARTNERSHIP',
+            'LLP',
+            'PRIVATE_LIMITED',
+            'PUBLIC_LIMITED',
+            'GOVERNMENT',
+            'NGO',
+            'OTHER'
+        )
+    ),
+
+    contact_person VARCHAR(150),
+    contact_email VARCHAR(150),
+    contact_phone VARCHAR(30),
+
+    website VARCHAR(150),
+
+    address_line1 TEXT,
+    address_line2 TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'India',
+    pincode VARCHAR(15),
+
+    bank_name VARCHAR(150),
+    account_number VARCHAR(50),
+    ifsc_code VARCHAR(20),
+    branch_name VARCHAR(150),
+
+    onboarding_date DATE DEFAULT CURRENT_DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+
+----------------------------------------------------------------- Work Order  --------------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmu.work_order (
+    id 					BIGSERIAL PRIMARY KEY,
+	empanelment_id_fk   BIGINT REFERENCES pmu.empanelment_master(id) ON DELETE CASCADE NOT NULL,
+    work_order_no       CHARACTER VARYING(255) UNIQUE NOT NULL,
+    work_order_date     DATE NOT NULL,
+    project_no          CHARACTER VARYING(255) NOT NULL,
+    pi_number           CHARACTER VARYING(255),
+    project_name        CHARACTER VARYING(255) NOT NULL,
+	vendor_id_fk      	BIGINT NOT NULL REFERENCES pmu.vendor_master(id) ON DELETE CASCADE,
+    issued_to_name      CHARACTER VARYING(255) NOT NULL,
+    issued_to_address   TEXT NOT NULL,
+    issued_to_contact   CHARACTER VARYING(255) NOT NULL,
+    issued_to_phone     CHARACTER VARYING(50) NOT NULL,
+    issued_to_email     CHARACTER VARYING(255) NOT NULL,
+    contact_name        CHARACTER VARYING(255) NOT NULL,
+    contact_number      TEXT NOT NULL,
+    contact_email       TEXT NOT NULL,
+    total_amt           NUMERIC(15,2) NOT NULL,
+    total_cgst_amt      NUMERIC(15,2) NOT NULL,
+    total_sgst_amt      NUMERIC(15,2) NOT NULL,
+    total_igst_amt      NUMERIC(15,2) NOT NULL,
+    grand_total         NUMERIC(15,2) NOT NULL,
+	doc_path			CHARACTER VARYING(255),
+	remarks				TEXT,
+    is_active          	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by          INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pmu.wo_desgn_mapping (
+    id 					BIGSERIAL PRIMARY KEY,
+    work_order_id      	BIGINT REFERENCES pmu.work_order(id) ON DELETE CASCADE NOT NULL,
+    sac_code           	CHARACTER VARYING(10) NOT NULL,
+	desgn_id_fk			BIGINT REFERENCES pmu.empanelment_designation(id) ON DELETE CASCADE NOT NULL,
+    description        	TEXT,
+    req_person_count   	INTEGER NOT NULL,
+    duration_days      	TEXT NOT NULL,
+    monthly_unit_rate  	NUMERIC(15,2) NOT NULL,
+    deployment_from    	DATE NOT NULL,
+    deployment_to      	DATE NOT NULL,
+    cgst_amount        	NUMERIC(15,2) NOT NULL,
+    sgst_amount        	NUMERIC(15,2) NOT NULL,
+    igst_amount        	NUMERIC(15,2) NOT NULL,
+    is_active        	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    updated_at      	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by         	BIGINT NOT NULL,
+	modified_by         BIGINT
+);
+
+
+ALTER TABLE pmu.wo_desgn_mapping
+ALTER COLUMN sac_code TYPE BIGINT USING sac_code::BIGINT;
+
+ALTER TABLE pmu.wo_desgn_mapping
+ADD CONSTRAINT fk_wo_desgn_gst
+FOREIGN KEY (sac_code)
+REFERENCES pmu.gst_master(id)
+ON DELETE RESTRICT;
+
+
+
+
+----------------------------------------------------------------- Employees  --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employees (
+    id BIGSERIAL PRIMARY KEY,
+
+    -- System IDs
+    employee_code VARCHAR(30) UNIQUE NOT NULL,
+    attendance_code VARCHAR(20) UNIQUE,
+
+    -- Authentication
+    password_hash VARCHAR(255) NOT NULL,
+
+    -- Name (minimal needed for UI + login)
+    salutation VARCHAR(10) CHECK (salutation IN ('Mr','Ms','Mrs','Dr')),
+    first_name VARCHAR(50) NOT NULL,
+    middle_name VARCHAR(50),
+    last_name VARCHAR(50) NOT NULL,
+
+    -- Contact for login
+    email VARCHAR(120) UNIQUE NOT NULL,
+    contact_no VARCHAR(20) NOT NULL,
+
+    -- Employment lifecycle
+    date_of_joining DATE NOT NULL,
+    probation_end_date DATE,
+    confirmation_date DATE,
+    date_of_exit DATE,
+    notice_period_days INTEGER,
+
+    -- HR workflow status
+    account_status VARCHAR(20) CHECK (account_status IN ('PENDING','ACTIVE','REJECTED','EXITED')) DEFAULT 'PENDING', -- PENDING / ACTIVE / REJECTED / EXITED
+    hr_verified BOOLEAN DEFAULT false,
+    verified_by BIGINT REFERENCES pmu.employees(id),
+    verified_at TIMESTAMP,
+
+    -- Flags
+    is_active BOOLEAN DEFAULT true,
+    is_deleted BOOLEAN DEFAULT false,
+
+    -- Audit
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_emp_email ON pmu.employees(email);
+CREATE INDEX idx_emp_contact ON pmu.employees(contact_no);
+
+ALTER TABLE pmu.employees
+ADD COLUMN organization_id BIGINT
+REFERENCES pmu.organizations(id);
+
+Alter TABLE pmu.employees
+ADD COLUMN must_change_password boolean DEFAULT true;
+----------------------------------------------------------------- Role Master ----------------------------------------------------------------- 
+
+CREATE TABLE pmu.roles (
+    id BIGSERIAL PRIMARY KEY,
+
+    role_code VARCHAR(50) NOT NULL,   
+    role_name VARCHAR(100) NOT NULL,
+    description TEXT,
+
+    is_system_role BOOLEAN DEFAULT false, -- cannot be deleted
+	role_level INT NOT NULL, -- Lower number = higher authority
+	is_super_admin BOOLEAN DEFAULT FALSE, -- bypass all permission checks
+    is_active BOOLEAN DEFAULT TRUE,
+    organization_id BIGINT, -- NULL = global role -- NOT NULL = org-specific role
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	
+	UNIQUE (role_code, organization_id)
+);
+
+CREATE INDEX idx_roles_org ON pmu.roles(organization_id);
+CREATE INDEX idx_roles_org_code ON pmu.roles(organization_id, role_code);
+
+ALTER TABLE pmu.roles
+ADD CONSTRAINT fk_roles_organization
+FOREIGN KEY (organization_id)
+REFERENCES pmu.organizations(id)
+ON DELETE CASCADE
+ON UPDATE CASCADE;
+
+INSERT INTO pmu.roles (role_code, role_name, is_system_role,is_super_admin, role_level,organization_id) VALUES
+('SAAS_ADMIN','System Administrator', true,true, 1, null),
+('ORG_ADMIN','Super Administrator', true,false, 2, 1),
+('HR_ADMIN','HR Administrator', true,false, 3, 1),
+('MANAGER','Manager', true,false, 4, 1),
+('EMPLOYEE','Employee', true,false, 5, 1);
+
+-----------------------------------------------------------------  Employee Roles ----------------------------------------------------------------- 
+
+CREATE TABLE pmu.employee_roles (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL
+        REFERENCES pmu.employees(id)
+        ON DELETE CASCADE,
+
+    role_id BIGINT NOT NULL
+        REFERENCES pmu.roles(id)
+        ON DELETE CASCADE,
+		
+	organization_id BIGINT
+		REFERENCES pmu.organizations(id)
+		ON DELETE CASCADE,
+
+    assigned_by BIGINT
+        REFERENCES pmu.employees(id),
+
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (employee_id, role_id)
+);
+
+CREATE INDEX idx_emp_roles_emp ON pmu.employee_roles(employee_id);
+CREATE INDEX idx_emp_roles_role ON pmu.employee_roles(role_id);
+
+
+----------------------------------------------------------------- Refresh Token ----------------------------------------------------------------- 
+
+CREATE TABLE pmu.employee_refresh_tokens (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL
+        REFERENCES pmu.employees(id)
+        ON DELETE CASCADE,
+
+    token_hash CHAR(64) NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    revoked BOOLEAN DEFAULT false
+);
+
+CREATE INDEX idx_refresh_emp ON pmu.employee_refresh_tokens(employee_id);
+
+
+
+----------------------------------------------------------------- Employee details --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_details (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT UNIQUE
+    REFERENCES pmu.employees(id)
+    ON DELETE CASCADE,
+
+    -- Personal details
+    dob DATE NOT NULL,
+    birth_place VARCHAR(100),
+    gender VARCHAR(20) CHECK (gender IN ('Male','Female','Other')) NOT NULL,
+
+    marital_status VARCHAR(20)
+        CHECK (marital_status IN ('SINGLE','MARRIED','DIVORCED','WIDOWED','SEPARATED')),
+    marriage_date DATE,
+
+    father_name VARCHAR(150),
+    mother_name VARCHAR(150),
+
+    religion VARCHAR(50),
+    nationality VARCHAR(50),
+
+    alternate_email VARCHAR(120),
+    emergency_contact_no VARCHAR(20),
+
+    blood_group VARCHAR(10),
+
+    -- 🔐 Sensitive IDs (Encryption-ready pattern)
+
+    pan_enc BYTEA,
+    pan_iv BYTEA,
+    pan_hash CHAR(64) UNIQUE,
+
+    aadhaar_enc BYTEA,
+    aadhaar_iv BYTEA,
+    aadhaar_hash CHAR(64) UNIQUE,
+
+    voter_enc BYTEA,
+    voter_iv BYTEA,
+    voter_hash CHAR(64) UNIQUE,
+
+    passport_enc BYTEA,
+    passport_iv BYTEA,
+    passport_hash CHAR(64) UNIQUE,
+
+    -- Other statutory numbers (less sensitive)
+	
+	visa VARCHAR(30),
+    pran_number VARCHAR(30),
+    esic_number VARCHAR(30),
+    mgnrega_number VARCHAR(40),
+    epfo_number VARCHAR(30),
+    eps_number VARCHAR(30),
+	
+	-- PF
+	uan_number VARCHAR(30),
+	pf_number VARCHAR(30),
+    pf_joining_date DATE,
+    pf_exit_date DATE,
+
+    -- Compliance
+    lwf BOOLEAN DEFAULT false,
+    professional_tax BOOLEAN DEFAULT false,
+
+    -- Vendor / contract
+    vendor_code VARCHAR(30),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+------------------------------------------------------------------------ Employee Bank Details --------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_bank_details (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT UNIQUE REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    bank_name VARCHAR(120),
+    branch_name VARCHAR(120),
+    bank_address TEXT,
+    account_number VARCHAR(40),
+    ifsc VARCHAR(20),
+    micr_code VARCHAR(20),
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-------------------------------------------------------------- Employee family members ----------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_family_members (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    relation VARCHAR(30) CHECK (relation IN ('SPOUSE','CHILD','FATHER','MOTHER','SIBLING')), 
+
+    name VARCHAR(150),
+    dob DATE,
+    gender VARCHAR(20),
+    pan_number VARCHAR(20),
+    is_dependent BOOLEAN,
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pmu.employee_insurances (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    insurance_company VARCHAR(150),
+    policy_number VARCHAR(100),
+    from_date DATE,
+    to_date DATE,
+
+    sum_insured NUMERIC(14,2),
+    policy_premium NUMERIC(14,2),
+    family_members_covered TEXT,
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+---------------------------------------------------------------- Employee Screening Tests -------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_screening_tests (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT UNIQUE REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    test_scheduled_date DATE,
+    test_given_date DATE,
+    marks_secured NUMERIC(6,2),
+    result VARCHAR(10) CHECK (result IN ('PASS','FAIL')),
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-------------------------------------------------------------------- Employee Address ----------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_addresses (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    address_type VARCHAR(30) NOT NULL,  
+    -- CORRESPONDENCE / PERMANENT / OFFICE / CLIENT_OFFICE
+
+    address_line1 TEXT NOT NULL,
+    address_line2 TEXT,
+    landmark TEXT,
+
+    city VARCHAR(100),
+    district VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'India',
+
+    pin_code VARCHAR(10),
+
+    is_primary BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX uniq_emp_addr_type
+ON pmu.employee_addresses(employee_id, address_type);
+
+ALTER TABLE pmu.employee_addresses
+ADD CONSTRAINT chk_address_type
+CHECK (address_type IN (
+ 'CORRESPONDENCE','PERMANENT','OFFICE','CLIENT_OFFICE'
+));
+
+-------------------------------------------------------------------- Employee Qualifications ----------------------------------------------------------------------------
+CREATE TABLE pmu.employee_qualifications (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES  pmu.employees(id) ON DELETE CASCADE,
+
+    qualification_type VARCHAR(50),  
+    -- DEGREE / CERTIFICATION / DIPLOMA / TRAINING
+
+    qualification_name VARCHAR(200) NOT NULL,
+    specialization VARCHAR(150),
+
+    institute_name VARCHAR(200),
+    board_university VARCHAR(200),
+
+    year_of_passing INT,
+    grade VARCHAR(50),
+    percentage NUMERIC(5,2),
+
+    duration_months INT,
+    is_highest BOOLEAN DEFAULT FALSE,
+
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_qual_emp ON pmu.employee_qualifications(employee_id);
+
+-------------------------------------------------------------------- Employee Experiences ----------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_experiences (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    company_name VARCHAR(200),
+    designation VARCHAR(150),
+
+    start_date DATE,
+    end_date DATE,
+
+    total_years NUMERIC(4,1),
+
+    description TEXT,
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_exp_emp ON pmu.employee_experiences(employee_id);
+
+--------------------------------------------------------------------- employee Skill table ------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_skills (
+    id BIGSERIAL PRIMARY KEY,
+
+    -- Relation
+    employee_id BIGINT NOT NULL
+        REFERENCES pmu.employees(id)
+        ON DELETE CASCADE,
+
+    -- Skill details
+    skill_name VARCHAR(100) NOT NULL,
+    experience_years NUMERIC(4,1) CHECK (experience_years >= 0),
+    remarks VARCHAR(255),
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Prevent duplicate skill for same employee
+    UNIQUE (employee_id, skill_name)
+);
+
+--------------------------------------------------------------------- employee health table ------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_health (
+    id BIGSERIAL PRIMARY KEY,
+
+    -- Relation
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    -- Physical details
+    height_cm NUMERIC(5,2) CHECK (height_cm > 0),
+    weight_kg NUMERIC(5,2) CHECK (weight_kg > 0),
+
+    -- Health flags
+    has_health_issues BOOLEAN DEFAULT false,
+    is_handicapped BOOLEAN DEFAULT false,
+
+    -- Disability details
+    physical_disability_category VARCHAR(100),
+
+    -- Remarks
+    health_issue_remarks TEXT,
+    identification_mark TEXT,
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- One health record per employee
+    UNIQUE (employee_id)
+);
+
+----------------------------------------------------------------- employee vaccination -----------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_vaccinations (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    vaccination_name VARCHAR(100) NOT NULL,
+    vaccination_date DATE,
+    vaccination_document VARCHAR(255),
+	
+	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+------------------------------------------------------------------  emp_vehicle -------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_vehicles (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    vehicle_details TEXT,
+    driving_license_number VARCHAR(30),
+    driving_license_issue_date DATE,
+    driving_license_expiry_date DATE,
+    vehicle_category VARCHAR(30),
+
+    professional_membership_details TEXT,
+
+    emt_registration_expiry_date DATE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--------------------------------------------------------------------- emp_hobbies --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_hobbies (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    hobby VARCHAR(100),
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+------------------------------------------------------------- emp_achievement ---------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_achievements (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    achievement_date DATE,
+    achievement TEXT,
+    achievement_remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- emp_assests --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_assets (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    asset_name VARCHAR(150),
+    asset_code VARCHAR(50),
+    asset_issue_date DATE,
+    asset_return_date DATE,
+
+    quantity_issued INTEGER,
+    should_be_returned BOOLEAN,
+
+    return_expected_by DATE,
+    quantity_returned INTEGER,
+    remarks TEXT,
+    total_damage_worth NUMERIC(12,2),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+---------------------------------------------------------------- emp_language -----------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_languages (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    language_name VARCHAR(50),
+    can_read BOOLEAN,
+    can_write BOOLEAN,
+    can_speak BOOLEAN,
+    proficiency TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-------------------------------------------------------------   emp_discipline ---------------------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_discipline (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    offence TEXT,
+    offence_date DATE,
+    disciplinary_action TEXT,
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- emp_passport_visa_details ---------------------------------------------------------------------
+
+CREATE TABLE pmu.employee_passport_visa_details (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    passport_number VARCHAR(30),
+    passport_issue_date DATE,
+    passport_expiry_date DATE,
+    passport_place_of_issue VARCHAR(100),
+    passport_issuing_country VARCHAR(100),
+    passport_type VARCHAR(30),
+
+    visa_issuing_authority VARCHAR(150),
+    visa_start_date DATE,
+    visa_end_date DATE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- Employee documents  --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.documents (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL
+        REFERENCES pmu.employees(id)
+        ON DELETE CASCADE,
+
+    doc_type VARCHAR(50) NOT NULL
+        CHECK (doc_type IN (
+            'PHOTO','RESUME','PAN_FILE','AADHAAR_FILE','VOTER_ID_FILE',
+            'QUALIFICATION_CERT','EXPERIENCE_CERT',
+            'BIRTH_CERT','DRIVING_LICENSE','WORK_PERMIT',
+            'CANCEL_CHEQUE','POLICY_DOCUMENT','SCREENING_MAIL_COPY',
+            'SALARY_SLIP','FORM16','POLICE_VERIFICATION',
+            'DECLARATION','OTHER_DOC'
+        )),
+
+    file_name TEXT,
+    file_path TEXT,
+    file_size BIGINT,
+    mime_type VARCHAR(100),
+	
+	file_hash CHAR(64),
+	is_encrypted BOOLEAN DEFAULT true,
+
+    -- Foreign Keys
+    qualification_id BIGINT REFERENCES pmu.employee_qualifications(id) ON DELETE CASCADE,
+    experience_id BIGINT REFERENCES pmu.employee_experiences(id) ON DELETE CASCADE,
+    bank_details_id BIGINT REFERENCES pmu.employee_bank_details(id) ON DELETE CASCADE,
+    screening_test_id BIGINT REFERENCES pmu.employee_screening_tests(id) ON DELETE CASCADE,
+
+    document_verification BOOLEAN DEFAULT false,
+    document_verification_date DATE,
+    document_verified_by BIGINT REFERENCES pmu.employees(id),
+
+    remarks TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	is_deleted BOOLEAN DEFAULT false,
+
+    CONSTRAINT chk_qualification_doc
+        CHECK (
+            (doc_type = 'QUALIFICATION_CERT' AND qualification_id IS NOT NULL)
+            OR doc_type <> 'QUALIFICATION_CERT'
+        ),
+
+    CONSTRAINT chk_experience_doc
+        CHECK (
+            (doc_type = 'EXPERIENCE_CERT' AND experience_id IS NOT NULL)
+            OR doc_type <> 'EXPERIENCE_CERT'
+        )
+);
+
+----------------------------------------------------------------- Employee Designation -----------------------------------------------------------------------------
+
+CREATE TABLE pmu.designations (
+    id BIGSERIAL PRIMARY KEY,
+    organization_id BIGINT NOT NULL REFERENCES pmu.organizations(id) ON DELETE CASCADE,
+    designation_name VARCHAR(150) NOT NULL,
+    designation_code VARCHAR(50),
+    level INTEGER,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, designation_name)
+);
+
+Alter TABLE pmu.designations
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+CREATE TABLE pmu.employee_designations (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+    designation_id BIGINT NOT NULL REFERENCES pmu.designations(id) ON DELETE CASCADE,
+    effective_from DATE NOT NULL,
+    effective_to DATE,
+    is_current BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- Employee Division --------------------------------------------------------------------------------
+
+CREATE TABLE pmu.divisions (
+    id BIGSERIAL PRIMARY KEY,
+    organization_id BIGINT NOT NULL REFERENCES pmu.organizations(id) ON DELETE CASCADE,
+    division_name VARCHAR(150) NOT NULL,
+    division_code VARCHAR(50),
+    parent_division_id BIGINT REFERENCES pmu.divisions(id),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, parent_division_id, division_name)
+);
+
+Alter TABLE pmu.divisions
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+CREATE TABLE pmu.employee_divisions (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+    division_id BIGINT NOT NULL REFERENCES pmu.divisions(id) ON DELETE CASCADE,
+    effective_from DATE NOT NULL,
+    effective_to DATE,
+    is_current BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- Employee Examination -----------------------------------------------------------------------------
+CREATE TABLE pmu.examinations (
+    id BIGSERIAL PRIMARY KEY,
+    organization_id BIGINT NOT NULL REFERENCES pmu.organizations(id) ON DELETE CASCADE,
+    exam_name VARCHAR(200) NOT NULL,
+    exam_type VARCHAR(100),
+    passing_marks INTEGER,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, exam_name)
+);
+
+Alter TABLE pmu.examinations
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+CREATE TABLE pmu.employee_examinations (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+    examination_id BIGINT NOT NULL REFERENCES pmu.examinations(id) ON DELETE CASCADE,
+    exam_date DATE,
+    marks_obtained INTEGER,
+    result_status VARCHAR(50), -- PASS / FAIL
+    certificate_number VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+----------------------------------------------------------------- Employee Training --------------------------------------------------------------------------------
+CREATE TABLE pmu.employee_trainings (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL,
+
+    training_name VARCHAR(255) NOT NULL,
+    training_provider VARCHAR(255),
+
+    training_start_date DATE,
+    training_end_date DATE,
+
+    certificate_file VARCHAR(500),
+
+    training_type VARCHAR(20) NOT NULL DEFAULT 'SELF'
+        CHECK (training_type IN ('SELF', 'COMPANY')),
+
+    description TEXT,
+
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_employee_trainings_employee
+        FOREIGN KEY (employee_id)
+        REFERENCES pmu.employees(id)
+        ON DELETE CASCADE
+);
+
+
+
+
+
+
+
+
+------------------------------------------------------------------------------------------------ module-level permission ------------------------------------------------------------------------------------------------
+
+CREATE TABLE pmu.modules (
+    id BIGSERIAL PRIMARY KEY,
+    module_name VARCHAR(100) NOT NULL,
+    module_code VARCHAR(100) UNIQUE NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pmu.permissions (
+    id BIGSERIAL PRIMARY KEY,
+    module_id BIGINT REFERENCES pmu.modules(id) ON DELETE CASCADE,
+    action VARCHAR(50) NOT NULL,
+    permission_key VARCHAR(150) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pmu.role_permissions (
+    id BIGSERIAL PRIMARY KEY,
+    role_id BIGINT REFERENCES pmu.roles(id) ON DELETE CASCADE,
+    permission_id BIGINT REFERENCES pmu.permissions(id) ON DELETE CASCADE,
+    organization_id BIGINT,
+    UNIQUE (role_id, permission_id, organization_id)
+);
+
+------------------------INDEXING------------------------------
+CREATE INDEX ON pmu.empanelment_master (organization_id);
+CREATE INDEX ON pmu.emp_ext_mapping (empanelment_id_fk);
+CREATE INDEX ON pmu.empanelment_designation (empanelment_id_fk);
+CREATE INDEX ON pmu.resource_rate (desgn_id_fk);
+CREATE INDEX ON pmu.work_order (empanelment_id_fk);
+CREATE INDEX ON pmu.wo_desgn_mapping (work_order_id);
+
+CREATE INDEX idx_doc_emp_active ON pmu.documents(employee_id) WHERE is_deleted = false;
+CREATE INDEX idx_doc_type ON pmu.documents(doc_type);
+
+CREATE INDEX idx_skill_emp ON pmu.employee_skills(employee_id);
+CREATE INDEX idx_assets_emp ON pmu.employee_assets(employee_id);
+CREATE INDEX idx_family_emp ON pmu.employee_family_members(employee_id);
+CREATE INDEX idx_lang_emp ON pmu.employee_languages(employee_id);
+CREATE INDEX idx_vendor_name ON pmu.vendor_master(vendor_name);
+
+
+
+-----------------------TRIGGERS--------------------------
+
+CREATE OR REPLACE FUNCTION pmu.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_emp_upd
+BEFORE UPDATE ON pmu.employees
+FOR EACH ROW EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_emp_details_upd
+BEFORE UPDATE ON pmu.employee_details
+FOR EACH ROW EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_gst_master_modified
+BEFORE UPDATE ON pmu.gst_master
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_empanelment_master_modified
+BEFORE UPDATE ON pmu.empanelment_master
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_emp_ext_mapping_modified
+BEFORE UPDATE ON pmu.emp_ext_mapping
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_empanelment_designation_modified
+BEFORE UPDATE ON pmu.empanelment_designation
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_resource_rate_modified
+BEFORE UPDATE ON pmu.resource_rate
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_work_order_modified
+BEFORE UPDATE ON pmu.work_order
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_wo_desgn_mapping_modified
+BEFORE UPDATE ON pmu.wo_desgn_mapping
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_company_master_upd
+BEFORE UPDATE ON pmu.company_master
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_vendor_master_upd
+BEFORE UPDATE ON pmu.vendor_master
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+CREATE TRIGGER trg_employee_trainings_updated_at
+BEFORE UPDATE ON pmu.employee_trainings
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+-- 02/03/2026
+CREATE UNIQUE INDEX unique_current_designation
+ON pmu.employee_designations (employee_id)
+WHERE is_current = true;
+
+-- 03/03/2026
+CREATE UNIQUE INDEX unique_current_employee_division
+ON pmu.employee_divisions(employee_id)
+WHERE is_current = true;
+
+-- ALTER TABLE pmu.divisions
+-- DROP CONSTRAINT divisions_organization_id_division_name_key;
+
+CREATE UNIQUE INDEX division_unique_active
+ON pmu.divisions (organization_id, division_name)
+WHERE is_deleted = false;
+
+-- 06/03/2026
+ALTER TABLE pmu.employee_examinations
+ADD CONSTRAINT unique_employee_exam
+UNIQUE(employee_id, examination_id);
+
+-- 09/03/2026
+----------------------------------------------------------LTC (Leave Travel Concession)---------------------------------------------------------------------------
+CREATE TABLE pmu.employee_ltc (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT UNIQUE 
+        REFERENCES pmu.employees(id) 
+        ON DELETE CASCADE,
+
+    hometown VARCHAR(100),
+    state VARCHAR(100),
+    district VARCHAR(100),
+    nearest_railway VARCHAR(150),
+    nearest_airport VARCHAR(150),
+    can_update BOOLEAN DEFAULT true,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Alter TABLE pmu.employees
+ADD COLUMN mode_of_working VARCHAR(100);
+
+Alter TABLE pmu.employees
+ADD COLUMN state_of_working VARCHAR(100);
+
+Alter TABLE pmu.employees
+ADD COLUMN employee_category VARCHAR(100);
+
+Alter TABLE pmu.employees
+ADD COLUMN is_gazetted boolean DEFAULT false;
+
+Alter TABLE pmu.employees
+ADD COLUMN resignation_date DATE;
+
+ALTER TABLE pmu.gst_master
+ADD COLUMN transaction_type character varying(10) 
+    CHECK (transaction_type IN ('INTRA', 'INTER'))
+    DEFAULT 'INTRA';
+	
+ALTER TABLE pmu.empanelment_master
+DROP CONSTRAINT empanelment_master_organization_id_fkey;
+
+ALTER TABLE pmu.empanelment_master
+RENAME COLUMN organization_id TO company_id;
+
+ALTER TABLE pmu.empanelment_master
+ADD CONSTRAINT empanelment_master_company_id_fkey
+FOREIGN KEY (company_id)
+REFERENCES pmu.company_master(id)
+ON UPDATE NO ACTION
+ON DELETE CASCADE;
+
+
+-- 11/03/2026
+
+DROP TABLE pmu.employee_vehicles;
+
+CREATE TABLE pmu.employee_vehicles (
+    id BIGSERIAL PRIMARY KEY,
+
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE CASCADE,
+
+    vehicle_details TEXT,
+    vehicle_registration_number VARCHAR(30),
+    registration_issue_date DATE,
+    registration_expiry_date DATE,
+    vehicle_category VARCHAR(30),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+------------ Employee Work Order Deployment --------------------------
+
+CREATE TABLE pmu.employee_work_order_deployment (
+    id BIGSERIAL PRIMARY KEY,
+
+    wo_desgn_id BIGINT NOT NULL REFERENCES pmu.wo_desgn_mapping(id) ON DELETE CASCADE,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE RESTRICT,
+
+    joining_date DATE NOT NULL,
+    relieving_date DATE,
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+
+
+);
+
+--- 16/03/2026 ---
+
+ALTER TABLE pmu.empanelment_master
+ADD COLUMN organization_id bigint;
+
+ALTER TABLE pmu.empanelment_master
+ADD CONSTRAINT empanelment_master_organization_id_fkey
+FOREIGN KEY (organization_id)
+REFERENCES pmu.organizations(id)
+ON UPDATE NO ACTION
+ON DELETE CASCADE;
+
+--------------- Column training_id and doc_type TRAINING_CERT added -----------------
+
+ALTER TABLE pmu.documents
+DROP CONSTRAINT documents_doc_type_check;
+
+ALTER TABLE pmu.documents
+ADD CONSTRAINT documents_doc_type_check
+CHECK (doc_type IN (
+'PHOTO','RESUME','PAN_FILE','AADHAAR_FILE','VOTER_ID_FILE',
+'QUALIFICATION_CERT','EXPERIENCE_CERT','TRAINING_CERT',
+'BIRTH_CERT','DRIVING_LICENSE','WORK_PERMIT',
+'CANCEL_CHEQUE','POLICY_DOCUMENT','SCREENING_MAIL_COPY',
+'SALARY_SLIP','FORM16','POLICE_VERIFICATION',
+'DECLARATION','OTHER_DOC'
+));
+
+ALTER TABLE pmu.documents
+ADD COLUMN training_id BIGINT
+REFERENCES pmu.employee_trainings(id)
+ON DELETE CASCADE;
+
+ALTER TABLE pmu.documents
+ADD CONSTRAINT chk_training_doc
+CHECK (
+    (doc_type = 'TRAINING_CERT' AND training_id IS NOT NULL)
+    OR doc_type <> 'TRAINING_CERT'
+);
+
+--- 17/03/2026 ---
+CREATE INDEX idx_role_perm_role_org 
+ON pmu.role_permissions(role_id, organization_id);
+
+CREATE INDEX idx_permissions_module 
+ON pmu.permissions(module_id);
+
+ALTER TABLE pmu.roles
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+------------ Employee Work Order Leave --------------------------
+
+CREATE TABLE pmu.employee_work_order_leave (
+    id BIGSERIAL PRIMARY KEY,
+
+    wo_id BIGINT NOT NULL REFERENCES pmu.work_order(id) ON DELETE CASCADE,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE RESTRICT,
+
+    leave_taken INTEGER NOT NULL,
+    holiday_worked INTEGER NOT NULL,
+	leave_granted INTEGER NOT NULL,
+	month VARCHAR(10),
+	year VARCHAR(10),
+	
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+------------ Employee Work Order MPR --------------------------
+
+CREATE TABLE pmu.employee_work_order_mpr (
+    id BIGSERIAL PRIMARY KEY,
+
+    wo_id BIGINT NOT NULL REFERENCES pmu.work_order(id) ON DELETE CASCADE,
+    employee_id BIGINT NOT NULL REFERENCES pmu.employees(id) ON DELETE RESTRICT,
+
+    mpr_generated BOOLEAN NOT NULL,
+	mpr_file_name TEXT,
+    mpr_file_path TEXT,
+	month VARCHAR(10),
+	year VARCHAR(10),
+	
+
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+------25/03/2026--------------------------------------
+
+Alter TABLE pmu.employee_experiences
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+Alter TABLE pmu.employee_qualifications
+ADD COLUMN is_deleted boolean DEFAULT false;
+
+--06/04/2026
+
+ALTER TABLE pmu.employee_work_order_leave
+ALTER COLUMN leave_taken TYPE numeric(4,1),
+ALTER COLUMN holiday_worked TYPE numeric(4,1),
+ALTER COLUMN leave_granted TYPE numeric(5,2);
+
+
+---15/04/2026-----------------
+
+CREATE TABLE pmu.salary_component (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) UNIQUE NOT NULL,
+
+    type VARCHAR(20) NOT NULL CHECK (type IN ('EARNING', 'DEDUCTION')),
+
+    value_type VARCHAR(20) NOT NULL CHECK (value_type IN ('PERCENTAGE', 'FIXED')),
+
+    percentage NUMERIC(5,2),
+    amount NUMERIC(12,2),
+
+    base_type VARCHAR(20) NOT NULL CHECK (base_type IN ('CTC', 'COMPONENT')),
+    base_component_id BIGINT REFERENCES pmu.salary_component(id),
+
+    calculation_priority INT NOT NULL DEFAULT 1,
+
+    is_prorated BOOLEAN DEFAULT TRUE,
+    is_mandatory BOOLEAN DEFAULT FALSE,
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+
+CREATE TABLE pmu.salary_structure (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(150) NOT NULL UNIQUE,
+    description TEXT,
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+
+CREATE TABLE pmu.salary_structure_component (
+    id BIGSERIAL PRIMARY KEY,
+    salary_structure_id BIGINT NOT NULL REFERENCES pmu.salary_structure(id),
+    salary_component_id BIGINT NOT NULL REFERENCES pmu.salary_component(id),
+
+    value_type VARCHAR(20) CHECK (value_type IN ('PERCENTAGE', 'FIXED')),
+    percentage NUMERIC(5,2),
+    amount NUMERIC(12,2),
+
+    calculation_priority INT,
+
+    UNIQUE (salary_structure_id, salary_component_id),
+
+    -- Audit fields
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+
+CREATE TABLE pmu.employee_salary_structure (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+    salary_structure_id BIGINT NOT NULL REFERENCES pmu.salary_structure(id),
+
+    ctc NUMERIC(14,2) NOT NULL,
+    effective_from DATE NOT NULL,
+
+
+    UNIQUE (employee_id, effective_from),
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+
+CREATE TABLE pmu.employee_salary_adjustment (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+
+    year INT NOT NULL,
+    month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+
+    type VARCHAR(20) NOT NULL CHECK (type IN ('EARNING', 'DEDUCTION')),
+    name VARCHAR(100) NOT NULL,
+
+    amount NUMERIC(12,2) NOT NULL,
+
+    remarks TEXT,
+
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+
+CREATE TABLE pmu.employee_salary_register (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+
+    year INT NOT NULL,
+    month INT NOT NULL CHECK (month BETWEEN 1 AND 12),
+
+    salary_structure_id BIGINT,
+    ctc NUMERIC(14,2),
+
+    gross_earnings NUMERIC(14,2),
+    total_deductions NUMERIC(14,2),
+    net_salary NUMERIC(14,2),
+
+    working_days INT,
+    paid_days INT,
+    lop_days INT,
+
+    status VARCHAR(20) NOT NULL CHECK (status IN ('PENDING', 'DISPATCHED')),
+
+    dispatched_at TIMESTAMP,
+
+    UNIQUE (employee_id, year, month),
+
+    -- Audit fields
+    is_deleted BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+);
+
+--24/04/2026
+
+ALTER TABLE pmu.salary_component
+ADD COLUMN org_id bigint;
+
+-- UPDATE pmu.salary_component SET org_id = 1;
+
+ALTER TABLE pmu.salary_component
+ALTER COLUMN org_id SET NOT NULL,
+ADD CONSTRAINT salary_component_org_id_fkey
+FOREIGN KEY (org_id)
+REFERENCES pmu.organizations (id)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION;
+
+ALTER TABLE pmu.salary_structure
+ADD COLUMN org_id bigint;
+
+-- UPDATE pmu.salary_structure SET org_id = 1;
+
+ALTER TABLE pmu.salary_structure
+ALTER COLUMN org_id SET NOT NULL,
+ADD CONSTRAINT salary_structure_org_id_fkey
+FOREIGN KEY (org_id)
+REFERENCES pmu.organizations (id)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION;
+
+ALTER TABLE pmu.employee_salary_register
+DROP COLUMN IF EXISTS salary_structure_id,
+DROP COLUMN IF EXISTS ctc;
+
+--27/04/2026
+
+ALTER TABLE pmu.employee_salary_structure
+ADD COLUMN effective_to date;
+
+
+ALTER TABLE pmu.employee_salary_structure
+ADD CONSTRAINT employee_salary_structure_date_check
+CHECK (
+    effective_to IS NULL OR effective_to >= effective_from
+);
+
+CREATE TABLE IF NOT EXISTS pmu.employee_salary_register_snapshot
+(
+    id bigserial ,
+
+    employee_salary_register_id bigint NOT NULL,
+    salary_component_id bigint NOT NULL,
+
+    -- Minimal snapshot (important)
+    component_name character varying(100) NOT NULL,
+    component_type character varying(20) NOT NULL, -- EARNING / DEDUCTION
+
+    -- Final dispatched value (core field)
+    final_amount numeric(14,2) NOT NULL,
+
+    is_active boolean DEFAULT true,
+    is_deleted boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by bigint,
+    updated_by bigint,
+
+    CONSTRAINT esrc_pkey PRIMARY KEY (id),
+
+    CONSTRAINT esrc_salary_register_fkey FOREIGN KEY (employee_salary_register_id)
+        REFERENCES pmu.employee_salary_register (id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT esrc_salary_component_fkey FOREIGN KEY (salary_component_id)
+        REFERENCES pmu.salary_component (id),
+
+    CONSTRAINT esrc_component_type_check CHECK (
+        component_type IN ('EARNING', 'DEDUCTION')
+    ),
+
+    -- Prevent duplicate components in one salary slip
+    CONSTRAINT esrc_unique_component UNIQUE (employee_salary_register_id, salary_component_id)
+);
+
+
+CREATE INDEX idx_esrc_salary_register_snapshot
+ON pmu.employee_salary_register_snapshot (employee_salary_register_id);
+
+--29/0/2026
+
+ALTER TABLE pmu.employee_work_order_mpr
+DROP COLUMN month;
+
+ALTER TABLE pmu.employee_work_order_mpr
+ADD COLUMN month integer;
+
+
+ALTER TABLE pmu.employee_work_order_leave
+DROP COLUMN month;
+
+ALTER TABLE pmu.employee_work_order_leave
+ADD COLUMN month integer;
+
+ALTER TABLE pmu.employee_salary_structure
+ADD COLUMN is_active boolean DEFAULT true;
+
+
+--05/05/26
+
+CREATE OR REPLACE FUNCTION pmu.fn_update_previous_salary_effective_to()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE pmu.employee_salary_structure
+  SET effective_to = NEW.effective_from
+  WHERE id = (
+    SELECT id FROM pmu.employee_salary_structure
+    WHERE employee_id = NEW.employee_id
+      AND effective_from < NEW.effective_from
+    ORDER BY effective_from DESC
+    LIMIT 1
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_previous_salary
+BEFORE INSERT ON pmu.employee_salary_structure
+FOR EACH ROW
+EXECUTE FUNCTION pmu.fn_update_previous_salary_effective_to();
+
+-----06/05/2026
+
+ALTER TABLE pmu.employee_salary_register
+ADD COLUMN transaction_number VARCHAR(50);
+
+-- 07/05/2026
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+DROP COLUMN id;
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ADD COLUMN id BIGSERIAL PRIMARY KEY;
+
+ALTER TABLE pmu.employee_salary_register
+ADD COLUMN mon_salaryslip_filename VARCHAR(255),
+
+ADD COLUMN mon_salaryslip_filepath TEXT,
+
+ADD COLUMN mon_salaryslip_generated BOOLEAN DEFAULT false;
+
+-------08/05/2026
+
+ALTER TABLE pmu.salary_component
+ADD COLUMN is_hidden boolean DEFAULT false;
+
+-- 18/05/2026
+
+DROP TABLE pmu.employee_salary_adjustment;
+
+CREATE TABLE IF NOT EXISTS pmu.salary_addon_master
+(
+    id bigserial,
+
+    name character varying(255) NOT NULL,
+
+    code character varying(100) NOT NULL,
+
+    description text,
+
+    addon_type character varying(20) NOT NULL,
+    -- EARNING / DEDUCTION
+
+    taxable boolean DEFAULT true,
+
+    affects_pf boolean DEFAULT false,
+
+    affects_esi boolean DEFAULT false,
+
+    recurring_allowed boolean DEFAULT false,
+
+    is_active boolean DEFAULT true,
+
+    is_deleted boolean DEFAULT false,
+
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+
+    created_by bigint,
+
+    updated_by bigint,
+
+    CONSTRAINT salary_addon_master_pkey PRIMARY KEY (id),
+
+    CONSTRAINT salary_addon_master_code_unique UNIQUE (code),
+
+    CONSTRAINT salary_addon_master_addon_type_check CHECK (
+        addon_type IN ('EARNING', 'DEDUCTION')
+    )
+);
+
+
+CREATE TABLE IF NOT EXISTS pmu.employee_salary_addon
+(
+    id BIGSERIAL primary key,
+
+    employee_id bigint NOT NULL,
+
+    salary_addon_master_id bigint NOT NULL,
+
+    amount numeric(14,2) NOT NULL,
+
+    recurrence_type character varying(20),
+    -- ONE_TIME / MONTHLY / QUARTERLY / YEARLY
+
+    effective_from date NOT NULL,
+
+    effective_to date,
+
+    remarks text,
+
+    is_active boolean DEFAULT true,
+
+    is_deleted boolean DEFAULT false,
+
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+
+    created_by bigint,
+
+    updated_by bigint
+);
+
+
+CREATE TABLE IF NOT EXISTS pmu.state_master
+(
+    id bigserial,
+
+    state_name varchar(150) NOT NULL,
+    state_code varchar(10),
+    lgd_code bigint,
+    state_type varchar(10),
+
+    is_active boolean DEFAULT true,
+    created_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    modified_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by bigint,
+
+    CONSTRAINT master_state_pkey PRIMARY KEY (id),
+
+    CONSTRAINT master_state_unique_name UNIQUE (state_name),
+    CONSTRAINT master_state_unique_lgd UNIQUE (lgd_code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_state_master_name
+ON pmu.state_master(state_name);
+
+CREATE INDEX IF NOT EXISTS idx_state_master_active
+ON pmu.state_master(is_active);
+
+
+INSERT INTO pmu.state_master
+(
+    state_name,
+    state_code,
+    lgd_code,
+    state_type,
+    created_by
+)
+VALUES
+('Andaman And Nicobar Islands', 'AN', 35, 'UT', 1),
+('Andhra Pradesh', 'AP', 28, 'STATE', 1),
+('Arunachal Pradesh', 'AR', 12, 'STATE', 1),
+('Assam', 'AS', 18, 'STATE', 1),
+('Bihar', 'BR', 10, 'STATE', 1),
+('Chandigarh', 'CH', 4, 'UT', 1),
+('Chhattisgarh', 'CG', 22, 'STATE', 1),
+('Delhi', 'DL', 7, 'UT', 1),
+('Goa', 'GA', 30, 'STATE', 1),
+('Gujarat', 'GJ', 24, 'STATE', 1),
+('Haryana', 'HR', 6, 'STATE', 1),
+('Himachal Pradesh', 'HP', 2, 'STATE', 1),
+('Jammu And Kashmir', 'JK', 1, 'UT', 1),
+('Jharkhand', 'JH', 20, 'STATE', 1),
+('Karnataka', 'KA', 29, 'STATE', 1),
+('Kerala', 'KL', 32, 'STATE', 1),
+('Ladakh', 'LA', 37, 'UT', 1),
+('Lakshadweep', 'LD', 31, 'UT', 1),
+('Madhya Pradesh', 'MP', 23, 'STATE', 1),
+('Maharashtra', 'MH', 27, 'STATE', 1),
+('Manipur', 'MN', 14, 'STATE', 1),
+('Meghalaya', 'ML', 17, 'STATE', 1),
+('Mizoram', 'MZ', 15, 'STATE', 1),
+('Nagaland', 'NL', 13, 'STATE', 1),
+('Odisha', 'OD', 21, 'STATE', 1),
+('Puducherry', 'PY', 34, 'UT', 1),
+('Punjab', 'PB', 3, 'STATE', 1),
+('Rajasthan', 'RJ', 8, 'STATE', 1),
+('Sikkim', 'SK', 11, 'STATE', 1),
+('Tamil Nadu', 'TN', 33, 'STATE', 1),
+('Telangana', 'TS', 36, 'STATE', 1),
+('The Dadra And Nagar Haveli And Daman And Diu', 'DH', 26, 'UT', 1),
+('Tripura', 'TR', 16, 'STATE', 1),
+('Uttar Pradesh', 'UP', 9, 'STATE', 1),
+('Uttarakhand', 'UK', 5, 'STATE', 1),
+('West Bengal', 'WB', 19, 'STATE', 1);
+
+
+
+CREATE TABLE IF NOT EXISTS pmu.district_master
+(
+    id bigint NOT NULL GENERATED ALWAYS AS IDENTITY,
+
+    state_id bigint NOT NULL,
+    district_name varchar(150) NOT NULL,
+
+    is_active boolean DEFAULT true,
+    created_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    modified_on timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created_by bigint,
+
+    CONSTRAINT master_district_pkey PRIMARY KEY (id),
+
+    CONSTRAINT master_district_state_fk
+        FOREIGN KEY (state_id)
+        REFERENCES pmu.state_master (id),
+
+    CONSTRAINT master_district_unique
+        UNIQUE(state_id, district_name)
+);
+
+
+CREATE INDEX IF NOT EXISTS idx_master_district_state_id
+ON pmu.district_master(state_id);
+
+CREATE INDEX IF NOT EXISTS idx_master_district_name
+ON pmu.district_master(district_name);
+
+CREATE INDEX IF NOT EXISTS idx_master_district_active
+ON pmu.district_master(is_active);
+
+INSERT INTO pmu.district_master
+(
+    state_id,
+    district_name,
+    created_by
+)
+VALUES
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andaman And Nicobar Islands'),
+    'Nicobars',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andaman And Nicobar Islands'),
+    'North And Middle Andaman',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andaman And Nicobar Islands'),
+    'South Andamans',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Alluri Sitharama Raju',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Anakapalli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Ananthapuramu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Annamayya',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Bapatla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Chittoor',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Dr. B.R. Ambedkar Konaseema',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'East Godavari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Eluru',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Guntur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Kakinada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Krishna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Kurnool',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Markapuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Nandyal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Ntr',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Palnadu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Parvathipuram Manyam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Polavaram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Prakasam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Srikakulam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Sri Potti Sriramulu Nellore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Sri Sathya Sai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Tirupati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Visakhapatnam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Vizianagaram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'West Godavari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Andhra Pradesh'),
+    'Y.S.R. Kadapa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Anjaw',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Bichom',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Changlang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Dibang Valley',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'East Kameng',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'East Siang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Kamle',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Bandipora',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Keyi Panyor',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Kra Daadi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Kurung Kumey',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Leparada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Lohit',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Longding',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Lower Dibang Valley',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Lower Siang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Lower Subansiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Namsai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Pakke Kessang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Papum Pare',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Shi Yomi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Siang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Tawang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Tirap',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Upper Siang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'Upper Subansiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'West Kameng',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Arunachal Pradesh'),
+    'West Siang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Bajali',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Baksa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Barpeta',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Biswanath',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Bongaigaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Cachar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Charaideo',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Chirang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Darrang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Dhemaji',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Dhubri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Dibrugarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Dima Hasao',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Goalpara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Golaghat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Hailakandi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Hojai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Jorhat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Kamrup',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Kamrup Metro',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Karbi Anglong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Kokrajhar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Lakhimpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Majuli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Marigaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Nagaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Nalbari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Sivasagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Sonitpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'South Salmara Mancachar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Sribhumi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Tamulpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Tinsukia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'Udalguri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Assam'),
+    'West Karbi Anglong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Araria',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Arwal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Aurangabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Banka',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Begusarai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Bhagalpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Bhojpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Buxar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Darbhanga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Gaya',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Gopalganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Jamui',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Jehanabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Kaimur (Bhabua)',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Katihar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Khagaria',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Kishanganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Lakhisarai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Madhepura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Madhubani',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Munger',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Muzaffarpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Nalanda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Nawada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Pashchim Champaran',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Patna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Purbi Champaran',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Purnia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Rohtas',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Saharsa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Samastipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Saran',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Sheikhpura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Sheohar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Sitamarhi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Siwan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Supaul',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Bihar'),
+    'Vaishali',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chandigarh'),
+    'Chandigarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Balod',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Balodabazar-Bhatapara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Balrampur-Ramanujganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Bastar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Bemetara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Bijapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Bilaspur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Dakshin Bastar Dantewada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Dhamtari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Durg',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Gariyaband',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Gaurela-Pendra-Marwahi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Janjgir-Champa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Jashpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Kabeerdham',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Baramulla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Khairagarh-Chhuikhadan-Gandai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Kondagaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Korba',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Korea',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Mahasamund',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Manendragarh-Chirmiri-Bharatpur(M C B)',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Mohla-Manpur-Ambagarh Chouki',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Mungeli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Narayanpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Raigarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Raipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Rajnandgaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Sakti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Sarangarh-Bilaigarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Sukma',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Surajpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Surguja',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Chhattisgarh'),
+    'Uttar Bastar Kanker',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'Central',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'Central North',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'East',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'New Delhi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'North',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'North East',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'North West',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'Old Delhi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'Outer North',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'South',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'South East',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'South West',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Delhi'),
+    'West',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Goa'),
+    'Kushavati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Goa'),
+    'North Goa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Goa'),
+    'South Goa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Ahmedabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Amreli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Anand',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Arvalli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Banas Kantha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Bharuch',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Bhavnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Botad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Chhotaudepur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Dahod',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Dangs',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Devbhumi Dwarka',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Gandhinagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Gir Somnath',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Jamnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Junagadh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Kachchh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Kheda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Mahesana',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Mahisagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Morbi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Narmada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Navsari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Panch Mahals',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Patan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Porbandar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Rajkot',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Sabar Kantha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Surat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Surendranagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Tapi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Vadodara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Valsad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Gujarat'),
+    'Vav-Tharad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Ambala',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Bhiwani',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Charkhi Dadri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Faridabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Fatehabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Gurugram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Hansi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Hisar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Jhajjar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Jind',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Kaithal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Karnal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Kurukshetra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Mahendragarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Nuh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Palwal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Panchkula',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Panipat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Rewari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Rohtak',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Sirsa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Sonipat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Haryana'),
+    'Yamunanagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Bilaspur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Chamba',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Hamirpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Kangra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Kinnaur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Kullu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Lahaul And Spiti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Mandi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Shimla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Sirmaur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Solan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Himachal Pradesh'),
+    'Una',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Anantnag',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Budgam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Doda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Ganderbal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Jammu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Kathua',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Kishtwar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Kulgam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Kupwara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Poonch',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Pulwama',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Rajouri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Ramban',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Reasi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Samba',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Shopian',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Srinagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jammu And Kashmir'),
+    'Udhampur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Bokaro',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Chatra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Deoghar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Dhanbad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Dumka',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'East Singhbum',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Garhwa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Giridih',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Godda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Gumla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Hazaribagh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Jamtara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Khunti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Koderma',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Latehar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Lohardaga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Pakur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Palamu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Ramgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Ranchi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Sahebganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Saraikela Kharsawan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'Simdega',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Jharkhand'),
+    'West Singhbhum',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Bagalkote',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Ballari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Belagavi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Bengaluru Rural',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Bengaluru South',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Bengaluru Urban',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Bidar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Chamarajanagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Chikkaballapura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Chikkamagaluru',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Chitradurga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Dakshina Kannada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Davanagere',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Dharwad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Gadag',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Hassan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Haveri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Kalaburagi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Kodagu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Kolar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Koppal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Mandya',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Mysuru',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Raichur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Shivamogga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Tumakuru',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Udupi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Uttara Kannada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Vijayanagara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Vijayapura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Karnataka'),
+    'Yadgir',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Alappuzha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Ernakulam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Idukki',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Kannur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Kasaragod',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Kollam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Kottayam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Kozhikode',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Malappuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Palakkad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Pathanamthitta',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Thiruvananthapuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Thrissur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Kerala'),
+    'Wayanad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Ladakh'),
+    'Kargil',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Ladakh'),
+    'Leh Ladakh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Lakshadweep'),
+    'Lakshadweep District',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Agar-Malwa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Alirajpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Anuppur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Ashoknagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Balaghat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Barwani',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Betul',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Bhind',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Bhopal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Burhanpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Chhatarpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Chhindwara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Damoh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Datia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Dewas',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Dhar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Dindori',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Guna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Gwalior',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Harda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Indore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Jabalpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Jhabua',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Katni',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Khandwa (East Nimar)',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Khargone (West Nimar)',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Maihar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Mandla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Mandsaur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'MAUGANJ',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Morena',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Narmadapuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Narsimhapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Neemuch',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Niwari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Pandhurna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Panna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Raisen',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Rajgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Ratlam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Rewa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Sagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Satna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Sehore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Seoni',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Shahdol',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Shajapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Sheopur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Shivpuri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Sidhi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Singrauli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Tikamgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Ujjain',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Umaria',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Madhya Pradesh'),
+    'Vidisha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Ahilyanagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Akola',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Amravati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Beed',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Bhandara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Buldhana',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Chandrapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Chhatrapati Sambhajinagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Dharashiv',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Dhule',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Gadchiroli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Gondia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Hingoli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Jalgaon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Jalna',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Kolhapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Latur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Mumbai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Mumbai Suburban',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Nagpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Nanded',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Nandurbar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Nashik',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Palghar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Parbhani',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Pune',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Raigad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Ratnagiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Sangli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Satara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Sindhudurg',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Solapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Thane',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Wardha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Washim',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Maharashtra'),
+    'Yavatmal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Bishnupur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Chandel',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Churachandpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Imphal East',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Imphal West',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Jiribam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Kakching',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Kamjong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Kangpokpi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Noney',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Pherzawl',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Senapati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Tamenglong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Tengnoupal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Thoubal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Manipur'),
+    'Ukhrul',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'Eastern West Khasi Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'East Garo Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'East Jaintia Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'East Khasi Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'North Garo Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'Ri Bhoi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'South Garo Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'South West Garo Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'South West Khasi Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'West Garo Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'West Jaintia Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Meghalaya'),
+    'West Khasi Hills',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Aizawl',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Champhai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Hnahthial',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Khawzawl',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Kolasib',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Lawngtlai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Lunglei',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Mamit',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Saitual',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Serchhip',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Mizoram'),
+    'Siaha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Chumoukedima',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Dimapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Kiphire',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Kohima',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Longleng',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Meluri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Mokokchung',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Mon',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Niuland',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Noklak',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Peren',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Phek',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Shamator',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Tseminyu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Tuensang',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Wokha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Nagaland'),
+    'Zunheboto',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Angul',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Balangir',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Balasore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Bargarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Bhadrak',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Boudh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Cuttack',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Deogarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Dhenkanal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Gajapati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Ganjam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Jagatsinghapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Jajpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Jharsuguda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Kalahandi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Kandhamal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Kendrapara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Keonjhar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Khordha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Koraput',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Malkangiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Mayurbhanj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Nabarangpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Nayagarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Nuapada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Puri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Rayagada',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Sambalpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Sonepur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Odisha'),
+    'Sundargarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Puducherry'),
+    'Karaikal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Puducherry'),
+    'Puducherry',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Amritsar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Barnala',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Bathinda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Faridkot',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Fatehgarh Sahib',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Fazilka',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Ferozepur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Gurdaspur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Hoshiarpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Jalandhar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Kapurthala',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Ludhiana',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Malerkotla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Mansa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Moga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Pathankot',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Patiala',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Rupnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Sangrur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'S.A.S Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Shahid Bhagat Singh Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Sri Muktsar Sahib',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Punjab'),
+    'Tarn Taran',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Ajmer',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Alwar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Balotra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Banswara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Baran',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Barmer',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Beawar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Bharatpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Bhilwara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Bikaner',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Bundi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Chittorgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Churu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Dausa',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Deeg',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Dholpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Didwana-Kuchaman',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Dungarpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Ganganagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Hanumangarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jaipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jaisalmer',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jalore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jhalawar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jhunjhunu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Jodhpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Karauli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Khairthal-Tijara',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Kota',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Kotputli-Behror',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Nagaur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Pali',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Phalodi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Pratapgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Rajsamand',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Salumbar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Sawai Madhopur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Sikar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Sirohi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Tonk',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Rajasthan'),
+    'Udaipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Gangtok',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Gyalshing',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Mangan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Namchi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Pakyong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Sikkim'),
+    'Soreng',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Ariyalur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Chengalpattu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Chennai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Coimbatore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Cuddalore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Dharmapuri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Dindigul',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Erode',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Kallakurichi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Kancheepuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Kanniyakumari',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Karur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Krishnagiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Madurai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Mayiladuthurai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Nagapattinam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Namakkal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Perambalur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Pudukkottai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Ramanathapuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Ranipet',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Salem',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Sivaganga',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tenkasi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Thanjavur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Theni',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'The Nilgiris',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Thiruvallur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Thiruvarur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Thoothukkudi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tiruchirappalli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tirunelveli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tirupathur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tiruppur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Tiruvannamalai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Vellore',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Viluppuram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tamil Nadu'),
+    'Virudhunagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Adilabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Bhadradri Kothagudem',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Hanumakonda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Hyderabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Jagitial',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Jangoan',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Jayashankar Bhupalapally',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Jogulamba Gadwal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Kamareddy',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Karimnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Khammam',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Kumuram Bheem Asifabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Mahabubabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Mahabubnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Mancherial',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Medak',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Medchal Malkajgiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Mulugu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Nagarkurnool',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Nalgonda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Narayanpet',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Nirmal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Nizamabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Peddapalli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Rajanna Sircilla',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Ranga Reddy',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Sangareddy',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Siddipet',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Suryapet',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Vikarabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Wanaparthy',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Warangal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Telangana'),
+    'Yadadri Bhuvanagiri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'The Dadra And Nagar Haveli And Daman And Diu'),
+    'Dadra And Nagar Haveli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'The Dadra And Nagar Haveli And Daman And Diu'),
+    'Daman',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'The Dadra And Nagar Haveli And Daman And Diu'),
+    'Diu',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'Dhalai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'Gomati',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'Khowai',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'North Tripura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'Sepahijala',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'South Tripura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'Unakoti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Tripura'),
+    'West Tripura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Almora',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Bageshwar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Chamoli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Champawat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Dehradun',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Haridwar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Nainital',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Pauri Garhwal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Pithoragarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Rudraprayag',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Tehri Garhwal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Udham Singh Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttarakhand'),
+    'Uttarkashi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Agra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Aligarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Ambedkar Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Amethi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Amroha',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Auraiya',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Ayodhya',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Azamgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Baghpat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bahraich',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Ballia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Balrampur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Banda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bara Banki',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bareilly',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Basti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bhadohi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bijnor',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Budaun',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Bulandshahr',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Chandauli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Chitrakoot',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Deoria',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Etah',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Etawah',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Farrukhabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Fatehpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Firozabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Gautam Buddha Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Ghaziabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Ghazipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Gonda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Gorakhpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Hamirpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Hapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Hardoi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Hathras',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Jalaun',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Jaunpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Jhansi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kannauj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kanpur Dehat',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kanpur Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kasganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kaushambi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kheri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Kushinagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Lalitpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Lucknow',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mahoba',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mahrajganj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mainpuri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mathura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mau',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Meerut',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Mirzapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Moradabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Muzaffarnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Pilibhit',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Pratapgarh',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Prayagraj',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Rae Bareli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Rampur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Saharanpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Sambhal',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Sant Kabir Nagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Shahjahanpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Shamli',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Shrawasti',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Siddharthnagar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Sitapur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Sonbhadra',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Sultanpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Unnao',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'Uttar Pradesh'),
+    'Varanasi',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Alipurduar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Bankura',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Birbhum',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Cooch Behar',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Dakshin Dinajpur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Darjeeling',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Hooghly',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Howrah',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Jalpaiguri',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Jhargram',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Kalimpong',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Kolkata',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Malda',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Murshidabad',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Nadia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'North 24 Parganas',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Paschim Bardhaman',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Paschim Medinipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Purba Bardhaman',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Purba Medinipur',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Purulia',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'South 24 Parganas',
+    1
+),
+(
+    (SELECT id FROM pmu.state_master WHERE state_name = 'West Bengal'),
+    'Uttar Dinajpur',
+    1
+);
+
+-- 19/05/2026
+
+ALTER TABLE pmu.employee_salary_register
+ADD COLUMN transaction_date date;
+
+--20/05/2026
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ALTER COLUMN salary_component_id DROP NOT NULL;
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ADD COLUMN source_type character varying(20)
+NOT NULL DEFAULT 'STRUCTURE';
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ADD COLUMN addon_id bigint;
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+DROP CONSTRAINT esrc_unique_component;
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ADD CONSTRAINT esrc_source_type_check
+CHECK (
+    source_type IN (
+        'STRUCTURE',
+        'ADDON'
+    )
+);
+
+ALTER TABLE pmu.employee_salary_register_snapshot
+ADD CONSTRAINT esrc_addon_fkey
+FOREIGN KEY (addon_id)
+REFERENCES pmu.employee_salary_addon(id);
+
+-- 01/06/2026
+
+ALTER TABLE pmu.empanelment_master
+ALTER COLUMN category TYPE character varying(255);
+
+-- 03/06/2026
+
+ALTER TABLE pmu.employees ALTER COLUMN last_name DROP NOT NULL;
+
+ALTER TABLE pmu.employees
+ADD COLUMN employment_type character varying(150);
+
+
+-- 07/07/2026
+
+ALTER TABLE pmu.work_order
+ADD COLUMN type CHARACTER VARYING(100)
+CHECK (
+    type IN (
+        'MANPOWER',
+        'MILESTONES_PROJECT_BASIS',
+        'MANPOWER_PROJECT_BASIS'
+    )
+);
+
+CREATE TABLE IF NOT EXISTS pmu.wo_milestones
+(
+    id BIGSERIAL PRIMARY KEY,
+
+    work_order_id BIGINT NOT NULL
+        REFERENCES pmu.work_order(id)
+        ON DELETE CASCADE,
+
+    gst_code_fk BIGINT NOT NULL
+        REFERENCES pmu.gst_master(id)
+        ON DELETE CASCADE,
+
+    title CHARACTER VARYING(255) NOT NULL,
+
+    description TEXT,
+
+    amount NUMERIC(15,2) NOT NULL,
+
+    from_date DATE,
+    to_date DATE,
+
+    is_active BOOLEAN DEFAULT TRUE,
+    created_on TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    modified_on TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+
+    CONSTRAINT wo_milestones_date_check
+    CHECK (
+        to_date IS NULL
+        OR from_date IS NULL
+        OR to_date >= from_date
+    )
+);
+
+-------- INDEXES ------------
+
+CREATE INDEX IF NOT EXISTS idx_wo_milestones_work_order
+ON pmu.wo_milestones(work_order_id);
+
+CREATE INDEX IF NOT EXISTS idx_wo_milestones_gst_code
+ON pmu.wo_milestones(gst_code_fk);
+
+-------- TRIGGER -----------
+
+CREATE TRIGGER trg_wo_milestones_modified
+BEFORE UPDATE ON pmu.wo_milestones
+FOR EACH ROW
+EXECUTE FUNCTION pmu.set_updated_at();
+
+
+
+
+COMMIT;
+

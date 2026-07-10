@@ -1,0 +1,1089 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import api from '../../api/axios'
+import { cilCloudDownload, cilFilter } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+import SalaryDispatchModal from './salaryDispatchModal'
+import PayslipModal from './payslipModal'
+
+const SalaryRegister = () => {
+  /* ================= FILTERS ================= */
+
+  const FILE_BASE_URL = import.meta.env.VITE_FILE_BASE_URL
+
+  const currentDate = new Date()
+
+  const [month, setMonth] = useState((currentDate.getMonth() + 1).toString())
+
+  const [year, setYear] = useState(currentDate.getFullYear().toString())
+
+  const [workOrders, setWorkOrders] = useState([])
+
+  const [selectedStructures, setSelectedStructures] = useState([])
+
+  const [selectedWorkOrders, setSelectedWorkOrders] = useState([])
+
+  const [applyAllTransactions, setApplyAllTransactions] = useState(false)
+
+  const [commonTransactionNo, setCommonTransactionNo] = useState('')
+
+  const [commonTransactionDate, setCommonTransactionDate] = useState('')
+
+  const handleApplyAllTransactions = (checked) => {
+    setApplyAllTransactions(checked)
+
+    if (checked) {
+      const updatedTransactions = {}
+
+      salaryData
+        .filter((emp) => selectedEmployees.includes(emp.id))
+        .forEach((emp) => {
+          updatedTransactions[emp.id] = {
+            transaction_number: commonTransactionNo,
+
+            transaction_date: commonTransactionDate,
+          }
+        })
+
+      setEmployeeTransactions(updatedTransactions)
+    }
+  }
+
+  /* ================= DATA ================= */
+
+  const [salaryStructures, setSalaryStructures] = useState([])
+
+  const [salaryData, setSalaryData] = useState([])
+
+  /* ================= MULTI SELECT ================= */
+
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+
+  const [selectAll, setSelectAll] = useState(false)
+
+  /* ================= BULK DISPATCH ================= */
+
+  const [bulkDispatchModal, setBulkDispatchModal] = useState(false)
+
+  const [transactionNo, setTransactionNo] = useState('')
+
+  const [transactionDate, setTransactionDate] = useState('')
+
+  const [useMultipleTransactions, setUseMultipleTransactions] = useState(false)
+
+  const [employeeTransactions, setEmployeeTransactions] = useState({})
+
+  /* ================= INDIVIDUAL DISPATCH ================= */
+
+  const [individualDispatchModal, setIndividualDispatchModal] = useState(false)
+
+  /* ================= PAYSLIP ================= */
+
+  const [payslipModal, setPayslipModal] = useState(false)
+
+  /* ================= SELECTED ROW ================= */
+
+  const [selectedRow, setSelectedRow] = useState(null)
+
+  /* ================= FILTER SEARCHES ================= */
+
+  const [workOrderSearch, setWorkOrderSearch] = useState('')
+
+  const [salaryStructureSearch, setSalaryStructureSearch] = useState('')
+
+  /* ================= FETCH STRUCTURES ================= */
+
+  useEffect(() => {
+    if (!month || !year) {
+      setSalaryData([])
+
+      toast.error('Please select month and year')
+
+      return
+    }
+
+    fetchEmployees()
+  }, [month, year, selectedWorkOrders, selectedStructures])
+
+  /* ================= FETCH INITIAL DATA ================= */
+
+  const fetchInitialData = async () => {
+    try {
+      await Promise.all([fetchSalaryStructures(), fetchWorkOrders(), fetchEmployees()])
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to load filters')
+    }
+  }
+
+  useEffect(() => {
+    fetchInitialData()
+  }, [])
+
+  /* ================= FETCH WORK ORDERS ================= */
+
+  const fetchWorkOrders = async () => {
+    try {
+      const response = await api.get('admin/workorder/index?is_active=true')
+
+      setWorkOrders(response?.data?.data?.workOrderList || [])
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch work orders')
+    }
+  }
+
+  /* ================= FETCH SALARY STRUCTURES ================= */
+
+  const fetchSalaryStructures = async () => {
+    try {
+      const response = await api.get('salary-structure?is_active=true')
+
+      setSalaryStructures(response?.data?.data || [])
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch salary structures')
+    }
+  }
+
+  /* ================= FETCH EMPLOYEES ================= */
+
+  const fetchEmployees = async () => {
+    try {
+      const params = {
+        models:
+          'empSalaryStructure.salaryStructure,employeeSalaryRegisters,employeeWorkOrderDeployment.WoDesgnMapping',
+
+        is_active: true,
+      }
+
+      const modelFilter = {}
+
+      if (selectedWorkOrders.length > 0) {
+        modelFilter.WoDesgnMapping = {
+          work_order_id: {
+            $in: selectedWorkOrders,
+          },
+        }
+
+        modelFilter.employeeWorkOrderDeployment = {
+          required: true,
+        }
+      }
+
+      if (selectedStructures.length > 0) {
+        modelFilter.empSalaryStructure = {
+          salary_structure_id: {
+            $in: selectedStructures,
+          },
+
+          required: true,
+        }
+      }
+
+      if (month && year) {
+        modelFilter.employeeSalaryRegisters = {
+          month: Number(month),
+
+          year: Number(year),
+
+          required: false,
+        }
+      }
+
+      if (Object.keys(modelFilter).length > 0) {
+        params.modelFilter = JSON.stringify(modelFilter)
+      }
+
+      const response = await api.get('employee', {
+        params,
+      })
+
+      const employees = response?.data?.data || []
+
+      const formattedEmployees = employees.map((employee) => {
+        const latestSalaryStructure =
+          employee?.empSalaryStructure?.length > 0
+            ? [...employee.empSalaryStructure].sort(
+                (a, b) => new Date(b.effective_from) - new Date(a.effective_from),
+              )[0]
+            : null
+
+        return {
+          ...employee,
+
+          latestSalaryStructure,
+
+          hasSalaryStructure: !!latestSalaryStructure,
+        }
+      })
+
+      setSalaryData(formattedEmployees)
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch employees')
+    }
+  }
+
+  /* ================= CHECKBOX ================= */
+
+  const handleCheckbox = (id) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  const handleSelectAll = () => {
+    const dispatchableEmployees = salaryData
+      .filter((item) => {
+        const register = item.employeeSalaryRegisters?.[0] || null
+
+        const isDispatched = register?.status === 'DISPATCHED'
+
+        const isPayslipGenerated = register?.mon_salaryslip_generated
+
+        return item.hasSalaryStructure && !isDispatched && !isPayslipGenerated
+      })
+      .map((item) => item.id)
+
+    if (selectAll) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(dispatchableEmployees)
+    }
+
+    setSelectAll(!selectAll)
+  }
+
+  /* ================= EMPLOYEE TRANSACTION ================= */
+
+  const handleEmployeeTransactionChange = (employeeId, field, value) => {
+    setEmployeeTransactions((prev) => ({
+      ...prev,
+      [employeeId]: {
+        ...prev[employeeId],
+        [field]: value,
+      },
+    }))
+  }
+
+  /* ================= BULK DISPATCH ================= */
+
+  const handleBulkDispatch = async () => {
+    try {
+      const selectedEmployeeData = salaryData.filter((item) => selectedEmployees.includes(item.id))
+
+      const generatedRegisters = await Promise.all(
+        selectedEmployeeData.map(async (employee) => {
+          const response = await api.post('employee-salary-register-monthly/generate', {
+            employee_id: employee.id,
+
+            month: Number(month),
+
+            year: Number(year),
+
+            salary_structure_id: employee?.latestSalaryStructure?.salary_structure_id,
+          })
+
+          return response?.data?.data
+        }),
+      )
+
+      const payload = generatedRegisters.map((register) => {
+        const employeeTransaction = employeeTransactions[register.employee_id] || {}
+
+        return {
+          transaction_number: useMultipleTransactions
+            ? employeeTransaction.transaction_number || ''
+            : transactionNo,
+
+          transaction_date: useMultipleTransactions
+            ? employeeTransaction.transaction_date || ''
+            : transactionDate,
+
+          employee_id: register.employee_id,
+
+          month: register.month,
+
+          year: register.year,
+
+          ctc: Number(register.ctc || 0),
+
+          gross_earnings: Number(register.gross_earnings || 0),
+
+          total_deductions: Number(register.total_deductions || 0),
+
+          net_salary: Number(register.net_salary || 0),
+
+          components: register.components || [],
+
+          addons: register.addons || [],
+        }
+      })
+
+      await api.post('employee-salary-register-monthly/dispatch', payload)
+
+      toast.success('Salary dispatched successfully')
+
+      setBulkDispatchModal(false)
+
+      setTransactionNo('')
+
+      setTransactionDate('')
+
+      setUseMultipleTransactions(false)
+
+      setEmployeeTransactions({})
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+
+      await fetchEmployees()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Dispatch failed')
+    }
+  }
+
+  return (
+    <>
+      {/* TABLE */}
+      <CCard className="border-0 rounded-4">
+        <CCardBody>
+          <CTable bordered hover responsive align="middle">
+            <CTableHead>
+              <CTableRow>
+                {/* SELECT ALL */}
+
+                <CTableHeaderCell className="text-center">
+                  <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>Employee</CTableHeaderCell>
+
+                <CTableHeaderCell>Employee Code</CTableHeaderCell>
+
+                <CTableHeaderCell>Salary Structure</CTableHeaderCell>
+
+                <CTableHeaderCell>CTC</CTableHeaderCell>
+
+                <CTableHeaderCell>Action</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {salaryData.length > 0 ? (
+                salaryData.map((item) => {
+                  const latestStructure = item.latestSalaryStructure
+
+                  const register = item.employeeSalaryRegisters?.[0] || null
+
+                  const status = register?.status || null
+
+                  const isPayslipGenerated = register?.mon_salaryslip_generated
+
+                  const isDispatched = register?.status === 'DISPATCHED'
+
+                  const canDispatch =
+                    item.hasSalaryStructure && !isDispatched && !isPayslipGenerated
+
+                  return (
+                    <CTableRow key={item.id}>
+                      {/* CHECKBOX */}
+
+                      <CTableDataCell className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmployees.includes(item.id)}
+                          disabled={!canDispatch}
+                          onChange={() => handleCheckbox(item.id)}
+                          style={{
+                            cursor: canDispatch ? 'pointer' : 'not-allowed',
+                          }}
+                        />
+                      </CTableDataCell>
+
+                      {/* EMPLOYEE */}
+
+                      <CTableDataCell>
+                        {item.first_name} {item.middle_name || ''} {item.last_name}
+                      </CTableDataCell>
+
+                      {/* EMPLOYEE CODE */}
+
+                      <CTableDataCell>{item.employee_code}</CTableDataCell>
+
+                      {/* SALARY STRUCTURE */}
+
+                      <CTableDataCell>
+                        {latestStructure?.salaryStructure?.name || '-'}
+                      </CTableDataCell>
+
+                      {/* CTC */}
+
+                      <CTableDataCell>
+                        {latestStructure?.ctc ? (
+                          <>
+                            ₹{' '}
+                            {Number(latestStructure.ctc).toLocaleString('en-IN', {
+                              minimumFractionDigits: 2,
+                            })}
+                          </>
+                        ) : (
+                          '-'
+                        )}
+                      </CTableDataCell>
+
+                      {/* ACTION */}
+
+                      <CTableDataCell>
+                        {!item.hasSalaryStructure ? (
+                          <span className="text-muted">Salary Structure Not Mapped</span>
+                        ) : !register ? (
+                          <CButton
+                            size="sm"
+                            color="primary"
+                            onClick={() => {
+                              setSelectedRow(item)
+
+                              setIndividualDispatchModal(true)
+                            }}
+                          >
+                            Dispatch
+                          </CButton>
+                        ) : status === 'DISPATCHED' && !isPayslipGenerated ? (
+                          <CButton
+                            size="sm"
+                            color="success"
+                            onClick={() => {
+                              setSelectedRow(item)
+
+                              setPayslipModal(true)
+                            }}
+                          >
+                            Generate Payslip
+                          </CButton>
+                        ) : isPayslipGenerated ? (
+                          <>
+                            <CButton
+                              size="sm"
+                              className="me-2"
+                              style={{
+                                background: '#7a8594',
+                                border: 'none',
+                                color: '#fff',
+                              }}
+                              onClick={() => {
+                                setSelectedRow(item)
+
+                                setPayslipModal(true)
+                              }}
+                            >
+                              View
+                            </CButton>
+
+                            <a
+                              href={`${FILE_BASE_URL}${register?.mon_salaryslip_filepath}`}
+                              target="_blank"
+                              download
+                              rel="noreferrer"
+                            >
+                              <CButton
+                                size="sm"
+                                style={{
+                                  background: '#5c7c99',
+                                  border: 'none',
+                                  color: '#fff',
+                                }}
+                              >
+                                <CIcon icon={cilCloudDownload} className="me-1" />
+                                Download
+                              </CButton>
+                            </a>
+                          </>
+                        ) : (
+                          <span className="text-muted">Pending</span>
+                        )}
+                      </CTableDataCell>
+                    </CTableRow>
+                  )
+                })
+              ) : (
+                <CTableRow>
+                  <CTableDataCell colSpan={6} className="text-center text-muted py-4">
+                    No employees found
+                  </CTableDataCell>
+                </CTableRow>
+              )}
+            </CTableBody>
+          </CTable>
+
+          {/* BULK ACTION */}
+
+          <div className="d-flex justify-content-end mt-3">
+            <CButton
+              color="primary"
+              disabled={selectedEmployees.length === 0}
+              onClick={() => setBulkDispatchModal(true)}
+            >
+              Dispatch Selected
+            </CButton>
+          </div>
+        </CCardBody>
+      </CCard>
+
+      {/* ================= BULK DISPATCH MODAL ================= */}
+
+      {/* ================= BULK DISPATCH MODAL ================= */}
+
+      <CModal
+        visible={bulkDispatchModal}
+        alignment="center"
+        size="lg"
+        onClose={() => {
+          setBulkDispatchModal(false)
+
+          setUseMultipleTransactions(false)
+
+          setEmployeeTransactions({})
+
+          setApplyAllTransactions(false)
+
+          setCommonTransactionNo('')
+
+          setCommonTransactionDate('')
+        }}
+      >
+        {/* HEADER */}
+
+        <CModalHeader
+          style={{
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
+          <CModalTitle
+            style={{
+              fontWeight: '700',
+              color: '#1e293b',
+              fontSize: '20px',
+            }}
+          >
+            Bulk Dispatch
+          </CModalTitle>
+        </CModalHeader>
+
+        <CModalBody
+          style={{
+            background: '#ffffff',
+            padding: '24px',
+          }}
+        >
+          {/* MULTIPLE TRANSACTION TOGGLE */}
+
+          <div
+            className="mb-4 d-flex align-items-center justify-content-between rounded-4 p-3"
+            style={{
+              background: '#f8fafc',
+              border: '1px solid #dbe2ea',
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontWeight: '700',
+                  fontSize: '15px',
+                  color: '#1e293b',
+                }}
+              >
+                Multiple Transaction Mode
+              </div>
+
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#64748b',
+                  marginTop: '2px',
+                }}
+              >
+                Enable employee-wise transaction details
+              </div>
+            </div>
+
+            <label className="d-flex align-items-center gap-2 m-0">
+              <input
+                type="checkbox"
+                checked={useMultipleTransactions}
+                onChange={(e) => setUseMultipleTransactions(e.target.checked)}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer',
+                }}
+              />
+
+              <span
+                style={{
+                  fontWeight: '600',
+                  color: '#334155',
+                  fontSize: '14px',
+                }}
+              >
+                Enable
+              </span>
+            </label>
+          </div>
+
+          {/* ================= SINGLE MODE ================= */}
+
+          {!useMultipleTransactions ? (
+            <div
+              className="rounded-4 p-4"
+              style={{
+                background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
+
+                border: '1px solid #dbe2ea',
+              }}
+            >
+              {/* HEADER */}
+
+              <div className="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                  <div
+                    style={{
+                      fontSize: '18px',
+                      fontWeight: '700',
+                      color: '#1e293b',
+                    }}
+                  >
+                    Transaction Details
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      color: '#64748b',
+                      marginTop: '2px',
+                    }}
+                  >
+                    Enter dispatch transaction information
+                  </div>
+                </div>
+              </div>
+
+              {/* FORM */}
+
+              <div className="row">
+                {/* TRANSACTION NUMBER */}
+
+                <div className="col-md-6 mb-3">
+                  <CFormLabel
+                    style={{
+                      fontWeight: '600',
+                      color: '#334155',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Transaction Number
+                  </CFormLabel>
+
+                  <CFormInput
+                    value={transactionNo}
+                    onChange={(e) => setTransactionNo(e.target.value)}
+                    placeholder="Enter Transaction Number"
+                    style={{
+                      height: '46px',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      boxShadow: 'none',
+                    }}
+                  />
+                </div>
+
+                {/* TRANSACTION DATE */}
+
+                <div className="col-md-6 mb-3">
+                  <CFormLabel
+                    style={{
+                      fontWeight: '600',
+                      color: '#334155',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Transaction Date
+                  </CFormLabel>
+
+                  <CFormInput
+                    type="date"
+                    value={transactionDate}
+                    onChange={(e) => setTransactionDate(e.target.value)}
+                    style={{
+                      height: '46px',
+                      borderRadius: '10px',
+                      border: '1px solid #cbd5e1',
+                      boxShadow: 'none',
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* INFO BAR */}
+
+              <div
+                className="mt-3 d-flex align-items-center"
+                style={{
+                  background: '#f1f5f9',
+                  borderRadius: '10px',
+                  padding: '12px 14px',
+                  fontSize: '13px',
+                  color: '#475569',
+                }}
+              >
+                Selected employees will receive the same transaction details during salary dispatch.
+              </div>
+            </div>
+          ) : (
+            /* ================= MULTIPLE MODE ================= */
+
+            <div
+              style={{
+                maxHeight: '450px',
+                overflowY: 'auto',
+              }}
+            >
+              {/* APPLY SAME DETAILS */}
+
+              <div
+                className="rounded-3 p-3 mb-4"
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #dbe2ea',
+                }}
+              >
+                <label className="d-flex align-items-center gap-2 mb-3">
+                  <input
+                    type="checkbox"
+                    checked={applyAllTransactions}
+                    onChange={(e) => handleApplyAllTransactions(e.target.checked)}
+                  />
+
+                  <span
+                    className="fw-semibold"
+                    style={{
+                      fontSize: '14px',
+                      color: '#334155',
+                    }}
+                  >
+                    Apply Same Transaction Details To All Employees
+                  </span>
+                </label>
+
+                <div className="row">
+                  {/* COMMON TRANSACTION NUMBER */}
+
+                  <div className="col-md-6 mb-3">
+                    <CFormLabel
+                      style={{
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        color: '#475569',
+                      }}
+                    >
+                      Common Transaction Number
+                    </CFormLabel>
+
+                    <CFormInput
+                      value={commonTransactionNo}
+                      onChange={(e) => {
+                        const value = e.target.value
+
+                        setCommonTransactionNo(value)
+
+                        if (applyAllTransactions) {
+                          const updated = {
+                            ...employeeTransactions,
+                          }
+
+                          salaryData
+                            .filter((emp) => selectedEmployees.includes(emp.id))
+                            .forEach((emp) => {
+                              updated[emp.id] = {
+                                ...updated[emp.id],
+
+                                transaction_number: value,
+                              }
+                            })
+
+                          setEmployeeTransactions(updated)
+                        }
+                      }}
+                      placeholder="Enter Transaction Number"
+                      style={{
+                        height: '44px',
+                        borderRadius: '10px',
+                      }}
+                    />
+                  </div>
+
+                  {/* COMMON DATE */}
+
+                  <div className="col-md-6 mb-3">
+                    <CFormLabel
+                      style={{
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        color: '#475569',
+                      }}
+                    >
+                      Common Transaction Date
+                    </CFormLabel>
+
+                    <CFormInput
+                      type="date"
+                      value={commonTransactionDate}
+                      onChange={(e) => {
+                        const value = e.target.value
+
+                        setCommonTransactionDate(value)
+
+                        if (applyAllTransactions) {
+                          const updated = {
+                            ...employeeTransactions,
+                          }
+
+                          salaryData
+                            .filter((emp) => selectedEmployees.includes(emp.id))
+                            .forEach((emp) => {
+                              updated[emp.id] = {
+                                ...updated[emp.id],
+
+                                transaction_date: value,
+                              }
+                            })
+
+                          setEmployeeTransactions(updated)
+                        }
+                      }}
+                      style={{
+                        height: '44px',
+                        borderRadius: '10px',
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* TABLE HEADER */}
+
+              <div
+                className="d-grid align-items-center px-3 py-2"
+                style={{
+                  gridTemplateColumns: '1fr 1fr 180px',
+
+                  gap: '12px',
+
+                  background: '#eef2f7',
+
+                  border: '1px solid #dbe2ea',
+
+                  borderRadius: '8px',
+
+                  fontWeight: '700',
+
+                  fontSize: '13px',
+
+                  color: '#334155',
+
+                  marginBottom: '10px',
+                }}
+              >
+                <div>Employee</div>
+
+                <div>Transaction Number</div>
+
+                <div>Transaction Date</div>
+              </div>
+
+              {/* EMPLOYEE ROWS */}
+
+              {salaryData
+                .filter((emp) => selectedEmployees.includes(emp.id))
+                .map((emp, index) => (
+                  <div
+                    key={emp.id}
+                    className="d-grid align-items-center px-3 py-3"
+                    style={{
+                      gridTemplateColumns: '1fr 1fr 180px',
+
+                      gap: '12px',
+
+                      borderBottom:
+                        index !== selectedEmployees.length - 1 ? '1px solid #e2e8f0' : 'none',
+                    }}
+                  >
+                    {/* EMPLOYEE */}
+
+                    <div>
+                      <div
+                        style={{
+                          fontWeight: '600',
+                          fontSize: '14px',
+                          color: '#1e293b',
+                        }}
+                      >
+                        {emp.first_name} {emp.last_name}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: '#64748b',
+                        }}
+                      >
+                        {emp.employee_code}
+                      </div>
+                    </div>
+
+                    {/* TRANSACTION NUMBER */}
+
+                    <CFormInput
+                      disabled={applyAllTransactions}
+                      value={employeeTransactions?.[emp.id]?.transaction_number || ''}
+                      onChange={(e) =>
+                        handleEmployeeTransactionChange(
+                          emp.id,
+
+                          'transaction_number',
+
+                          e.target.value,
+                        )
+                      }
+                      placeholder="Transaction Number"
+                      style={{
+                        height: '42px',
+                        borderRadius: '8px',
+                      }}
+                    />
+
+                    {/* TRANSACTION DATE */}
+
+                    <CFormInput
+                      type="date"
+                      disabled={applyAllTransactions}
+                      value={employeeTransactions?.[emp.id]?.transaction_date || ''}
+                      onChange={(e) =>
+                        handleEmployeeTransactionChange(
+                          emp.id,
+
+                          'transaction_date',
+
+                          e.target.value,
+                        )
+                      }
+                      style={{
+                        height: '42px',
+                        borderRadius: '8px',
+                      }}
+                    />
+                  </div>
+                ))}
+            </div>
+          )}
+        </CModalBody>
+
+        {/* FOOTER */}
+
+        <CModalFooter
+          style={{
+            background: '#f8fafc',
+            borderTop: '1px solid #e2e8f0',
+          }}
+        >
+          <CButton
+            style={{
+              background: '#64748b',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 18px',
+              borderRadius: '10px',
+            }}
+            onClick={() => setBulkDispatchModal(false)}
+          >
+            Cancel
+          </CButton>
+
+          <CButton
+            style={{
+              background: '#1d4ed8',
+              border: 'none',
+              color: '#fff',
+              padding: '8px 20px',
+              borderRadius: '10px',
+              fontWeight: '600',
+            }}
+            onClick={handleBulkDispatch}
+          >
+            Submit
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* INDIVIDUAL DISPATCH */}
+
+      <SalaryDispatchModal
+        visible={individualDispatchModal}
+        onClose={() => setIndividualDispatchModal(false)}
+        employeeId={selectedRow?.id}
+        month={month}
+        year={year}
+      />
+
+      {/* PAYSLIP */}
+
+      <PayslipModal
+        visible={payslipModal}
+        onClose={() => setPayslipModal(false)}
+        employeeId={selectedRow?.id}
+        month={month}
+        year={year}
+      />
+    </>
+  )
+}
+
+export default SalaryRegister

@@ -1,0 +1,100 @@
+import React from "react";
+
+const Screening = ({ step, screening, setScreening }) => {
+
+  const handleChange = (field, value) => {
+    setScreening({
+      ...screening,
+      [field]: value
+    });
+  };
+
+  const handleScreeningMailUpload = (e) => {
+    const file = e.target.files[0];
+
+    setScreening({
+      ...screening,
+      screening_mail: file
+    });
+  };
+
+  return (
+    <>
+      {step === 6 && (
+        <div className="step-content">
+          <div className="row border rounded g-3 mt-2 p-3">
+
+            <div className="col-md-6">
+              <label className="form-label">Test Scheduled Date</label>
+              <input
+                type="date"
+                className="form-control"
+                value={screening.test_scheduled_date || ""}
+                onChange={(e) =>
+                  handleChange("test_scheduled_date", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Test Given Date</label>
+              <input
+                type="date"
+                className="form-control"
+                value={screening.test_given_date || ""}
+                onChange={(e) =>
+                  handleChange("test_given_date", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Marks Secured</label>
+              <input
+                type="number"
+                className="form-control"
+                step="0.01"
+                min={0}
+                value={screening.marks_secured || ""}
+                onChange={(e) =>
+                  handleChange("marks_secured", e.target.value)
+                }
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Result</label>
+              <select
+                className="form-select"
+                value={screening.result || ""}
+                onChange={(e) =>
+                  handleChange("result", e.target.value)
+                }
+              >
+                <option value="">Select Result</option>
+                <option value="PASS">PASS</option>
+                <option value="FAIL">FAIL</option>
+              </select>
+            </div>
+
+            <div className="col-md-12">
+              <label className="form-label">Screening Mail Copy</label>
+              <input
+                type="file"
+                className="form-control"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={handleScreeningMailUpload}
+              />
+              <small className="text-muted">
+                Allowed: PDF, JPG, PNG | Max Size: 2MB
+              </small>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Screening;

@@ -1,0 +1,34 @@
+import SalaryStructureForm from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (payload) => {
+    try {
+      await api.post('/admin/salary-structure/create', payload)
+      toast.success('Created successfully')
+      navigate('/salary-structure')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed')
+    }
+  }
+
+  const initialData = {
+    name: '',
+    description: '',
+    is_active: true,
+  }
+
+  return (
+    <SalaryStructureForm
+      initialData={initialData}
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

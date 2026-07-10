@@ -1,0 +1,29 @@
+.header-user-dropdown {
+  height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.header-user-dropdown .dropdown-toggle {
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center;
+  padding: 0 16px !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #111827 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+.header-user-dropdown .dropdown-toggle::after {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.header-user-dropdown .dropdown-toggle:focus,
+.header-user-dropdown .dropdown-toggle:active {
+  box-shadow: none !important;
+}

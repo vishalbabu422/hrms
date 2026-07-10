@@ -1,0 +1,278 @@
+import React, { forwardRef, useImperativeHandle, useState, useEffect } from 'react'
+import api from '../../../api/axios'
+import { toast } from 'react-toastify'
+import useDocumentUpload from '../../../hooks/useDocumentUpload'
+import useEmployeeDocuments from '../../../hooks/fetchDocuments'
+import { validateExperience } from '../../../validations/experienceValidation'
+
+const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
+  const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState([])
+
+  const [experiences, setExperiences] = useState([
+    {
+      company_name: '',
+      designation: '',
+      start_date: '',
+      end_date: '',
+      total_years: '',
+      description: '',
+      document: null,
+    },
+  ])
+
+  const { uploadDocument, updateDocument } = useDocumentUpload(employeeId)
+
+  const { documents } = useEmployeeDocuments(employeeId, 'EXPERIENCE_CERT')
+
+  // ================= FETCH =================
+  useEffect(() => {
+    if (!employeeId) return
+
+    const fetchExperiences = async () => {
+      try {
+        const res = await api.get(`/employee/${employeeId}/experiences`)
+        const data = res.data?.data || []
+
+        if (data.length) {
+          setExperiences(data)
+        }
+      } catch (err) {
+        console.error('Fetch experience error', err)
+      }
+    }
+
+    fetchExperiences()
+  }, [employeeId])
+
+  // ================= HANDLERS =================
+  const handleChange = (index, field, value) => {
+    const updated = [...experiences]
+    updated[index][field] = value
+    setExperiences(updated)
+  }
+
+  const addExperience = () => {
+    setExperiences([
+      ...experiences,
+      {
+        company_name: '',
+        designation: '',
+        start_date: '',
+        end_date: '',
+        total_years: '',
+        description: '',
+        document: null,
+      },
+    ])
+  }
+
+  const removeExperience = async (exp, index) => {
+    try {
+      // delete experience
+      if (exp.id) {
+        const confirmDelete = window.confirm('Are you sure you want to delete this experience?')
+
+        if (!confirmDelete) return
+        await api.delete(`/employee/${employeeId}/experiences/${exp.id}`)
+        toast.success('Experience deleted')
+      }
+
+      // 🔥 REMOVE FROM UI
+      setExperiences((prev) => prev.filter((_, i) => i !== index))
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to delete experience')
+    }
+  }
+
+  // ================= SUBMIT =================
+  useImperativeHandle(ref, () => ({
+    submit: async () => {
+      try {
+        setLoading(true)
+
+        // ✅ ADD HERE
+        const allErrors = []
+
+        for (const exp of experiences) {
+          const validationErrors = validateExperience(exp)
+          allErrors.push(validationErrors)
+        }
+
+        const hasError = allErrors.some((err) => Object.keys(err).length > 0)
+
+        if (hasError) {
+          setErrors(allErrors)
+          return false
+        }
+
+        const url = `/employee/${employeeId}/experiences`
+
+        for (const exp of experiences) {
+          if (!exp.company_name) continue
+
+          let savedExp
+
+          // 🔥 CREATE / UPDATE
+          if (exp.id) {
+            const res = await api.patch(url + '/' + exp.id, exp)
+            savedExp = res.data?.data
+          } else {
+            const res = await api.post(url, exp)
+            savedExp = res.data?.data
+          }
+
+          // 🔥 HANDLE DOCUMENT
+          if (exp.document) {
+            const existingDoc = documents?.find((d) => d.experience_id === savedExp.id)
+
+            if (existingDoc?.id) {
+              await updateDocument({
+                docId: existingDoc.id,
+                file: exp.document,
+                docType: 'EXPERIENCE_CERT',
+                experienceId: savedExp.id,
+                remarks: 'Experience certificate',
+              })
+            } else {
+              await uploadDocument({
+                file: exp.document,
+                docType: 'EXPERIENCE_CERT',
+                experienceId: savedExp.id,
+                remarks: 'Experience certificate',
+              })
+            }
+          }
+        }
+
+        toast.success('Experience saved')
+        return true
+      } catch (error) {
+        console.error(error)
+        toast.error(error.response?.data?.message || 'Failed to save experience')
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+  }))
+
+  return (
+    <div className="step-content">
+      {experiences.map((exp, index) => {
+        const existingDoc = documents?.find((d) => d.experience_id === exp.id)
+
+        return (
+          <div key={index} className="border rounded p-3 mb-3">
+            <div className="row g-3 mt-2">
+              <div className="col-md-6">
+                <label className="form-label">
+                  Company Name <span className="text-danger">*</span>
+                </label>
+
+                <input
+                  className={`form-control ${errors[index]?.company_name ? 'is-invalid' : ''}`}
+                  value={exp.company_name || ''}
+                  onChange={(e) => handleChange(index, 'company_name', e.target.value)}
+                />
+
+                <div className="invalid-feedback">{errors[index]?.company_name}</div>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">
+                  Designation <span className="text-danger">*</span>
+                </label>
+
+                <input
+                  className={`form-control ${errors[index]?.designation ? 'is-invalid' : ''}`}
+                  value={exp.designation || ''}
+                  onChange={(e) => handleChange(index, 'designation', e.target.value)}
+                />
+
+                <div className="invalid-feedback">{errors[index]?.designation}</div>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">
+                  Start Date <span className="text-danger">*</span>
+                </label>
+
+                <input
+                  type="date"
+                  className={`form-control ${errors[index]?.start_date ? 'is-invalid' : ''}`}
+                  value={exp.start_date || ''}
+                  onChange={(e) => handleChange(index, 'start_date', e.target.value)}
+                />
+
+                <div className="invalid-feedback">{errors[index]?.start_date}</div>
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">
+                  End Date <span className="text-danger">*</span>
+                </label>
+
+                <input
+                  type="date"
+                  className={`form-control ${errors[index]?.end_date ? 'is-invalid' : ''}`}
+                  value={exp.end_date || ''}
+                  onChange={(e) => handleChange(index, 'end_date', e.target.value)}
+                />
+
+                <div className="invalid-feedback">{errors[index]?.end_date}</div>
+              </div>
+
+              <div className="col-md-12">
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Total Years"
+                  value={exp.total_years || ''}
+                  onChange={(e) => handleChange(index, 'total_years', e.target.value)}
+                />
+              </div>
+
+              {/* FILE */}
+              <div className="col-md-12">
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => handleChange(index, 'document', e.target.files[0])}
+                />
+
+                {/* existing */}
+                {!exp.document && existingDoc && (
+                  <div className="mt-2">
+                    <a href={existingDoc.file_url} target="_blank" rel="noreferrer">
+                      View existing document
+                    </a>
+                  </div>
+                )}
+
+                {/* new */}
+                {exp.document && <small className="text-success">{exp.document.name}</small>}
+              </div>
+            </div>
+
+            {experiences.length > 1 && (
+              <button
+                className="btn btn-danger btn-sm mt-2"
+                onClick={() => removeExperience(exp, index)}
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        )
+      })}
+
+      <button className="btn btn-outline-primary" onClick={addExperience}>
+        + Add Experience
+      </button>
+    </div>
+  )
+})
+
+export default Experience

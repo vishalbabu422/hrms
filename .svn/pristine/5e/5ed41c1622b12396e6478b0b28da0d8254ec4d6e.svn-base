@@ -1,0 +1,187 @@
+import { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+  CTableRow,
+  CSpinner,
+} from '@coreui/react'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+
+import ViewField from '../components/preview-field'
+import api from '../../api/axios'
+
+const Preview = () => {
+  const { id } = useParams()
+
+  const [empanelment, setEmpanelment] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const fetchEmpanelment = async () => {
+      try {
+        setLoading(true)
+
+        const response = await api.get(
+          `/admin/empanelment/${id}?models=Organization&modelFilter=%7B%7D`,
+        )
+        
+        setEmpanelment(response.data?.data || [])
+      } catch (error) {
+        console.error(error)
+        toast.error('Failed to fetch empanelment')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEmpanelment()
+  }, [])
+
+  const formatDate = (date) =>
+    date
+      ? new Date(date).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '-'
+
+  /* ================= PDF EXPORT ================= */
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 10
+
+    doc.setFontSize(14)
+    doc.text('Empanelment Details', 10, y)
+    y += 10
+
+    doc.setFontSize(10)
+    Object.entries(empanelment).forEach(([key, value]) => {
+      doc.text(`${key} : ${value}`, 10, y)
+      y += 8
+    })
+
+    doc.save('empanelment-details.pdf')
+  }
+
+  /* ================= EXCEL EXPORT ================= */
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet([empanelment])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Empanelment')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'empanelment-details.xlsx')
+  }
+
+  return (
+    <CContainer fluid className="py-4">
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="shadow border-0 rounded-4">
+            {loading ? (
+              <div className="d-flex justify-content-center align-items-center py-5">
+                <CSpinner color="primary" />
+              </div>
+            ) : (
+              <CCardBody className="p-4">
+                {/* ================= HEADER ================= */}
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <div>
+                    <h3 className="fw-bold mb-1 text-primary">{empanelment.empanelment_no}</h3>
+                    <div className="text-muted">{empanelment?.Organization?.org_name}</div>
+                  </div>
+
+                  <div className="d-flex gap-3">
+                    <CDropdown>
+                      <CDropdownToggle color="primary" size="sm">
+                        Export
+                      </CDropdownToggle>
+                      <CDropdownMenu>
+                        <CDropdownItem onClick={handleExportPDF}>Download PDF</CDropdownItem>
+                        <CDropdownItem onClick={handleExportExcel}>Download Excel</CDropdownItem>
+                      </CDropdownMenu>
+                    </CDropdown>
+                  </div>
+                </div>
+
+                {/* ================= DETAILS ================= */}
+                <div className="p-4 rounded-3 bg-light">
+                  <h5 className="fw-semibold text-dark mb-4 border-start border-4 border-primary ps-3">
+                    Empanelment Details
+                  </h5>
+
+                  <CRow>
+                    <ViewField label="Organisation" value={empanelment?.Organization?.org_name} />
+                    <ViewField label="Category" value={empanelment.category} />
+                    <ViewField label="Date" value={formatDate(empanelment.date)} />
+
+                    <ViewField label="Short Code" value={empanelment.shortcode} />
+                    <ViewField label="RFE" value={empanelment.rfe} />
+                    <ViewField label="AMC (%)" value={`${empanelment.amc}%`} />
+
+                    <ViewField label="AGM (%)" value={`${empanelment.agm}%`} />
+                    <ViewField label="Leaves (Per Month)" value={empanelment.leaves_per_month} />
+                    <ViewField label="Leave Category" value={empanelment.leave_category} />
+
+                    <ViewField
+                      label="Carry Forward"
+                      value={empanelment.carry_forward ? 'True' : 'False'}
+                    />
+                    <ViewField
+                      label="Maternity"
+                      value={empanelment.maternity_leaves ? 'True' : 'False'}
+                    />
+                    <ViewField
+                      label="Effective From"
+                      value={formatDate(empanelment.effective_from)}
+                    />
+
+                    <ViewField label="Effective To" value={formatDate(empanelment.effective_to)} />
+                    <ViewField
+                      label="Status"
+                      value={empanelment.is_active ? 'Active' : 'Inactive'}
+                    />
+
+                    <CCol xs={12}>
+                      <div className="mb-3">
+                        <ViewField label="Remarks" value={formatDate(empanelment.remarks)} />
+                      </div>
+                    </CCol>
+
+                    <CCol xs={12}>
+                      <div className="mb-3">
+                        <ViewField label="Uploaded Document" value={formatDate(empanelment.document)} />
+                      </div>
+                    </CCol>
+                  </CRow>
+                </div>
+              </CCardBody>
+            )}
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default Preview

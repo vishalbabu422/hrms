@@ -1,0 +1,348 @@
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import api from '../../../api/axios'
+import { toast } from 'react-toastify'
+import useDocumentUpload from '../../../hooks/useDocumentUpload'
+import useEmployeeDocuments from '../../../hooks/fetchDocuments'
+import { validateBank } from '../../../validations/bankValidation'
+
+const Bank = forwardRef(({ employeeId }, ref) => {
+  const [loading, setLoading] = useState(false)
+  const [isExisting, setIsExisting] = useState(false)
+
+  const { uploadDocument, updateDocument } = useDocumentUpload(employeeId)
+
+  const { documents } = useEmployeeDocuments(employeeId, 'CANCEL_CHEQUE')
+  const chequeDoc = documents.find((d) => d.doc_type === 'CANCEL_CHEQUE')
+
+  const [chequeFile, setChequeFile] = useState(null)
+  const [errors, setErrors] = useState({})
+
+  const emptyBank = {
+    bank_name: '',
+    branch_name: '',
+    bank_address: '',
+    account_number: '',
+    ifsc: '',
+    micr_code: '',
+  }
+
+  const [employeeBank, setEmployeeBank] = useState(emptyBank)
+
+  // ================= FETCH =================
+  useEffect(() => {
+    if (!employeeId) return
+
+    const fetchBank = async () => {
+      try {
+        const res = await api.get(`/employee/${employeeId}/bankId`)
+        const data = res.data?.data?.[0] || res.data
+
+        if (data) {
+          setEmployeeBank(data)
+          setIsExisting(true)
+        }
+      } catch (err) {
+        console.error('Fetch bank error', err)
+      }
+    }
+
+    fetchBank()
+  }, [employeeId])
+
+  // ================= HANDLE CHANGE =================
+  const handleChange = (field, value) => {
+    setEmployeeBank((prev) => ({
+      ...prev,
+      [field]: value,
+    }))
+  }
+
+  const handleChequeUpload = (e) => {
+    const file = e.target.files[0]
+    setChequeFile(file)
+  }
+
+  // ================= SUBMIT =================
+  useImperativeHandle(ref, () => ({
+    // submit: async () => {
+    //   try {
+    //     setLoading(true)
+
+    //     if (!employeeBank.bank_name || !employeeBank.account_number) {
+    //       toast.error('Bank name and account number are required')
+    //       return false
+    //     }
+
+    //     const url = `/employee/${employeeId}/bankId`
+
+    //     //  Save bank data (JSON only)
+    //     if (isExisting) {
+    //       await api.patch(url, employeeBank)
+    //     } else {
+    //       await api.post(url, employeeBank)
+    //     }
+
+    //     //  Upload cheque separately (if exists)
+    //     if (chequeFile) {console.log(chequeFile)
+    //       if (chequeDoc?.id) {
+    //         await updateDocument({
+    //           docId: chequeDoc.id,
+    //           file: chequeFile,
+    //           docType: 'CANCEL_CHEQUE',
+    //           remarks: 'Cancelled cheque',
+    //         })
+    //       } else {
+    //         await uploadDocument({
+    //           file: chequeFile,
+    //           docType: 'CANCEL_CHEQUE',
+    //           remarks: 'Cancelled cheque',
+    //         })
+    //       }
+    //     }
+
+    //     toast.success('Bank details saved')
+    //     return true
+    //   } catch (error) {
+    //     console.error(error)
+    //     toast.error(error.response?.data?.message || 'Failed to save bank details')
+    //     return false
+    //   } finally {
+    //     setLoading(false)
+    //   }
+    // },
+    submit: async () => {
+      try {
+        setLoading(true)
+
+        const validationErrors = validateBank(employeeBank, 'Bank')
+
+        if (Object.keys(validationErrors).length > 0) {
+          setErrors(validationErrors)
+          toast.error('Please fill all required fields')
+          return false
+        }
+
+        const { bank_name, branch_name, bank_address, account_number, ifsc, micr_code } =
+          employeeBank
+
+        // ✅ Validation
+        if (!bank_name.trim()) {
+          toast.error('Bank name is required')
+          return false
+        }
+
+        if (!branch_name.trim()) {
+          toast.error('Branch name is required')
+          return false
+        }
+
+        //  Upload cheque separately (if exists)
+        if (chequeFile) {
+          console.log(chequeFile)
+          if (chequeDoc?.id) {
+            await updateDocument({
+              docId: chequeDoc.id,
+              file: chequeFile,
+              docType: 'CANCEL_CHEQUE',
+              remarks: 'Cancelled cheque',
+            })
+          } else {
+            await uploadDocument({
+              file: chequeFile,
+              docType: 'CANCEL_CHEQUE',
+              remarks: 'Cancelled cheque',
+            })
+          }
+        }
+
+        if (!account_number.trim()) {
+          toast.error('Account number is required')
+          return false
+        }
+
+        // Account number validation (numbers only)
+        if (!/^\d{9,18}$/.test(account_number)) {
+          toast.error('Enter valid account number (9-18 digits)')
+          return false
+        }
+
+        if (!ifsc.trim()) {
+          toast.error('IFSC code is required')
+          return false
+        }
+
+        // IFSC format validation (e.g., SBIN0001234)
+        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc)) {
+          toast.error('Invalid IFSC code format')
+          return false
+        }
+
+        if (!micr_code.trim()) {
+          toast.error('MICR code is required')
+          return false
+        }
+
+        // MICR validation (9 digits)
+        if (!/^\d{9}$/.test(micr_code)) {
+          toast.error('MICR code must be 9 digits')
+          return false
+        }
+
+        const url = `/employee/${employeeId}/bankId`
+
+        if (isExisting) {
+          await api.patch(url, employeeBank)
+        } else {
+          await api.post(url, employeeBank)
+        }
+
+        // File upload (no validation required as per your request)
+        if (chequeFile) {
+          if (chequeDoc?.id) {
+            await updateDocument({
+              docId: chequeDoc.id,
+              file: chequeFile,
+              docType: 'CANCEL_CHEQUE',
+              remarks: 'Cancelled cheque',
+            })
+          } else {
+            await uploadDocument({
+              file: chequeFile,
+              docType: 'CANCEL_CHEQUE',
+              remarks: 'Cancelled cheque',
+            })
+          }
+        }
+
+        toast.success('Bank details saved')
+        return true
+      } catch (error) {
+        console.error(error)
+        toast.error(error.response?.data?.message || 'Failed to save bank details')
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+  }))
+
+  return (
+    <div className="step-content">
+      <div className="row border rounded g-3 mt-2 p-3">
+        
+        <div className="col-md-6">
+          <label className="form-label">
+            Bank Name <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.bank_name ? 'is-invalid' : ''}`}
+            value={employeeBank.bank_name || ''}
+            onChange={(e) => handleChange('bank_name', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.bank_name}</div>
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">
+            Branch Name <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.branch_name ? 'is-invalid' : ''}`}
+            value={employeeBank.branch_name || ''}
+            onChange={(e) => handleChange('branch_name', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.branch_name}</div>
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">
+            Bank Address <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.bank_address ? 'is-invalid' : ''}`}
+            value={employeeBank.bank_address || ''}
+            onChange={(e) => handleChange('bank_address', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.bank_address}</div>
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">
+            Account Number <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.account_number ? 'is-invalid' : ''}`}
+            value={employeeBank.account_number || ''}
+            onChange={(e) => handleChange('account_number', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.account_number}</div>
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">
+            IFSC Code <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.ifsc ? 'is-invalid' : ''}`}
+            value={employeeBank.ifsc || ''}
+            onChange={(e) => handleChange('ifsc', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.ifsc}</div>
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">
+            MICR Code <span className="text-danger">*</span>
+          </label>
+
+          <input
+            className={`form-control ${errors.micr_code ? 'is-invalid' : ''}`}
+            value={employeeBank.micr_code || ''}
+            onChange={(e) => handleChange('micr_code', e.target.value)}
+          />
+
+          <div className="invalid-feedback">{errors.micr_code}</div>
+        </div>
+
+        {/* Cheque Upload */}
+        <div className="col-md-12">
+          <label className="form-label">Cancelled Cheque</label>
+
+          <input
+            type="file"
+            className="form-control"
+            accept=".pdf,.jpg,.jpeg,.png"
+            onChange={handleChequeUpload}
+          />
+
+          {/* Existing document */}
+          {!chequeFile && chequeDoc && (
+            <div className="mt-2">
+              <small className="text-primary">
+                Existing File:{' '}
+                <a href={chequeDoc.file_url} target="_blank" rel="noreferrer">
+                  {chequeDoc.file_name}
+                </a>
+              </small>
+            </div>
+          )}
+
+          {/* Newly selected file */}
+          {chequeFile && <small className="text-success mt-2 d-block">{chequeFile.name}</small>}
+        </div>
+      </div>
+    </div>
+  )
+})
+
+export default Bank

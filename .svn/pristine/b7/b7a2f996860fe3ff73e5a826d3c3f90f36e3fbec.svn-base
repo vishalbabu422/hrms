@@ -1,0 +1,37 @@
+import SalaryAddonFormComponent from './form-component'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Edit = () => {
+  const navigate = useNavigate()
+
+  // DUMMY DATA
+  const initialData = {
+    name: 'Basic Salary',
+    code: 'BASIC',
+    description: 'Monthly salary component',
+    type: 'earning',
+    is_taxable: true,
+    is_recurring: true,
+    is_active: true,
+  }
+
+  const handleSubmit = (payload) => {
+    console.log('UPDATE DATA : ', payload)
+
+    toast.success('Salary Addon updated successfully')
+
+    // REDIRECT TO INDEX PAGE
+    navigate('/salary-addon')
+  }
+
+  return (
+    <SalaryAddonFormComponent
+      initialData={initialData}
+      mode="edit"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Edit

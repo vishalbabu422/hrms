@@ -1,0 +1,59 @@
+const { EmployeeExperience, Employee } = require("../../../models");
+const AppError = require("../../../utils/appError");
+
+
+exports.getExperienceById = async (queryOptions) => {
+    return await EmployeeExperience.findAll({
+        ...queryOptions,
+        where: {
+            ...queryOptions.where
+        }
+    });
+};
+
+
+exports.assignExperience = async (employeeId, experienceData, transaction) => {
+
+    // Check employee exists
+    const employee = await Employee.findByPk(employeeId, { transaction });
+    if (!employee) throw new AppError("Employee not found", 404);
+
+    // Check duplicate company experience
+    const existingExperience = await EmployeeExperience.findOne({
+        where: {
+            employee_id: employeeId,
+            company_name: experienceData.company_name
+        },
+        transaction
+    });
+
+    if (existingExperience) {
+        throw new AppError("Experience with this company already exists for this employee", 400);
+    }
+
+    return await EmployeeExperience.create(
+        {
+            ...experienceData,
+            employee_id: employeeId
+        },
+        { transaction }
+    );
+};
+
+
+exports.updateExperience = async (employeeId, experienceId, experienceData, transaction) => {
+
+    const experience = await EmployeeExperience.findOne({
+        where: {
+            id : experienceId,
+            employee_id: employeeId            
+        },
+        transaction
+    });
+
+    if (!experience) {
+        throw new AppError("Experience not found", 404);
+    }
+
+    return await experience.update(experienceData, { transaction });
+};

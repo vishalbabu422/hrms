@@ -1,0 +1,88 @@
+.mpr-container {
+  padding: 20px;
+  background: #f5f7fb;
+  min-height: 100vh;
+}
+
+.mpr-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  border: none;
+}
+
+/* Header */
+.mpr-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mpr-icon {
+  background: #3b82f6;
+  color: #fff;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+/* Middle */
+.mpr-middle {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.mpr-section {
+  flex: 1;
+}
+
+/* Dropdown */
+.mpr-dropdown {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  padding: 10px;
+  background: #f9fafb;
+}
+
+.dropdown-body {
+  padding: 10px;
+}
+
+.search-box {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 6px;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  gap: 10px;
+}
+
+.stat-box {
+  flex: 1;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+/* Actions */
+.mpr-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+
+
+.download-btn {
+  margin-left: 6px;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 14px;
+}

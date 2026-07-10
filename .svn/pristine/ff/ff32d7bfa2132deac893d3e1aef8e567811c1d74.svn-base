@@ -1,0 +1,178 @@
+const {
+  WorkOrder,
+  WoDesgnMapping,
+  EmployeeWorkOrderDeployment,
+  Employee,
+  EmpSalaryStructure,
+} = require("../../../models");
+const AppError = require("../../../utils/appError");
+
+// GET ALL
+exports.getEmployeeSalaryStructures = async (queryOptions) => {
+  const { rows, count } =
+    await EmpSalaryStructure.findAndCountAll(queryOptions);
+
+  const page = queryOptions.page * 1 || 1;
+  const limit = queryOptions.limit * 1 || 10;
+
+  return {
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+    results: rows.length,
+    data: rows,
+  };
+};
+
+// GET BY ID
+exports.getEmployeeSalaryStructureById = async (queryOptions) => {
+  const data = await EmpSalaryStructure.findOne(queryOptions);
+
+  if (!data) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  return data;
+};
+
+// CREATE
+exports.bulkCreateEmployeeSalaryStructure = async (dataArray, transaction) => {
+  // Step 1: Check duplicates in DB
+  for (const data of dataArray) {
+    const existing = await EmpSalaryStructure.findOne({
+      where: {
+        employee_id: data.employee_id,
+        effective_from: data.effective_from,
+      },
+      transaction,
+    });
+
+    if (existing) {
+      throw new AppError(
+        `Salary already exists for employee ${data.employee_id} on ${data.effective_from}`,
+        409,
+      );
+    }
+  }
+
+  // Step 2: Bulk create
+  const result = await EmpSalaryStructure.bulkCreate(dataArray, {
+    transaction,
+  });
+
+  return result;
+};
+
+// UPDATE
+exports.updateEmployeeSalaryStructure = async (id, data, transaction) => {
+  const record = await EmpSalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!record) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  await record.update(data, { transaction });
+
+  return record;
+};
+
+// DELETE (soft delete)
+exports.deleteEmployeeSalaryStructure = async (id, transaction) => {
+  const record = await EmpSalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!record) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  return await record.update({ is_deleted: true }, { transaction });
+};
+
+exports.getEmployeeSalaryStructureByWorkOrder = async (workOrderId) => {
+  const data = await WorkOrder.findOne({
+    where: {
+      id: workOrderId,
+      is_active: true,
+    },
+    include: [
+      {
+        model: WoDesgnMapping,
+        required: false,
+        include: [
+          {
+            model: EmployeeWorkOrderDeployment,
+            required: false,
+            where: {
+              is_deleted: false,
+              relieving_date: null,
+            },
+            include: [
+              {
+                model: Employee,
+                required: false,
+                include: [
+                  {
+                    model: EmpSalaryStructure,
+                    as: "empSalaryStructure",
+                    required: false,
+                    where: {
+                      is_active: true,
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  });
+
+  if (!data) {
+    throw new AppError("Work Order not found", 404);
+  }
+
+  // NORMALIZATION
+
+  const employeeMap = {};
+
+  data.WoDesgnMappings?.forEach((mapping) => {
+    mapping.EmployeeWorkOrderDeployments?.forEach((deployment) => {
+      const emp = deployment.Employee;
+      if (!emp) return;
+
+      const empId = emp.id;
+
+      // avoid duplicates
+      if (employeeMap[empId]) return;
+
+      const salaryList = emp.empSalaryStructure || [];
+
+      // pick latest OR filter by structure if needed
+      let latest = null;
+
+      if (salaryList.length > 0) {
+        latest = salaryList.reduce((a, b) =>
+          new Date(a.effective_from) > new Date(b.effective_from) ? a : b,
+        );
+      }
+
+      const name = `${emp.first_name || " "}${emp.middle_name || " "}${
+        emp.last_name || ""
+      }`.trim();
+
+      employeeMap[empId] = {
+        employee_id: empId,
+        name,
+        ctc: latest?.ctc || null,
+        effective_from: latest?.effective_from || null,
+      };
+    });
+  });
+
+  return Object.values(employeeMap);
+};

@@ -130,6 +130,15 @@ const WorkOrder = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    type: {
+      type: DataTypes.STRING(100),
+      allowNull: false,
+      validate: {
+        isIn: [
+          ["MANPOWER", "MILESTONES_PROJECT_BASIS", "MANPOWER_PROJECT_BASIS"],
+        ],
+      },
+    },
   },
   {
     schema: "pmu",
@@ -143,7 +152,12 @@ WorkOrder.associate = (models) => {
     foreignKey: "work_order_id",
     onDelete: "CASCADE",
   });
-  
+
+  WorkOrder.hasOne(models.WoMilestone, {
+    foreignKey: "work_order_id",
+    onDelete: "CASCADE",
+  });
+
   WorkOrder.belongsTo(models.EmpanelmentMaster, {
     foreignKey: "empanelment_id_fk",
     onDelete: "RESTRICT",

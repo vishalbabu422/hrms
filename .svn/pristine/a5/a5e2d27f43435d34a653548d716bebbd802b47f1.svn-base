@@ -1,0 +1,224 @@
+import React, { useState } from 'react'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CButton,
+  CFormInput,
+  CBadge,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CFormSwitch,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilUser, cilShieldAlt,cilToilet, cilPencil, cilTrash } from '@coreui/icons'
+
+
+const Permission = () => {
+  const [activeTab, setActiveTab] = useState('users')
+
+  return (
+    <CContainer fluid className="py-3">
+      <CRow className="g-4">
+
+        {/* Sidebar */}
+        <CCol xs={12} md={4} lg={3}>
+          <CCard className="h-100 shadow-sm">
+            <CCardBody>
+
+              <div className="d-flex mb-3">
+                <CButton
+                  color={activeTab === 'users' ? 'primary' : 'light'}
+                  className="w-50 me-2"
+                  onClick={() => setActiveTab('users')}
+                >
+                  {/* <CIcon icon={cilUser} className="me-1" /> */}
+                  List Of User
+                </CButton>
+
+                <CButton
+                  color={activeTab === 'roles' ? 'primary' : 'light'}
+                  className="w-50"
+                  onClick={() => setActiveTab('roles')}
+                >
+                  {/* <CIcon icon={cilShieldAlt} className="me-1" /> */}
+                  List Of Roles
+                </CButton>
+              </div>
+
+              {activeTab === 'users' && (
+                <>
+                  <CFormInput placeholder="Search User" className="mb-3" />
+                  <CButton color="primary" className="w-100">
+                    + Add User
+                  </CButton>
+                </>
+              )}
+
+              {activeTab === 'roles' && (
+                <>
+                  <CFormInput placeholder="Search Role" className="mb-3" />
+                  <div className="list-group">
+                    <div className="list-group-item active">
+                      Admin <small className="d-block">8 users</small>
+                    </div>
+                    {/* <div className="list-group-item">
+                      Developer <small className="d-block">6 users</small>
+                    </div>
+                    <div className="list-group-item">
+                      Accountant <small className="d-block">12 users</small>
+                    </div> */}
+                  </div>
+                </>
+              )}
+
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* Main Content */}
+        <CCol xs={12} md={8} lg={9}>
+
+          {/* USERS TABLE */}
+          {activeTab === 'users' && (
+            <CCard className="shadow-sm">
+              <CCardHeader>
+                <strong>User List</strong>
+              </CCardHeader>
+              <CCardBody>
+                <CTable hover responsive align="middle">
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>Name</CTableHeaderCell>
+                      <CTableHeaderCell>Email</CTableHeaderCell>
+                      <CTableHeaderCell>Role</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell>Actions</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    <CTableRow>
+                      <CTableDataCell>Akansha</CTableDataCell>
+                      <CTableDataCell>akansha231192@gmail.com</CTableDataCell>
+                      <CTableDataCell>Admin</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="success">Active</CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CButton size="sm" color="light" className="me-2">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                        <CButton size="sm" color="light">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTableDataCell>
+                    </CTableRow>
+                     <CTableRow>
+                      <CTableDataCell>Parul</CTableDataCell>
+                      <CTableDataCell>parul23@gmail.com</CTableDataCell>
+                      <CTableDataCell>Developer</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge color="success">Active</CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <CButton size="sm" color="light" className="me-2">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                        <CButton size="sm" color="light">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
+              </CCardBody>
+            </CCard>
+          )}
+
+          {/* ROLES & PERMISSIONS */}
+          {activeTab === 'roles' && (
+            <CRow className="g-4">
+
+              <CCol xs={12} md={6}>
+                <CCard className="shadow-sm">
+                  <CCardBody>
+                    <h6 className="mb-3">
+                      {/* <CIcon icon={cilShieldAlt} className="me-2" /> */}
+                      Requests Module
+                    </h6>
+
+                    <CFormSwitch label="View" />
+                    <CFormSwitch label="Edit" />
+                    <CFormSwitch label="Delete" />
+                  </CCardBody>
+                </CCard>
+              </CCol>
+
+
+ <CCol xs={12} md={6}>
+                <CCard className="shadow-sm">
+                  <CCardBody>
+                    <h6 className="mb-3">
+                      {/* <CIcon icon={cilShieldAlt} className="me-2" /> */}
+                      Requests Module
+                    </h6>
+
+                    <CFormSwitch label="View" />
+                    <CFormSwitch label="Edit" />
+                    <CFormSwitch label="Delete" />
+                  </CCardBody>
+                </CCard>
+              </CCol>
+
+ <CCol xs={12} md={6}>
+                <CCard className="shadow-sm">
+                  <CCardBody>
+                    <h6 className="mb-3">
+                      {/* <CIcon icon={cilShieldAlt} className="me-2" /> */}
+                      Requests Module
+                    </h6>
+
+                    <CFormSwitch label="View" />
+                    <CFormSwitch label="Edit" />
+                    <CFormSwitch label="Delete" />
+                  </CCardBody>
+                </CCard>
+              </CCol>
+
+
+ <CCol xs={12} md={6}>
+                <CCard className="shadow-sm">
+                  <CCardBody>
+                    <h6 className="mb-3">
+                      {/* <CIcon icon={cilShieldAlt} className="me-2" /> */}
+                      Requests Module
+                    </h6>
+
+                    <CFormSwitch label="View" />
+                    <CFormSwitch label="Edit" />
+                    <CFormSwitch label="Delete" />
+                  </CCardBody>
+                </CCard>
+              </CCol>
+
+
+
+
+
+            </CRow>
+          )}
+
+        </CCol>
+
+      </CRow>
+    </CContainer>
+  )
+}
+export default Permission

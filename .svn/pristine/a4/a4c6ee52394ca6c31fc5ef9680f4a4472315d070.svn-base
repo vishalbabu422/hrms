@@ -1,0 +1,161 @@
+import React from 'react'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CButton,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil } from '@coreui/icons'
+import { useNavigate, useParams } from 'react-router-dom'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+
+const Permission = () => {
+  const navigate = useNavigate()
+  const { id } = useParams()
+
+  /* ================= DUMMY DATA ================= */
+  const employee = {
+    id,
+    emp_code: 'EMP-1015',
+    full_name: 'Rahul Verma',
+    email: 'rahul@pmu.in',
+    contact: '9812345678',
+    status: 'Active',
+    hr_verified: 'Verified',
+    onboarded_on: '2025-02-05',
+    organisation: 'ABC Healthcare Pvt Ltd',
+  }
+
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+
+  const ViewField = ({ label, value }) => (
+    <CCol xs={12} md={4}>
+      <div className="mb-3">
+        <small className="text-muted">{label}</small>
+        <div className="fw-semibold mt-1">{value ?? '-'}</div>
+      </div>
+    </CCol>
+  )
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 20
+
+    doc.setFontSize(14)
+    doc.text('Employee Details', 10, 10)
+
+    doc.setFontSize(10)
+    Object.entries(employee).forEach(([key, value]) => {
+      doc.text(`${key} : ${value}`, 10, y)
+      y += 8
+    })
+
+    doc.save('employee-details.pdf')
+  }
+
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet([employee])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Employee')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'employee-details.xlsx')
+  }
+
+  return (
+    <CContainer fluid className="py-4">
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="shadow border-0 rounded-4">
+            <CCardBody className="p-4">
+
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="fw-bold mb-1 text-primary">
+                    {employee.emp_code}
+                  </h3>
+                  <div className="text-muted">
+                    {employee.full_name} | {employee.organisation}
+                  </div>
+                </div>
+
+                <div className="d-flex gap-3">
+                  <CButton
+                    color="primary"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/employee/edit/${employee.id}`)
+                    }
+                  >
+                    <CIcon icon={cilPencil} className="me-1" />
+                    Edit
+                  </CButton>
+
+                  <CDropdown>
+                    <CDropdownToggle color="primary" size="sm">
+                      Export
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={handleExportPDF}>
+                        Download PDF
+                      </CDropdownItem>
+                      <CDropdownItem onClick={handleExportExcel}>
+                        Download Excel
+                      </CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-3 bg-light">
+                <h5 className="fw-semibold text-dark mb-4 border-start border-4 border-primary ps-3">
+                  Employee Details
+                </h5>
+
+                <CRow>
+                  <ViewField label="Employee Code" value={employee.emp_code} />
+                  <ViewField label="Full Name" value={employee.full_name} />
+                  <ViewField label="Email" value={employee.email} />
+                  <ViewField label="Contact" value={employee.contact} />
+                  <ViewField label="Status" value={employee.status} />
+                  <ViewField label="HR Verified" value={employee.hr_verified} />
+                  <ViewField
+                    label="Onboarded On"
+                    value={formatDate(employee.onboarded_on)}
+                  />
+                </CRow>
+              </div>
+
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default Permission

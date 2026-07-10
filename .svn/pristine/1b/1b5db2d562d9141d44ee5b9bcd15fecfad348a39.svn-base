@@ -1,0 +1,198 @@
+import React, { useEffect, useState } from 'react'
+import { getEmployeeById } from '../../services/employeeProfileService'
+import { CAvatar, CCard, CCardBody, CCol, CContainer, CRow } from '@coreui/react'
+import { useSelector } from 'react-redux'
+import CIcon from '@coreui/icons-react'
+import { cilUser } from '@coreui/icons'
+
+const InfoField = ({ label, value }) => (
+  <div
+    style={{
+      padding: '10px 12px',
+      borderBottom: '1px solid #eef2f7',
+    }}
+  >
+    <div
+      style={{
+        fontSize: '11px',
+        color: '#6b7280',
+        textTransform: 'uppercase',
+      }}
+    >
+      {label}
+    </div>
+
+    <div
+      style={{
+        fontSize: '14px',
+        fontWeight: 600,
+        color: '#111827',
+      }}
+    >
+      {value || '-'}
+    </div>
+  </div>
+)
+
+const Profile = () => {
+  const [employee, setEmployee] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const user = useSelector((state) => state.auth.user)
+  useEffect(() => {
+    fetchEmployee()
+  }, [])
+
+  const fetchEmployee = async () => {
+    try {
+      setLoading(true)
+
+      const response = await getEmployeeById(user.id)
+
+      setEmployee(response.data.data)
+    } catch (error) {
+      console.error('Employee API Error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-center py-5">Loading...</div>
+  }
+
+  const currentDesignation =
+    employee?.employeeDesignations?.find((item) => item.is_current)?.designation
+      ?.designation_name || '-'
+
+  const currentDivision =
+    employee?.employeeDivisions?.find((item) => item.is_current)?.division?.division_name ||
+    employee?.employeeDivisions?.[employee?.employeeDivisions?.length - 1]?.division
+      ?.division_name ||
+    '-'
+
+  const initials = `${employee?.first_name?.[0] || ''}${
+    employee?.last_name?.[0] || ''
+  }`.toUpperCase()
+
+  return (
+    <CContainer fluid>
+      {/* Header */}
+
+      <CCard
+        className="border-0 shadow-sm mb-3"
+        style={{
+          borderRadius: '16px',
+        }}
+      >
+        <CCardBody className="py-3">
+          <div className="d-flex align-items-center">
+            <CAvatar
+              style={{
+                width: '50px',
+                height: '50px',
+                background: '#5856d6',
+                color: '#fff',
+              }}
+            >
+              <CIcon icon={cilUser} size="xl" />
+            </CAvatar>
+
+            <div className="ms-3">
+              <h5 className="mb-0 fw-bold">
+                {employee?.salutation} {employee?.first_name}
+                {employee?.middle_name} {employee?.last_name}
+              </h5>
+
+              <div
+                style={{
+                  color: '#5856d6',
+                  fontSize: '14px',
+                }}
+              ></div>
+            </div>
+          </div>
+        </CCardBody>
+      </CCard>
+
+      <CRow>
+        {/* Personal Information */}
+
+        <CCol lg={6}>
+          <CCard className="border-0 shadow-sm mb-3">
+            <CCardBody className="p-0">
+              <div className="px-3 py-2 fw-bold">Personal Information</div>
+
+              <InfoField label="Email" value={employee?.email} />
+
+              <InfoField label="Contact Number" value={employee?.contact_no} />
+
+              <InfoField label="Date Of Birth" value={employee?.EmployeeDetail?.date_of_birth} />
+
+              <InfoField label="Gender" value={employee?.EmployeeDetail?.gender} />
+
+              <InfoField label="Marital Status" value={employee?.EmployeeDetail?.marital_status} />
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* Employment Information */}
+
+        <CCol lg={6}>
+          <CCard className="border-0 shadow-sm mb-3">
+            <CCardBody className="p-0">
+              <div className="px-3 py-2 fw-bold">Employment Information</div>
+
+              <InfoField label="Employee Code" value={employee?.employee_code} />
+
+              <InfoField label="Designation" value={currentDesignation} />
+
+              <InfoField label="Division" value={currentDivision} />
+
+              <InfoField label="Mode Of Working" value={employee?.mode_of_working} />
+
+              <InfoField label="State Of Working" value={employee?.state_of_working} />
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* Service Details */}
+
+        <CCol lg={6}>
+          <CCard className="border-0 shadow-sm mb-3">
+            <CCardBody className="p-0">
+              <div className="px-3 py-2 fw-bold">Service Details</div>
+
+              <InfoField label="Joining Date" value={employee?.date_of_joining} />
+
+              <InfoField label="Probation End Date" value={employee?.probation_end_date} />
+
+              <InfoField label="Confirmation Date" value={employee?.confirmation_date} />
+
+              <InfoField label="Notice Period" value={employee?.notice_period_days} />
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* Other Information */}
+
+        <CCol lg={6}>
+          <CCard className="border-0 shadow-sm mb-3">
+            <CCardBody className="p-0">
+              <div className="px-3 py-2 fw-bold">Other Information</div>
+
+              <InfoField label="Employee Category" value={employee?.employee_category} />
+
+              <InfoField label="Account Status" value={employee?.account_status} />
+
+              <InfoField label="Gazetted" value={employee?.is_gazetted ? 'Yes' : 'No'} />
+
+              <InfoField label="HR Verified" value={employee?.hr_verified ? 'Yes' : 'No'} />
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default Profile

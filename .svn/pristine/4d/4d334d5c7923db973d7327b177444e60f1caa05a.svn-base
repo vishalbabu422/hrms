@@ -1,0 +1,263 @@
+import React, { useState, useEffect } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CBadge,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CFormInput,
+  CButton,
+  CRow,
+  CCol,
+  CProgress,
+  CProgressBar,
+} from '@coreui/react'
+import { useParams } from 'react-router-dom'
+
+const EmpDeployment = () => {
+  const { id } = useParams()
+
+  const [deployments, setDeployments] = useState([
+    {
+      id: 101,
+      designation: 'Engineer',
+      totalPositions: 5,
+      employees: [{ name: 'Akansha' }, { name: 'Rahul' }],
+    },
+    {
+      id: 102,
+      designation: 'Supervisor',
+      totalPositions: 3,
+      employees: [],
+    },
+  ])
+
+  const [visible, setVisible] = useState(false)
+  const [selectedDeployment, setSelectedDeployment] = useState(null)
+
+  const [formData, setFormData] = useState({})
+
+  const openModal = (deployment) => {
+    setSelectedDeployment(deployment)
+    setVisible(true)
+  }
+
+  const handleSave = () => {
+    const updated = deployments.map((item) => {
+      if (item.id === selectedDeployment.id) {
+        return {
+          ...item,
+          employees: [...item.employees, formData],
+        }
+      }
+      return item
+    })
+    setDeployments(updated)
+    setVisible(false)
+  }
+
+  const totalPositions = deployments.reduce(
+    (a, b) => a + b.totalPositions,
+    0
+  )
+  const totalDeployed = deployments.reduce(
+    (a, b) => a + b.employees.length,
+    0
+  )
+  const totalVacancy = totalPositions - totalDeployed
+
+  return (
+    <>
+      {/* Page Title */}
+      <div className="mb-4">
+        <h4 className="fw-bold">Employee Deployment</h4>
+        <small className="text-medium-emphasis">
+          Work Order ID: {id}
+        </small>
+      </div>
+
+      {/* Summary Cards */}
+      <CRow className="mb-4">
+        <CCol md={4}>
+          <CCard className="shadow border-0 text-white"
+            style={{ background: 'linear-gradient(135deg,#1d976c,#93f9b9)' }}>
+            <CCardBody>
+              <h6>Total Positions</h6>
+              <h3>{totalPositions}</h3>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard className="shadow border-0 text-white"
+            style={{ background: 'linear-gradient(135deg,#396afc,#2948ff)' }}>
+            <CCardBody>
+              <h6>Deployed</h6>
+              <h3>{totalDeployed}</h3>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        <CCol md={4}>
+          <CCard className="shadow border-0 text-white"
+            style={{ background: 'linear-gradient(135deg,#ff512f,#dd2476)' }}>
+            <CCardBody>
+              <h6>Vacancy</h6>
+              <h3>{totalVacancy}</h3>
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      {/* Deployment Table */}
+      <CCard className="shadow-sm border-0">
+        <CCardHeader className="bg-light fw-semibold">
+          Deployment Overview
+        </CCardHeader>
+
+        <CCardBody>
+          <CTable hover responsive className="align-middle">
+            <CTableHead className="table-light">
+              <CTableRow>
+                <CTableHeaderCell>Designation</CTableHeaderCell>
+                <CTableHeaderCell>Status</CTableHeaderCell>
+                <CTableHeaderCell>Vacancy</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {deployments.map((item) => {
+                const deployed = item.employees.length
+                const vacancy =
+                  item.totalPositions - deployed
+                const percent =
+                  (deployed / item.totalPositions) * 100
+
+                return (
+                  <CTableRow key={item.id}>
+                    <CTableDataCell className="fw-semibold">
+                      {item.designation}
+                      <div className="mt-2">
+                        <CProgress thin>
+                          <CProgressBar value={percent} />
+                        </CProgress>
+                      </div>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      <CBadge color="success" shape="rounded-pill">
+                        {deployed} / {item.totalPositions}
+                      </CBadge>
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      {vacancy > 0 ? (
+                        <CBadge
+                          color="danger"
+                          shape="rounded-pill"
+                          style={{
+                            cursor: 'pointer',
+                            transition: '0.3s',
+                          }}
+                          onClick={() => openModal(item)}
+                        >
+                          {vacancy} Left
+                        </CBadge>
+                      ) : (
+                        <CBadge
+                          color="secondary"
+                          shape="rounded-pill"
+                        >
+                          Full
+                        </CBadge>
+                      )}
+                    </CTableDataCell>
+                  </CTableRow>
+                )
+              })}
+            </CTableBody>
+          </CTable>
+        </CCardBody>
+      </CCard>
+
+      {/* Modal */}
+      <CModal visible={visible} onClose={() => setVisible(false)} alignment="center">
+        <CModalHeader>
+          <CModalTitle>Add Employee</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          <CRow className="g-3">
+            <CCol md={6}>
+              <CFormInput
+                label="Name"
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </CCol>
+            <CCol md={6}>
+              <CFormInput
+                label="Email"
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+              />
+            </CCol>
+            <CCol md={6}>
+              <CFormInput
+                label="Contact"
+                onChange={(e) =>
+                  setFormData({ ...formData, contact: e.target.value })
+                }
+              />
+            </CCol>
+            <CCol md={6}>
+              <CFormInput
+                type="date"
+                label="Joining Date"
+                onChange={(e) =>
+                  setFormData({ ...formData, joining: e.target.value })
+                }
+              />
+            </CCol>
+            <CCol md={6}>
+              <CFormInput
+                type="date"
+                label="Relieving Date"
+                onChange={(e) =>
+                  setFormData({ ...formData, relieving: e.target.value })
+                }
+              />
+            </CCol>
+          </CRow>
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton
+            color="secondary"
+            variant="outline"
+            onClick={() => setVisible(false)}
+          >
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={handleSave}>
+            Save
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </>
+  )
+}
+
+export default EmpDeployment

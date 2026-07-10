@@ -1,0 +1,1317 @@
+import React, { useState } from 'react'
+import { toast } from 'react-toastify'
+import CIcon from '@coreui/icons-react'
+import BasicInfo from './modules/basic-info'
+import Address from './modules/address'
+import OfficeAddress from './modules/office-address'
+import {
+  cilUser,
+  cilLocationPin,
+  cilEducation,
+  cilBriefcase,
+  cilPeople,
+  cilBank,
+  cilShieldAlt,
+  cilClipboard,
+  cilFile,
+  cilBuilding,
+  cilMap,
+  cilChart,
+} from '@coreui/icons'
+import api from '../../api/axios'
+
+const Add = () => {
+  const [step, setStep] = useState(0)
+  const [employeeId, setEmployeeId] = useState(null)
+  const [profileImage, setProfileImage] = useState(null)
+  const [cancelledCheque, setCancelledCheque] = useState(null)
+  const [screeningMail, setScreeningMail] = useState(null)
+  const [policyDocument, setPolicyDocument] = useState(null)
+  const [selectedDocType, setSelectedDocType] = useState('')
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [documents, setDocuments] = useState([])
+
+  const stepConfig = [
+    { label: 'Basic Information', icon: cilUser, url: '/employee' },
+    { label: 'Address', icon: cilLocationPin, url: '/employee/{employeeId}/address' },
+    { label: 'Office Address', icon: cilBuilding },
+    { label: 'Qualification', icon: cilEducation },
+    { label: 'Bank Details', icon: cilBank },
+    { label: 'Insurance', icon: cilShieldAlt },
+    { label: 'Screening Test', icon: cilClipboard },
+    { label: 'Experience', icon: cilBriefcase },
+    { label: 'LTC', icon: cilMap },
+
+    { label: 'Documents', icon: cilFile },
+  ]
+
+  const initialBasicDetails = {
+    employee_code: '',
+    attendance_code: '',
+    password_hash: '',
+    salutation: '',
+    first_name: '',
+    middle_name: '',
+    last_name: '',
+    email: '',
+    contact_no: '',
+    date_of_joining: null,
+    probation_end_date: null,
+    confirmation_date: null,
+    date_of_exit: null,
+    notice_period_days: null,
+    employeeType: '',
+    designation: '',
+    division: '',
+    modeOfWorking: '',
+    stateOfWorking: '',
+    employeeCategory: '',
+    dateOfBirth: '',
+    fathersName: '',
+    mothersName: '',
+    maritalStatus: '',
+    gender: '',
+    relievingDate: '',
+    gazetted: false,
+  }
+
+  const [employeeDetails, setEmployeeDetails] = useState(initialBasicDetails)
+
+  const initialAddressDetails = {
+    correspondence: {
+      address_type: 'CORRESPONDENCE',
+      address: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+      is_primary: true,
+    },
+
+    permanent: {
+      address_type: 'PERMANENT',
+      address: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+      is_primary: false,
+    },
+
+    office: {
+      address_type: 'OFFICE',
+      address: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+      is_primary: false,
+    },
+
+    client_office: {
+      address_type: 'CLIENT_OFFICE',
+      address: '',
+      landmark: '',
+      city: '',
+      district: '',
+      state: '',
+      country: '',
+      pin_code: '',
+      is_primary: false,
+    },
+  }
+
+  const emptyAddress = {
+    address_line1: '',
+    address_line2: '',
+    landmark: '',
+    city: '',
+    district: '',
+    state: '',
+    country: 'India',
+    pin_code: '',
+  }
+
+  const [employeeAddress, setEmployeeAddress] = useState(initialAddressDetails)
+
+  const [qualifications, setQualifications] = useState([
+    {
+      qualificationType: '',
+      qualificationName: '',
+      specialization: '',
+      instituteName: '',
+      boardUniversity: '',
+      yearOfPassing: '',
+      grade: '',
+      percentage: '',
+      document: null, // 👈 added
+    },
+  ])
+
+  const [experiences, setExperiences] = useState([
+    {
+      companyName: '',
+      designation: '',
+      startDate: '',
+      endDate: '',
+      totalExperience: '',
+      document: null, // 👈 added
+    },
+  ])
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setProfileImage(reader.result)
+    reader.readAsDataURL(file)
+  }
+
+  const handleChequeUpload = (e) => {
+    const file = e.target.files[0]
+
+    if (!file) return
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only PDF, JPG, PNG files are allowed.')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB.')
+      return
+    }
+
+    setCancelledCheque(file)
+  }
+
+  const handleScreeningMailUpload = (e) => {
+    const file = e.target.files[0]
+
+    if (!file) return
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only PDF, JPG, PNG files are allowed.')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB.')
+      return
+    }
+
+    setScreeningMail(file)
+  }
+
+  const handlePolicyUpload = (e) => {
+    const file = e.target.files[0]
+
+    if (!file) return
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only PDF, JPG, PNG files are allowed.')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB.')
+      return
+    }
+
+    setPolicyDocument(file)
+  }
+
+  
+
+  // FAMILY MEMBERS STATE
+  const [familyMembers, setFamilyMembers] = useState([
+    {
+      relation: '',
+      name: '',
+      dob: '',
+      gender: '',
+      pan_number: '',
+      is_dependent: false,
+    },
+  ])
+
+  // INSURANCE STATE
+  const [insurance, setInsurance] = useState({
+    insurance_company: '',
+    policy_number: '',
+    from_date: '',
+    to_date: '',
+    sum_insured: '',
+    policy_premium: '',
+    family_members_covered: '',
+    policy_document: null,
+  })
+
+  const handleFamilyChange = (index, field, value) => {
+    const updated = [...familyMembers]
+    updated[index][field] = value
+    setFamilyMembers(updated)
+  }
+
+  const addFamilyMember = () => {
+    setFamilyMembers([
+      ...familyMembers,
+      {
+        relation: '',
+        name: '',
+        dob: '',
+        gender: '',
+        pan_number: '',
+        is_dependent: false,
+      },
+    ])
+  }
+
+  const removeFamilyMember = (index) => {
+    setFamilyMembers(familyMembers.filter((_, i) => i !== index))
+  }
+
+  const handleInsuranceChange = (field, value) => {
+    setInsurance({ ...insurance, [field]: value })
+  }
+
+  const handleInsuranceFile = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setInsurance({ ...insurance, policy_document: file })
+  }
+
+  const handleFileSelect = (file) => {
+    if (!file) return
+    setSelectedFile(file)
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    const file = e.dataTransfer.files[0]
+    if (file) setSelectedFile(file)
+  }
+
+  const handleDragOver = (e) => {
+    e.preventDefault()
+  }
+
+  const handleAddDocument = () => {
+    if (!selectedDocType || !selectedFile) {
+      alert('Please select document type and file.')
+      return
+    }
+
+    setDocuments((prev) => [
+      ...prev,
+      {
+        type: selectedDocType,
+        file: selectedFile,
+      },
+    ])
+
+    // Reset
+    setSelectedFile(null)
+    setSelectedDocType('')
+
+    const input = document.getElementById('hiddenFileInput')
+    if (input) input.value = ''
+  }
+
+  const handleRemoveDocument = (indexToRemove) => {
+    setDocuments((prev) => prev.filter((_, index) => index !== indexToRemove))
+
+    const input = document.getElementById('hiddenFileInput')
+    if (input) input.value = ''
+  }
+
+  const [ltcData, setLtcData] = useState({
+    hometown: '',
+    district: '',
+    state: '',
+    nearestRailway: '',
+    nearestAirport: '',
+  })
+
+
+  const [ltcLocked, setLtcLocked] = useState(false) // locks after first save
+
+  const handleLtcChange = (e) => {
+    const { name, value } = e.target
+    setLtcData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleLtcSave = () => {
+    if (
+      !ltcData.hometown ||
+      !ltcData.district ||
+      !ltcData.state ||
+      !ltcData.nearestRailway ||
+      !ltcData.nearestAirport
+    ) {
+      alert('Please fill all fields')
+      return
+    }
+
+    setLtcLocked(true)
+  }
+
+  // dynamic submit// dont change
+
+  const handleSubmit = async () => {
+    try {
+      if (step === 0) {
+        const response = await api.post('/employee', employeeDetails)
+        const id = response.data?.data?.id
+        setEmployeeId(id)
+        toast.success('Basic info saved')
+      } else if (step === 1) {
+        const url = `/employee/${employeeId}/address`
+
+        const addresses = [
+          employeeAddress.correspondence,
+          employeeAddress.permanent,
+          employeeAddress.office,
+          employeeAddress.client_office,
+        ]
+
+        for (const addr of addresses) {
+          // server expects `address` field; forms use `address_line1` so check both
+          const hasAddress = addr.address || addr.address_line1
+          const isEmpty = !hasAddress && !addr.city && !addr.state && !addr.pin_code
+
+          if (isEmpty) continue
+
+          // make sure payload has expected key
+          const payload = { ...addr }
+          if (!payload.address && payload.address_line1) {
+            payload.address = payload.address_line1
+          }
+
+          await api.post(url, payload)
+        }
+
+        toast.success('Addresses saved')
+      } else {
+        const url = stepConfig[step]?.url
+        await api.post(url, employeeDetails)
+        toast.success('Data submitted successfully')
+      }
+      setStep((prev) => prev + 1)
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to create Employee')
+    }
+  }
+
+
+
+
+
+  return (
+    <div className="container my-4">
+      <div className="card p-4 shadow-sm" style={{ minHeight: '800px' }}>
+        {/* 🔹 UNDERLINE STEPPER */}
+        <div className="stepper-underline mb-4">
+          {stepConfig.map((item, index) => (
+            <div
+              key={index}
+              className={`stepper-item ${step === index ? 'active' : ''}`}
+              onClick={() => setStep(index)}
+            >
+              <CIcon icon={item.icon} className="stepper-icon" />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* 🔹 STEP 1 */}
+        {step === 0 && (
+          <BasicInfo employeeDetails={employeeDetails} setEmployeeDetails={setEmployeeDetails} />
+        )}
+
+        {/* STEP 1 */}
+
+        {step === 1 && (
+          <Address
+            employeeId={employeeId}
+            employeeAddress={employeeAddress}
+            setEmployeeAddress={setEmployeeAddress}
+          />
+        )}
+
+
+        {/* 🔹 Office address */}
+        
+
+{/* STEP 2 */}
+{step === 2 && (
+  <OfficeAddress
+    employeeId={employeeId}
+    employeeAddress={employeeAddress}
+    setEmployeeAddress={setEmployeeAddress}
+  />
+)}
+
+
+
+
+        {step === 3 && (
+          <div className="step-content">
+            {qualifications.map((q, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Qualification Type</label>
+                    <select
+                      className="form-select"
+                      value={q.qualificationType}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].qualificationType = e.target.value
+                        setQualifications(arr)
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option>Degree</option>
+                      <option>Certification</option>
+                      <option>Diploma</option>
+                      <option>Training</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Qualification Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.qualificationName}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].qualificationName = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Specialization</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.specialization}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].specialization = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Institute Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="institute_name"
+                      value={q.instituteName}
+                      maxLength={200}
+                      placeholder="Enter institute name"
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].instituteName = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Board / University</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.boardUniversity}
+                      maxLength={200}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].boardUniversity = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Year of Passing</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={q.yearOfPassing}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].yearOfPassing = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Grade</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.grade}
+                      maxLength={50}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].grade = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Percentage (%)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={q.percentage}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].percentage = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Upload Certificate</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].document = e.target.files[0]
+                        setQualifications(arr)
+                      }}
+                    />
+                    {q.document && <small className="text-success">{q.document.name}</small>}
+                  </div>
+                </div>
+
+                {/* REMOVE */}
+                {qualifications.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() =>
+                        setQualifications(qualifications.filter((_, i) => i !== index))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* ADD MORE */}
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() =>
+                setQualifications([
+                  ...qualifications,
+                  {
+                    qualificationType: '',
+                    qualificationName: '',
+                    specialization: '',
+                    instituteName: '',
+                    boardUniversity: '',
+                    yearOfPassing: '',
+                    grade: '',
+                    percentage: '',
+                    document: null,
+                  },
+                ])
+              }
+            >
+              + Add Qualification
+            </button>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="step-content">
+            <div className="row border rounded g-3 mt-2">
+              <div className="col-md-6">
+                <label className="form-label">Bank Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="bank_name"
+                  placeholder="Enter bank name"
+                  maxLength={150}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Branch Name</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="branch_name"
+                  placeholder="Enter branch name"
+                  maxLength={150}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Bank Address</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="bank_address"
+                  placeholder="Enter bank branch address"
+                  maxLength={150}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Account Number</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="account_number"
+                  placeholder="Enter account number"
+                  maxLength={150}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">IFSC Code</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="ifsc_code"
+                  placeholder="Enter IFSC code (e.g. SBIN0001234)"
+                  maxLength={11}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">MICR Code</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="micr_code"
+                  placeholder="Enter MICR code"
+                  maxLength={9}
+                />
+              </div>
+              {/* Cancelled Cheque Upload */}
+              <div className="col-md-12">
+                <label className="form-label">Cancelled Cheque (Upload)</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="cancelled_cheque"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleChequeUpload}
+                />
+                <small className="text-muted">Allowed: PDF, JPG, PNG | Max Size: 2MB</small>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 5 && (
+          <div className="step-content">
+            {/* ================= INSURANCE ================= */}
+            <div className="card mb-4 shadow-sm">
+              <div className="card-header bg-light fw-semibold">Insurance Details</div>
+
+              <div className="card-body">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Insurance Company</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={insurance.insurance_company}
+                      onChange={(e) => handleInsuranceChange('insurance_company', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Policy Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={insurance.policy_number}
+                      onChange={(e) => handleInsuranceChange('policy_number', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">From Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={insurance.from_date}
+                      onChange={(e) => handleInsuranceChange('from_date', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">To Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={insurance.to_date}
+                      onChange={(e) => handleInsuranceChange('to_date', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Sum Insured</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      step="0.01"
+                      value={insurance.sum_insured}
+                      onChange={(e) => handleInsuranceChange('sum_insured', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Policy Premium</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      step="0.01"
+                      value={insurance.policy_premium}
+                      onChange={(e) => handleInsuranceChange('policy_premium', e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-md-12">
+                    <label className="form-label">Family Members Covered</label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      value={insurance.family_members_covered}
+                      onChange={(e) =>
+                        handleInsuranceChange('family_members_covered', e.target.value)
+                      }
+                    />
+                  </div>
+
+                  <div className="col-md-12">
+                    <label className="form-label">Policy Document</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={handleInsuranceFile}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ================= FAMILY MEMBERS ================= */}
+            <div className="card shadow-sm">
+              <div className="card-header bg-light fw-semibold">Family Members</div>
+
+              <div className="card-body">
+                {familyMembers.map((member, index) => (
+                  <div key={index} className="border rounded p-3 mb-3">
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label">Relation</label>
+                        <select
+                          className="form-select"
+                          value={member.relation}
+                          onChange={(e) => handleFamilyChange(index, 'relation', e.target.value)}
+                        >
+                          <option value="">Select</option>
+                          <option value="SPOUSE">Spouse</option>
+                          <option value="CHILD">Child</option>
+                          <option value="FATHER">Father</option>
+                          <option value="MOTHER">Mother</option>
+                          <option value="SIBLING">Sibling</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={member.name}
+                          onChange={(e) => handleFamilyChange(index, 'name', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">Date of Birth</label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={member.dob}
+                          onChange={(e) => handleFamilyChange(index, 'dob', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">Gender</label>
+                        <select
+                          className="form-select"
+                          value={member.gender}
+                          onChange={(e) => handleFamilyChange(index, 'gender', e.target.value)}
+                        >
+                          <option value="">Select</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </div>
+
+                      <div className="col-md-6">
+                        <label className="form-label">PAN Number</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={member.pan_number}
+                          onChange={(e) => handleFamilyChange(index, 'pan_number', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="col-md-6 d-flex align-items-center">
+                        <div className="form-check mt-4">
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={member.is_dependent}
+                            onChange={(e) =>
+                              handleFamilyChange(index, 'is_dependent', e.target.checked)
+                            }
+                          />
+                          <label className="form-check-label">Is Dependent</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {familyMembers.length > 1 && (
+                      <div className="text-end mt-2">
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => removeFamilyMember(index)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <button type="button" className="btn btn-outline-primary" onClick={addFamilyMember}>
+                  + Add Family Member
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 6 && (
+          <div className="step-content">
+            <div className="row border rounded g-3 mt-2">
+              <div className="col-md-6">
+                <label className="form-label">Test Scheduled Date</label>
+                <input type="date" className="form-control" />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Test Given Date</label>
+                <input type="date" className="form-control" />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Marks Secured</label>
+                <input type="number" className="form-control" min={0} step="0.01" />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Result</label>
+                <select className="form-select">
+                  <option value="">Select Result</option>
+                  <option value="PASS">PASS</option>
+                  <option value="FAIL">FAIL</option>
+                </select>
+              </div>
+
+              {/* Screening Mail Copy Upload */}
+              <div className="col-md-12">
+                <label className="form-label">Screening Mail Copy</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleScreeningMailUpload}
+                />
+                <small className="text-muted">Allowed: PDF, JPG, PNG | Max Size: 2MB</small>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 7 && (
+          <div className="step-content">
+            {experiences.map((exp, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3 mt-2">
+                  <div className="col-md-6">
+                    <label className="form-label">Company Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter Company Name"
+                      maxLength={200}
+                      value={exp.companyName}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].companyName = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Designation</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter Designation"
+                      maxLength={150}
+                      value={exp.designation}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].designation = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Start Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={exp.startDate}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].startDate = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">End Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={exp.endDate}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].endDate = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-12">
+                    <label className="form-label">Total Experience (Years)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      min={0}
+                      step="0.1"
+                      value={exp.totalExperience}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].totalExperience = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Upload Experience Certificate</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].document = e.target.files[0]
+                        setExperiences(arr)
+                      }}
+                    />
+                    {exp.document && <small className="text-success">{exp.document.name}</small>}
+                  </div>
+                </div>
+
+                {/* REMOVE BUTTON */}
+                {experiences.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => setExperiences(experiences.filter((_, i) => i !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* ADD EXPERIENCE BUTTON */}
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() =>
+                setExperiences([
+                  ...experiences,
+                  {
+                    companyName: '',
+                    designation: '',
+                    startDate: '',
+                    endDate: '',
+                    totalExperience: '',
+                    document: null,
+                  },
+                ])
+              }
+            >
+              + Add Experience
+            </button>
+          </div>
+        )}
+
+        {step === 8 && (
+          <div className="step-content">
+            <div className="row border rounded g-3 mt-2 p-3">
+              {/* Hometown */}
+              <div className="col-md-6">
+                <label className="form-label">Hometown</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="hometown"
+                  value={ltcData.hometown}
+                  onChange={handleLtcChange}
+                  disabled={ltcLocked}
+                />
+              </div>
+
+              {/* District */}
+              <div className="col-md-6">
+                <label className="form-label">District</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="district"
+                  value={ltcData.district}
+                  onChange={handleLtcChange}
+                  disabled={ltcLocked}
+                />
+              </div>
+
+              {/* State */}
+              <div className="col-md-6">
+                <label className="form-label">State</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="state"
+                  value={ltcData.state}
+                  onChange={handleLtcChange}
+                  disabled={ltcLocked}
+                />
+              </div>
+
+              {/* Nearest Railway */}
+              <div className="col-md-6">
+                <label className="form-label">Nearest Railway</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="nearestRailway"
+                  value={ltcData.nearestRailway}
+                  onChange={handleLtcChange}
+                  disabled={ltcLocked}
+                />
+              </div>
+
+              {/* Nearest Airport - Full Width */}
+              <div className="col-md-12">
+                <label className="form-label">Nearest Airport</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="nearestAirport"
+                  value={ltcData.nearestAirport}
+                  onChange={handleLtcChange}
+                  disabled={ltcLocked}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 9 && (
+          <div className="step-content">
+            <div className="card shadow-sm p-4">
+              <div className="row g-3">
+                {/* Document Type */}
+                <div className="col-md-12">
+                  <label className="form-label">Document Type</label>
+                  <select
+                    className="form-select"
+                    value={selectedDocType}
+                    onChange={(e) => setSelectedDocType(e.target.value)}
+                  >
+                    <option value="">Select Document Type</option>
+                    <option value="PHOTO">Photo</option>
+                    <option value="RESUME">Resume</option>
+                    <option value="PAN_FILE">PAN Card</option>
+                    <option value="AADHAAR_FILE">Aadhaar Card</option>
+                    <option value="VOTER_ID_FILE">Voter ID</option>
+                    <option value="BIRTH_CERT">Birth Certificate</option>
+                    <option value="DRIVING_LICENSE">Driving License</option>
+                    <option value="WORK_PERMIT">Work Permit</option>
+                    <option value="POLICY_DOCUMENT">Policy Document</option>
+                    <option value="SALARY_SLIP">Salary Slip</option>
+                    <option value="FORM16">Form 16</option>
+                    <option value="POLICE_VERIFICATION">Police Verification</option>
+                    <option value="DECLARATION">Declaration</option>
+                  </select>
+                </div>
+
+                {/* Upload Box */}
+                <div className="col-12">
+                  <label className="form-label">Upload File</label>
+
+                  <div
+                    className="border rounded p-5 text-center"
+                    style={{
+                      cursor: 'pointer',
+                      background: '#fafafa',
+                      borderStyle: 'dashed',
+                    }}
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onClick={() => document.getElementById('hiddenFileInput').click()}
+                  >
+                    {selectedFile ? (
+                      <div className="text-success fw-semibold">{selectedFile.name}</div>
+                    ) : (
+                      <div className="text-muted">Drag & Drop file here or Click to Browse</div>
+                    )}
+                  </div>
+
+                  <input
+                    id="hiddenFileInput"
+                    type="file"
+                    hidden
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={(e) => handleFileSelect(e.target.files[0])}
+                  />
+                </div>
+
+                {/* Add Button */}
+                <div className="col-12 text-end">
+                  <button type="button" className="btn btn-primary" onClick={handleAddDocument}>
+                    Add Document
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* ================= DOCUMENT PREVIEW TABLE ================= */}
+            {documents.length > 0 && (
+              <div className="card mt-4 shadow-sm p-3">
+                <h6 className="fw-semibold mb-3">Uploaded Documents</h6>
+
+                <div className="table-responsive">
+                  <table className="table table-bordered align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Document Type</th>
+                        <th>File Name</th>
+                        <th width="100">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {documents.map((doc, index) => (
+                        <tr key={index}>
+                          <td>{doc.type}</td>
+                          <td>{doc.file.name}</td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => handleRemoveDocument(index)}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 🔹 FOOTER */}
+        <div className="d-flex justify-content-end gap-2 mt-5">
+          <button
+            className="btn btn-outline-secondary"
+            disabled={step === 0}
+            onClick={() => setStep(step - 1)}
+          >
+            Previous
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={step === stepConfig.length - 1}
+            onClick={() => handleSubmit(step)}
+          >
+            {step === stepConfig.length - 1 ? 'Submit' : 'Next'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Add

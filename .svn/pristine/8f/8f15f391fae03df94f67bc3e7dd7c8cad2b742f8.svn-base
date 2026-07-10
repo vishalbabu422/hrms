@@ -1,0 +1,30 @@
+import SalaryAddonFormComponent from './form-component'
+import { toast } from 'react-toastify'
+
+const Add = () => {
+  const initialData = {
+    name: '',
+    code: '',
+    description: '',
+    type: '',
+    is_taxable: true,
+    is_recurring: true,
+    is_active: true,
+  }
+
+  const handleSubmit = (payload) => {
+    console.log('CREATE DATA : ', payload)
+
+    toast.success('Salary Addon created successfully')
+  }
+
+  return (
+    <SalaryAddonFormComponent
+      initialData={initialData}
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

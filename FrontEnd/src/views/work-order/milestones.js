@@ -1,0 +1,402 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormTextarea,
+  CRow,
+} from '@coreui/react'
+import { useEffect, useMemo, useState } from 'react'
+import api from '../../api/axios'
+import GstSelect from '../components/gst-select'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import { calculateDuration } from '../../utils/workOrderCalculations'
+
+const emptyReplica = {
+  gst_code_fk: '',
+  title: '',
+  description: '',
+  amount: '',
+  from_date: '',
+  to_date: '',
+  duration_days: '',
+}
+
+const defaultInitialData = {
+  workOrderId: '',
+  deployments: [],
+}
+
+const normalizeReplica = (replica = {}) => ({
+  ...emptyReplica,
+  ...replica,
+})
+
+const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmit = () => {} }) => {
+  const { id } = useParams()
+  const workOrderId = id
+  const navigate = useNavigate()
+  const [errors, setErrors] = useState([])
+  const [replicas, setReplicas] = useState([])
+
+  const [gstCode, setGstCode] = useState('')
+
+  const [gstDetails, setGstDetails] = useState({
+    igst_rate: 0,
+    cgst_rate: 0,
+    sgst_rate: 0,
+
+    igst_name: 'IGST',
+    cgst_name: 'CGST',
+    sgst_name: 'SGST',
+  })
+
+  useEffect(() => {
+    if (!workOrderId) return
+
+    const fetchMilestones = async () => {
+      try {
+        const response = await api.get(
+          `/admin/workorder/${workOrderId}?models=WoMilestone&modelFilter=${encodeURIComponent(
+            JSON.stringify({
+              WoMilestone: {
+                is_active: true,
+              },
+            }),
+          )}&is_active=true`,
+        )
+
+        const milestone = response.data?.data?.WoMilestone
+
+        const list = milestone ? (Array.isArray(milestone) ? milestone : [milestone]) : []
+
+        if (list.length > 0) {
+          const computed = list.map((item) => {
+            const replica = normalizeReplica({
+              ...item,
+              totalAmount: Number(item.amount || 0),
+
+              deployment_from: item.from_date,
+              deployment_to: item.to_date,
+
+              gst_code_fk: item.gst_code_fk,
+            })
+
+            const duration = calculateDuration(replica.deployment_from, replica.deployment_to)
+
+            return {
+              ...replica,
+              ...duration,
+            }
+          })
+
+          if (list.length > 0) {
+            setGstCode(String(list[0].gst_code_fk || ''))
+          }
+          setReplicas(computed)
+        } else {
+          setReplicas([{ ...emptyReplica }])
+        }
+      } catch (err) {
+        console.error(err)
+        setReplicas([{ ...emptyReplica }])
+      }
+    }
+
+    fetchMilestones()
+  }, [workOrderId])
+
+  const updateReplica = (index, field, value) => {
+    const updated = [...replicas]
+    updated[index] = { ...updated[index], [field]: value }
+
+    const durationDrivers = ['deployment_from', 'deployment_to']
+    const amountDrivers = ['totalAmount']
+
+    if (
+      durationDrivers.includes(field) &&
+      updated[index].deployment_from &&
+      updated[index].deployment_to
+    ) {
+      const duration = calculateDuration(
+        updated[index].deployment_from,
+        updated[index].deployment_to,
+      )
+
+      updated[index] = {
+        ...updated[index],
+        ...duration,
+      }
+    } else if (amountDrivers.includes(field)) {
+      const total = Number(updated[index].totalAmount || 0)
+
+      updated[index].igst_amount = (total * updated[index].igst_percent) / 100
+
+      updated[index].cgst_amount = (total * updated[index].cgst_percent) / 100
+
+      updated[index].sgst_amount = (total * updated[index].sgst_percent) / 100
+    } else if (
+      durationDrivers.includes(field) &&
+      (!updated[index].deployment_from || !updated[index].deployment_to)
+    ) {
+      updated[index].duration_days = ''
+      updated[index].months = 0
+      updated[index].partialMonthFactor = 0
+    }
+
+    setReplicas(updated)
+  }
+
+  const addReplica = () => {
+    setReplicas((prev) => [...prev, { ...emptyReplica }])
+  }
+
+  const removeReplica = (index) => {
+    setReplicas((prev) => prev.filter((_, idx) => idx !== index))
+  }
+
+  const totalOfTotalAmount = useMemo(
+    () => replicas.reduce((s, r) => s + Math.round(r.totalAmount || 0), 0),
+    [replicas],
+  )
+
+  const totalIgst = useMemo(
+    () => (totalOfTotalAmount * Number(gstDetails.igst_rate || 0)) / 100,
+    [totalOfTotalAmount, gstDetails],
+  )
+
+  const totalCgst = useMemo(
+    () => (totalOfTotalAmount * Number(gstDetails.cgst_rate || 0)) / 100,
+    [totalOfTotalAmount, gstDetails],
+  )
+
+  const totalSgst = useMemo(
+    () => (totalOfTotalAmount * Number(gstDetails.sgst_rate || 0)) / 100,
+    [totalOfTotalAmount, gstDetails],
+  )
+
+  const grandTotal = useMemo(
+    () => totalOfTotalAmount + totalIgst + totalCgst + totalSgst,
+    [totalOfTotalAmount, totalIgst, totalCgst, totalSgst],
+  )
+
+  useEffect(() => {
+    if (!gstCode) return
+
+    const fetchGST = async () => {
+      try {
+        const response = await api.get(`/admin/gst-code/${gstCode}`)
+
+        const gst = response.data.data
+
+        setGstDetails({
+          igst_rate: Number(gst.igst_rate || 0),
+          cgst_rate: Number(gst.cgst_rate || 0),
+          sgst_rate: Number(gst.sgst_rate || 0),
+
+          igst_name: 'IGST',
+          cgst_name: 'CGST',
+          sgst_name: 'SGST',
+
+          transaction_type: gst.transaction_type,
+        })
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    fetchGST()
+  }, [gstCode])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const payload = {
+      work_order_id: workOrderId,
+      deployments: replicas.map((item) => ({
+        ...item,
+        modified_by: 1,
+      })),
+    }
+
+    try {
+      await api.post('/workorder-milestone', {
+        milestones: replicas.map((item) => ({
+          work_order_id: Number(workOrderId),
+
+          gst_code_fk: Number(item.gst_code_fk),
+
+          title: item.title,
+
+          description: item.description,
+
+          amount: Number(item.totalAmount),
+
+          from_date: item.deployment_from,
+
+          to_date: item.deployment_to,
+        })),
+
+        grand_total: grandTotal,
+      })
+
+      toast.success('Milestones saved successfully.')
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message ?? 'Failed to save milestones.')
+    }
+  }
+
+  return (
+    <CForm onSubmit={handleSubmit}>
+      {Array.isArray(replicas) &&
+        replicas.map((r, i) => (
+          <CCard className="mt-3" key={i}>
+            <CCardBody>
+              <div className="d-flex justify-content-between mb-3">
+                <strong>Milestone #{i + 1}</strong>
+                <div>
+                  <CButton size="sm" color="primary" type="button" onClick={addReplica}>
+                    +
+                  </CButton>{' '}
+                  {replicas.length > 1 && (
+                    <CButton
+                      size="sm"
+                      color="secondary"
+                      type="button"
+                      onClick={() => removeReplica(i)}
+                    >
+                      -
+                    </CButton>
+                  )}
+                </div>
+              </div>
+
+              <CRow className="g-3">
+                <CCol md={12}>
+                  <CFormLabel>
+                    Title <span className="text-danger">*</span>
+                  </CFormLabel>
+
+                  <CFormInput
+                    value={r.title ?? ''}
+                    onChange={(e) => updateReplica(i, 'title', e.target.value)}
+                    placeholder="Enter Title"
+                  />
+                </CCol>
+
+                <CCol md={12}>
+                  <CFormLabel>Description</CFormLabel>
+                  <CFormTextarea
+                    type="description"
+                    value={r.description ?? ''}
+                    onChange={(e) => updateReplica(i, 'description', e.target.value)}
+                  />
+                </CCol>
+
+                <CCol md={4}>
+                  <CFormLabel>From</CFormLabel>
+
+                  <CFormInput
+                    type="date"
+                    value={r.deployment_from ?? ''}
+                    onChange={(e) => updateReplica(i, 'deployment_from', e.target.value)}
+                    invalid={!!errors[i]?.deployment_from}
+                    feedback={errors[i]?.deployment_from}
+                  />
+                </CCol>
+
+                <CCol md={4}>
+                  <CFormLabel>To</CFormLabel>
+
+                  <CFormInput
+                    type="date"
+                    value={r.deployment_to ?? ''}
+                    onChange={(e) => updateReplica(i, 'deployment_to', e.target.value)}
+                    invalid={!!errors[i]?.deployment_to}
+                    feedback={errors[i]?.deployment_to}
+                  />
+                </CCol>
+
+                <CCol md={4}>
+                  <CFormLabel>
+                    Duration <span className="text-danger">*</span>
+                  </CFormLabel>
+
+                  <CFormInput value={r.duration_days ?? ''} disabled />
+                  {errors[i]?.duration_days && (
+                    <div className="text-danger mt-1">{errors[i].duration_days}</div>
+                  )}
+                </CCol>
+
+                <CCol md={4}>
+                  <CFormLabel>Total Amount</CFormLabel>
+                  <CFormInput
+                    type="number"
+                    value={r.totalAmount ?? ''}
+                    onChange={(e) => updateReplica(i, 'totalAmount', e.target.value)}
+                  />
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+        ))}
+
+      {replicas.length > 0 && (
+        <CCard className="mt-4">
+          <CCardBody>
+            <CRow className="gx-3 gy-2">
+              <CCol md={6}>
+                <CFormLabel>Total</CFormLabel>
+                <CFormInput value={totalOfTotalAmount.toFixed(2) ?? 0} readOnly />
+              </CCol>
+
+              <CCol md={6}>
+                <GstSelect
+                  name="gst_code_fk"
+                  value={gstCode}
+                  onChange={(e) => setGstCode(e.target.value)}
+                />
+              </CCol>
+
+              {errors.gst_code_fk && <div className="text-danger mt-1">{errors.gst_code_fk}</div>}
+
+              <CCol md={4}>
+                <CFormLabel>IGST ({Number(gstDetails.igst_rate || 0)}%)</CFormLabel>
+                <CFormInput value={totalIgst.toFixed(2) ?? 0} readOnly />
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>CGST ({Number(gstDetails.cgst_rate || 0)}%)</CFormLabel>
+
+                <CFormInput value={totalCgst.toFixed(2) ?? 0} readOnly />
+              </CCol>
+              <CCol md={4}>
+                <CFormLabel>SGST ({Number(gstDetails.sgst_rate || 0)}%)</CFormLabel>
+                <CFormInput value={totalSgst.toFixed(2) ?? 0} readOnly />
+              </CCol>
+            </CRow>
+
+            <CRow className="mt-2">
+              <CCol md={12}>
+                <CFormLabel>
+                  <strong>Grand Total</strong>
+                </CFormLabel>
+                <CFormInput value={grandTotal.toFixed(2) ?? 0} readOnly />
+              </CCol>
+            </CRow>
+
+            <CButton className="mt-4" type="submit" color="primary">
+              {mode === 'edit' ? 'Update' : 'Submit'}
+            </CButton>
+          </CCardBody>
+        </CCard>
+      )}
+    </CForm>
+  )
+}
+
+export default WorkOrderMilestoneFormComponent

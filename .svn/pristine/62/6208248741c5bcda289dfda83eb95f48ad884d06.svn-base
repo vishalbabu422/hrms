@@ -1,0 +1,88 @@
+const { EmpSalaryStructure } = require("../../../models");
+const AppError = require("../../../utils/appError");
+
+// GET ALL
+exports.getEmployeeSalaryStructures = async (queryOptions) => {
+  const { rows, count } =
+    await EmpSalaryStructure.findAndCountAll(queryOptions);
+
+  const page = queryOptions.page * 1 || 1;
+  const limit = queryOptions.limit * 1 || 10;
+
+  return {
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+    results: rows.length,
+    data: rows,
+  };
+};
+
+// GET BY ID
+exports.getEmployeeSalaryStructureById = async (queryOptions) => {
+  const data = await EmpSalaryStructure.findOne(queryOptions);
+
+  if (!data) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  return data;
+};
+
+// CREATE
+exports.createEmployeeSalaryStructure = async (data, transaction) => {
+
+  // duplicate check (employee + effective date)
+  const existing = await EmpSalaryStructure.findOne({
+    where: {
+      employee_id: data.employee_id,
+      effective_from: data.effective_from,
+    },
+    transaction,
+  });
+
+  if (existing) {
+    throw new AppError(
+      "Salary already exists for this employee on given date",
+      409
+    );
+  }
+
+  const result = await EmpSalaryStructure.create(data, {
+    transaction,
+  });
+
+  return result;
+};
+
+// UPDATE
+exports.updateEmployeeSalaryStructure = async (id, data, transaction) => {
+  const record = await EmpSalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!record) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  await record.update(data, { transaction });
+
+  return record;
+};
+
+// DELETE (soft delete)
+exports.deleteEmployeeSalaryStructure = async (id, transaction) => {
+  const record = await EmpSalaryStructure.findByPk(id, {
+    transaction,
+  });
+
+  if (!record) {
+    throw new AppError("Employee Salary Structure not found", 404);
+  }
+
+  return await record.update(
+    { is_deleted: true },
+    { transaction }
+  );
+};

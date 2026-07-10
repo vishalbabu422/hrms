@@ -1,0 +1,418 @@
+import React, { useState } from 'react'
+import CIcon from '@coreui/icons-react'
+import { cilEducation, cilBriefcase, cilPeople } from '@coreui/icons'
+
+const Add = () => {
+  const [step, setStep] = useState(0)
+
+  // ✅ Qualification state (REPEATABLE)
+  const [qualifications, setQualifications] = useState([
+    {
+      qualificationType: '',
+      qualificationName: '',
+      specialization: '',
+      instituteName: '',
+      boardUniversity: '',
+      yearOfPassing: '',
+      grade: '',
+      percentage: '',
+    },
+  ])
+
+  const [experiences, setExperiences] = useState([
+    {
+      companyName: '',
+      designation: '',
+      startDate: '',
+      endDate: '',
+      totalExperience: '',
+    },
+  ])
+
+  const stepConfig = [
+    { label: 'Qualification', icon: cilEducation },
+    { label: 'Experience', icon: cilBriefcase },
+    { label: 'Family Members', icon: cilPeople },
+  ]
+
+  return (
+    <div className="container my-4">
+      <div className="card p-4 shadow-sm">
+        {/* 🔹 STEPPER */}
+        <div className="stepper-underline mb-4">
+          {stepConfig.map((item, index) => (
+            <div
+              key={index}
+              className={`stepper-item ${step === index ? 'active' : ''}`}
+              onClick={() => setStep(index)}
+            >
+              <CIcon icon={item.icon} />
+              <span>{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ================= STEP 0 : QUALIFICATION ================= */}
+        {step === 0 && (
+          <div className="step-content">
+            {qualifications.map((q, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Qualification Type</label>
+                    <select
+                      className="form-select"
+                      value={q.qualificationType}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].qualificationType = e.target.value
+                        setQualifications(arr)
+                      }}
+                    >
+                      <option value="">Select</option>
+                      <option>Degree</option>
+                      <option>Certification</option>
+                      <option>Diploma</option>
+                      <option>Training</option>
+                    </select>
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Qualification Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.qualificationName}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].qualificationName = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Specialization</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.specialization}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].specialization = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Institute Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="institute_name"
+                      value={q.instituteName}
+                      maxLength={200}
+                      placeholder="Enter institute name"
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].instituteName = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Board / University</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.boardUniversity}
+                      maxLength={200}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].boardUniversity = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Year of Passing</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={q.yearOfPassing}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].yearOfPassing = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Grade</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={q.grade}
+                      maxLength={50}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].grade = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Percentage (%)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={q.percentage}
+                      onChange={(e) => {
+                        const arr = [...qualifications]
+                        arr[index].percentage = e.target.value
+                        setQualifications(arr)
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* REMOVE */}
+                {qualifications.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() =>
+                        setQualifications(qualifications.filter((_, i) => i !== index))
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* ADD MORE */}
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() =>
+                setQualifications([
+                  ...qualifications,
+                  {
+                    qualificationType: '',
+                    qualificationName: '',
+                    specialization: '',
+                    instituteName: '',
+                    boardUniversity: '',
+                    yearOfPassing: '',
+                    grade: '',
+                    percentage: '',
+                  },
+                ])
+              }
+            >
+              + Add Qualification
+            </button>
+          </div>
+        )}
+
+        {/* ================= STEP 1 : EXPERIENCE ================= */}
+
+        {step === 1 && (
+          <div className="step-content">
+            {experiences.map((exp, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3 mt-2">
+                  <div className="col-md-6">
+                    <label className="form-label">Company Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter Company Name"
+                      maxLength={200}
+                      value={exp.companyName}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].companyName = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Designation</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter Designation"
+                      maxLength={150}
+                      value={exp.designation}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].designation = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">Start Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={exp.startDate}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].startDate = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label className="form-label">End Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={exp.endDate}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].endDate = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+
+                  <div className="col-md-12">
+                    <label className="form-label">Total Experience (Years)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      min={0}
+                      step="0.1"
+                      value={exp.totalExperience}
+                      onChange={(e) => {
+                        const arr = [...experiences]
+                        arr[index].totalExperience = e.target.value
+                        setExperiences(arr)
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* REMOVE BUTTON */}
+                {experiences.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => setExperiences(experiences.filter((_, i) => i !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* ADD EXPERIENCE BUTTON */}
+            <button
+              type="button"
+              className="btn btn-outline-primary"
+              onClick={() =>
+                setExperiences([
+                  ...experiences,
+                  {
+                    companyName: '',
+                    designation: '',
+                    startDate: '',
+                    endDate: '',
+                    totalExperience: '',
+                  },
+                ])
+              }
+            >
+              + Add Experience
+            </button>
+          </div>
+        )}
+
+        {/* ================= STEP 2 : FAMILY ================= */}
+        {step === 2 && (
+          
+       
+          <div className="step-content">
+            <div className="row g-3 mt-2">
+              <div className="col-md-6">
+                <label className="form-label">Relation</label>
+                <select className="form-select">
+                  <option value="">Select </option>
+                  <option>Spouse</option>
+                  <option>Child</option>
+                  <option>Father</option>
+                  <option>Mother</option>
+                  <option>Sibling</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Name</label>
+                <input type="text" className="form-control" maxLength={150} />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Date of Birth</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Gender</label>
+                <select className="form-select">
+                  <option value="">Select </option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+
+              <div className="col-md-12">
+                <label className="form-label">Pan No</label>
+                <input type="text" className="form-control" maxLength={20} />
+              </div>
+            </div>
+          </div>
+        )} 
+
+        {/* 🔹 FOOTER */}
+        <div className="d-flex justify-content-end gap-2 mt-4">
+          <button
+            className="btn btn-outline-secondary"
+            disabled={step === 0}
+            onClick={() => setStep(step - 1)}
+          >
+            Previous
+          </button>
+
+          <button
+            className="btn btn-primary"
+            disabled={step === stepConfig.length - 1}
+            onClick={() => setStep(step + 1)}
+          >
+            {step === stepConfig.length - 1 ? 'Submit' : 'Next'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Add

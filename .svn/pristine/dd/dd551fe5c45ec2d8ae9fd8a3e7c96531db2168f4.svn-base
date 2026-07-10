@@ -1,0 +1,74 @@
+import { uploadEmployeeDocument,updateEmployeeDocument } from '../services/employeeDocuments'
+import { useState } from 'react'
+
+const useDocumentUpload = (employeeId) => {
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const uploadDocument = async ({
+    file,
+    docType,
+    trainingId = null,
+    qualificationId = null,
+    experienceId = null,
+    remarks = '',
+  }) => {
+    try {
+      setUploading(true)
+      setError(null)
+
+      const formData = new FormData()
+
+      formData.append('file', file)
+      formData.append('doc_type', docType)
+
+      if (trainingId) formData.append('training_id', trainingId)
+      if (qualificationId) formData.append('qualification_id', qualificationId)
+      if (experienceId) formData.append('experience_id', experienceId)
+
+      if (remarks) formData.append('remarks', remarks)
+
+      const res = await uploadEmployeeDocument(employeeId, formData)
+
+      return res.data.data
+    } catch (err) {
+      setError(err)
+      throw err
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  // ================= UPDATE =================
+  const updateDocument = async ({ docId, file, docType, remarks = '' }) => {
+    try {
+      setUploading(true)
+      setError(null)
+
+      const formData = new FormData()
+
+      formData.append('file', file)
+      formData.append('doc_type', docType)
+
+      if (remarks) formData.append('remarks', remarks)
+
+      const res = await updateEmployeeDocument(employeeId, docId, formData)
+
+      return res.data.data
+    } catch (err) {
+      setError(err)
+      throw err
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return {
+    uploadDocument,
+    updateDocument,
+    uploading,
+    error,
+  }
+}
+
+export default useDocumentUpload

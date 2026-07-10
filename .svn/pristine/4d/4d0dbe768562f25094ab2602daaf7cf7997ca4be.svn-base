@@ -1,0 +1,504 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+
+import api from '../../api/axios'
+
+import SalaryDispatchModal from './salaryDispatchModal'
+import PayslipModal from './payslipModal'
+
+const SalaryRegister = () => {
+  /* ================= FILTERS ================= */
+
+  const [month, setMonth] = useState('5')
+
+  const [year, setYear] = useState(new Date().getFullYear().toString())
+
+  const [salaryStructure, setSalaryStructure] = useState('')
+
+  /* ================= DATA ================= */
+
+  const [salaryStructures, setSalaryStructures] = useState([])
+
+  const [salaryData, setSalaryData] = useState([])
+
+  /* ================= MULTI SELECT ================= */
+
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+
+  const [selectAll, setSelectAll] = useState(false)
+
+  /* ================= BULK DISPATCH ================= */
+
+  const [bulkDispatchModal, setBulkDispatchModal] = useState(false)
+
+  const [transactionNo, setTransactionNo] = useState('')
+
+  const [transactionDate, setTransactionDate] = useState('')
+
+  /* ================= INDIVIDUAL DISPATCH ================= */
+
+  const [individualDispatchModal, setIndividualDispatchModal] = useState(false)
+
+  /* ================= PAYSLIP ================= */
+
+  const [payslipModal, setPayslipModal] = useState(false)
+
+  /* ================= SELECTED ROW ================= */
+
+  const [selectedRow, setSelectedRow] = useState(null)
+
+  /* ================= FETCH STRUCTURES ================= */
+
+  useEffect(() => {
+    fetchSalaryStructures()
+  }, [])
+
+  const fetchSalaryStructures = async () => {
+    try {
+      const response = await api.get('salary-structure')
+
+      setSalaryStructures(response?.data?.data || [])
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch salary structures')
+    }
+  }
+
+  /* ================= SEARCH ================= */
+
+  const handleSearch = async () => {
+    try {
+      const res = await api.get(`salary-structure/${salaryStructure}/employees`, {
+        params: {
+          month,
+          year,
+        },
+      })
+
+      const employees = res?.data?.data || []
+
+      setSalaryData(employees)
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch employees')
+    }
+  }
+
+  /* ================= CHECKBOX ================= */
+
+  const handleCheckbox = (id) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(salaryData.map((item) => item.employee_id))
+    }
+
+    setSelectAll(!selectAll)
+  }
+
+  /* ================= BULK DISPATCH ================= */
+
+  const handleBulkDispatch = async () => {
+    try {
+      const payload = {
+        employee_ids: selectedEmployees,
+
+        transaction_no: transactionNo,
+
+        transaction_date: transactionDate,
+      }
+
+      console.log('Bulk Payload:', payload)
+
+      // await api.post(
+      //   'employee-salary-register-monthly/bulk-dispatch',
+      //   payload,
+      // )
+
+      toast.success('Salary dispatched successfully')
+
+      setBulkDispatchModal(false)
+
+      setTransactionNo('')
+
+      setTransactionDate('')
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Dispatch failed')
+    }
+  }
+
+  /* ================= INDIVIDUAL DISPATCH ================= */
+
+  const handleIndividualDispatch = async (payload) => {
+    try {
+      console.log('Individual Payload:', payload)
+
+      // await api.post(
+      //   'employee-salary-register-monthly/dispatch',
+      //   payload,
+      // )
+
+      toast.success('Salary dispatched successfully')
+
+      setIndividualDispatchModal(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Dispatch failed')
+    }
+  }
+
+  /* ================= GENERATE PAYSLIP ================= */
+
+  const handleGenerate = async (registerId) => {
+    try {
+      console.log(registerId)
+
+      // await api.post(
+      //   `employee-salary-register-monthly/generate-slip/${registerId}`,
+      // )
+
+      toast.success('Payslip generated successfully')
+
+      setPayslipModal(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to generate payslip')
+    }
+  }
+
+  return (
+    <>
+      <CCard>
+        <CCardBody>
+          {/* FILTERS */}
+          <CRow className="mb-4">
+            {/* MONTH */}
+            <CCol md={3}>
+              <CFormLabel>Month</CFormLabel>
+
+              <CFormSelect value={month} onChange={(e) => setMonth(e.target.value)}>
+                <option value="1">Jan</option>
+
+                <option value="2">Feb</option>
+
+                <option value="3">Mar</option>
+
+                <option value="4">Apr</option>
+
+                <option value="5">May</option>
+
+                <option value="6">Jun</option>
+
+                <option value="7">Jul</option>
+
+                <option value="8">Aug</option>
+
+                <option value="9">Sep</option>
+
+                <option value="10">Oct</option>
+
+                <option value="11">Nov</option>
+
+                <option value="12">Dec</option>
+              </CFormSelect>
+            </CCol>
+
+            {/* YEAR */}
+            <CCol md={3}>
+              <CFormLabel>Year</CFormLabel>
+
+              <CFormSelect value={year} onChange={(e) => setYear(e.target.value)}>
+                {[2025, 2026, 2027, 2028].map((yr) => (
+                  <option key={yr} value={yr}>
+                    {yr}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {/* SALARY STRUCTURE */}
+            <CCol md={3}>
+              <CFormLabel>Salary Structure</CFormLabel>
+
+              <CFormSelect
+                value={salaryStructure}
+                onChange={(e) => setSalaryStructure(e.target.value)}
+              >
+                <option value="">Select</option>
+
+                {salaryStructures.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {/* SEARCH */}
+            <CCol md={3} className="d-flex align-items-end">
+              <CButton color="primary" onClick={handleSearch}>
+                Search
+              </CButton>
+            </CCol>
+          </CRow>
+
+          {/* TABLE */}
+          <CTable bordered hover responsive align="middle">
+            <CTableHead>
+              <CTableRow>
+                {/* SELECT ALL */}
+                <CTableHeaderCell className="text-center">
+                  <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+                </CTableHeaderCell>
+
+                <CTableHeaderCell>Employee</CTableHeaderCell>
+
+                <CTableHeaderCell>CTC</CTableHeaderCell>
+
+                <CTableHeaderCell>Status</CTableHeaderCell>
+
+                <CTableHeaderCell>Action</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+
+            <CTableBody>
+              {salaryData.length > 0 ? (
+                salaryData.map((item) => (
+                  <CTableRow key={item.employee_id}>
+                    {/* CHECKBOX */}
+                    <CTableDataCell className="text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployees.includes(item.employee_id)}
+                        onChange={() => handleCheckbox(item.employee_id)}
+                      />
+                    </CTableDataCell>
+
+                    {/* EMPLOYEE */}
+                    <CTableDataCell>{item.employee_name}</CTableDataCell>
+
+                    {/* CTC */}
+                    <CTableDataCell>
+                      ₹{' '}
+                      {Number(item.ctc).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                      })}
+                    </CTableDataCell>
+
+                    {/* STATUS */}
+                    <CTableDataCell>
+                      <span
+                        className={`badge ${
+                          item.status === 'DISPATCHED'
+                            ? 'bg-success'
+                            : item.status === 'GENERATED'
+                              ? 'bg-info'
+                              : 'bg-warning text-dark'
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </CTableDataCell>
+
+                    {/* ACTION */}
+                    <CTableDataCell>
+                      {item.status === 'PENDING' && (
+                        <CButton
+                          size="sm"
+                          color="primary"
+                          onClick={() => {
+                            setSelectedRow(item)
+
+                            setIndividualDispatchModal(true)
+                          }}
+                        >
+                          Dispatch
+                        </CButton>
+                      )}
+
+                      {item.status === 'DISPATCHED' && (
+                        <CButton
+                          size="sm"
+                          color="success"
+                          onClick={() => {
+                            setSelectedRow(item)
+
+                            setPayslipModal(true)
+                          }}
+                        >
+                          Generate Payslip
+                        </CButton>
+                      )}
+
+                      {item.status === 'GENERATED' && (
+                        <div className="d-flex gap-2">
+                          <CButton
+                            size="sm"
+                            color="secondary"
+                            onClick={() => {
+                              setSelectedRow(item)
+
+                              setPayslipModal(true)
+                            }}
+                          >
+                            View
+                          </CButton>
+
+                          <CButton size="sm" color="info">
+                            Download
+                          </CButton>
+                        </div>
+                      )}
+                    </CTableDataCell>
+                  </CTableRow>
+                ))
+              ) : (
+                <CTableRow>
+                  <CTableDataCell colSpan={5} className="text-center text-muted py-4">
+                    No salary records found
+                  </CTableDataCell>
+                </CTableRow>
+              )}
+            </CTableBody>
+          </CTable>
+
+          {/* BULK ACTION */}
+          <div className="d-flex justify-content-end align-items-center gap-3 mt-3">
+            <span>
+              Selected:
+              <strong> {selectedEmployees.length}</strong>
+            </span>
+
+            <CButton
+              color="primary"
+              disabled={selectedEmployees.length === 0}
+              onClick={() => setBulkDispatchModal(true)}
+            >
+              Dispatch Selected
+            </CButton>
+          </div>
+        </CCardBody>
+      </CCard>
+
+      {/* ================= BULK DISPATCH MODAL ================= */}
+
+      <CModal
+        visible={bulkDispatchModal}
+        alignment="center"
+        onClose={() => setBulkDispatchModal(false)}
+      >
+        <CModalHeader>
+          <CModalTitle>Bulk Dispatch</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          {/* TRANSACTION NUMBER */}
+          <div className="mb-3">
+            <CFormLabel>Transaction Number</CFormLabel>
+
+            <CFormInput
+              value={transactionNo}
+              onChange={(e) => setTransactionNo(e.target.value)}
+              placeholder="Enter Transaction Number"
+            />
+          </div>
+
+          {/* TRANSACTION DATE */}
+          <div className="mb-3">
+            <CFormLabel>Transaction Date</CFormLabel>
+
+            <CFormInput
+              type="date"
+              value={transactionDate}
+              onChange={(e) => setTransactionDate(e.target.value)}
+            />
+          </div>
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setBulkDispatchModal(false)}>
+            Cancel
+          </CButton>
+
+          <CButton color="primary" onClick={handleBulkDispatch}>
+            Submit
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* ================= INDIVIDUAL DISPATCH MODAL ================= */}
+
+      <SalaryDispatchModal
+        visible={individualDispatchModal}
+        onClose={() => setIndividualDispatchModal(false)}
+        employeeId={selectedRow?.employee_id}
+        month={month}
+        year={year}
+        salaryStructureId={salaryStructure}
+        onSubmit={handleIndividualDispatch}
+      />
+
+      {/* ================= PAYSLIP MODAL ================= */}
+
+      <PayslipModal
+        visible={payslipModal}
+        onClose={() => setPayslipModal(false)}
+        employeeId={selectedRow?.employee_id}
+        month={month}
+        year={year}
+        salaryStructureId={salaryStructure}
+        onGenerate={handleGenerate}
+      />
+    </>
+  )
+}
+
+export default SalaryRegister

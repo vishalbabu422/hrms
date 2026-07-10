@@ -1,0 +1,23 @@
+
+class EmployeeMprUtils {
+  /**
+   * Get employee designation for MPR
+   * Prefers: employeeWorkOrderDeployment -> WoDesgnMapping -> EmpanelmentDesignation
+   * Returns "-" if not found
+   *
+   * @param {Object} employee - Sequelize Employee instance
+   * @returns {string}
+   */
+  static getDesignation(employee) {
+    if (!employee) return "-";
+
+    const deployments = employee.employeeWorkOrderDeployment || [];
+    const deployment = deployments.find(d => d?.WoDesgnMapping?.Designation);
+     console.log("LINE 15-----------------------------" +deployments.find(d => d?.WoDesgnMapping?.EmpanelmentDesignation));
+    // console.log("LINE 16-----------------------------" +EmpanelmentDesignation);
+    // console.log("LINE 17-----------------------------" +designation);
+
+    return deployment?.WoDesgnMapping?.EmpanelmentDesignation?.designation ?? "-";
+  }
+}
+  module.exports = EmployeeMprUtils;

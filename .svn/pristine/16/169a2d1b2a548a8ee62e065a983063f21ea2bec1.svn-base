@@ -1,0 +1,28 @@
+const catchAsync = require("../../../utils/catchAsync");
+const sequelize = require("../../../utils/database");
+
+const EmployeeRoleService = require("./employeeRole.service");
+
+// Assign / Replace Employee Roles
+const assignEmployeeRoles = catchAsync(async (req, res, next) => {
+  const { employeeId } = req.params;
+  const { roles } = req.body;
+
+  await sequelize.transaction(async (t) => {
+    await EmployeeRoleService.assignEmployeeRoles(
+      employeeId,
+      roles,
+      req.user?.id,
+      t
+    );
+  });
+
+  res.status(201).json({
+    status: "success",
+    message: "Employee roles assigned successfully"
+  });
+});
+
+module.exports = {
+  assignEmployeeRoles
+};

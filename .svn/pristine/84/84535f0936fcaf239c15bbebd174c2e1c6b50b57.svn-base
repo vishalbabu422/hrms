@@ -1,0 +1,134 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CFormTextarea,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const GstFormComponent = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData)
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
+
+  if (!formData) return null
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === '' ? null : name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    onSubmit(formData)
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardBody>
+            <CForm className="row g-3" onSubmit={handleSubmit}>
+              <CCol md={12}>
+                <CFormLabel>Code Type</CFormLabel>
+                <CFormInput
+                  name="code_type"
+                  value={formData.code_type || ''}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              <CCol md={12}>
+                <CFormLabel>Code</CFormLabel>
+                <CFormInput
+                  name="code"
+                  value={formData.code || ''}
+                  onChange={handleChange}
+                  disabled={mode === 'edit'}
+                />
+              </CCol>
+
+              <CCol md={12}>
+                <CFormLabel>Description</CFormLabel>
+                <CFormTextarea
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              {['gst_rate', 'cgst_rate', 'sgst_rate', 'igst_rate', 'cess_rate', 'other_rate'].map(
+                (f) => (
+                  <CCol md={4} key={f}>
+                    <CFormLabel>{f.replace('_', ' ').toUpperCase()}</CFormLabel>
+                    <CFormInput
+                      type="number"
+                      name={f}
+                      value={formData[f] ?? ''}
+                      onChange={handleChange}
+                    />
+                  </CCol>
+                ),
+              )}
+
+              <CCol md={4}>
+                <CFormLabel>Effective From</CFormLabel>
+                <CFormInput
+                  type="date"
+                  name="effective_from"
+                  value={formData.effective_from || ''}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              <CCol md={4}>
+                <CFormLabel>Effective To</CFormLabel>
+                <CFormInput
+                  type="date"
+                  name="effective_to"
+                  value={formData.effective_to || ''}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              <CCol md={4}>
+                <CFormLabel>Status</CFormLabel>
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active)}
+                  onChange={handleChange}
+                >
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </CFormSelect>
+              </CCol>
+
+              <CCol xs={12}>
+                <CButton type="submit" className='btn btn-primary'>{mode === 'edit' ? 'Update' : 'Create'}</CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default GstFormComponent

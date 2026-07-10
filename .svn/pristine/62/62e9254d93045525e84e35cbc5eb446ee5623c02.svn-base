@@ -1,0 +1,226 @@
+import React, { useEffect, useState } from 'react'
+import { CCard, CCardBody, CRow, CCol, CFormInput, CAlert, CContainer } from '@coreui/react'
+
+import PageHeader from '../components/form-header'
+import './leave.css'
+
+import WorkOrderSelect from '../components/leave-mpr/WorkOrderSelect'
+import EmployeeMultiSelect from '../components/leave-mpr/EmployeeMultiSelect'
+import MonthYearSelect from '../components/leave-mpr/MonthYearSelect'
+import useLeaveMprForm from '../../hooks/useWoMpr'
+import api from '../../api/axios'
+
+const LeaveRecord = () => {
+  const {
+    workOrder,
+    setWorkOrder,
+    month,
+    setMonth,
+    monthOptions,
+
+    selectedEmployees,
+    setSelectedEmployees,
+    filteredEmployees,
+
+    employeeData,
+    handleInputChange,
+
+    isReady,
+  } = useLeaveMprForm()
+
+  const [year, monthNum] = month.split('-')
+  const [apiData, setApiData] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const [leavePerMonth, setLeavePerMonth] = useState(null)
+  const [carryForward, setCarryForward] = useState(false)
+  const [loadingLeavePolicy, setLoadingLeavePolicy] = useState(false)
+
+  useEffect(() => {
+    const fetchLeaveData = async () => {
+      if (!workOrder || !month) return
+
+      const [year, monthNum] = month.split('-')
+
+      try {
+        setLoading(true)
+
+        let url = `/workorder/${workOrder}/employee-work-order-leave?month=${monthNum}&year=${year}`
+
+        if (selectedEmployees.length > 0) {
+          const ids = selectedEmployees.map((emp) => emp.id).join(',')
+          url += `&employeeIds=${ids}`
+        }
+
+        const res = await api.get(url)
+
+        setApiData(res.data?.data || [])
+      } catch (err) {
+        console.error(err)
+        setApiData([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchLeaveData()
+  }, [workOrder, month, selectedEmployees])
+
+  useEffect(() => {
+    const fetchLeavePolicy = async () => {
+      if (!workOrder) {
+        setLeavePerMonth(null)
+        return
+      }
+
+      try {
+        setLoadingLeavePolicy(true)
+
+        const modelFilter = {
+          EmpanelmentMaster: {
+            is_active: true,
+          },
+        }
+
+        const url = `/admin/workorder/${workOrder}?models=EmpanelmentMaster&modelFilter=${encodeURIComponent(
+          JSON.stringify(modelFilter),
+        )}&is_active=true`
+
+        const res = await api.get(url)
+
+        // adjust this based on actual API response
+        const empanelment = res.data?.data?.EmpanelmentMaster
+
+        // assume field name (you MUST verify)
+        const leaveDays = empanelment?.leaves_per_month || 0
+        const carryFowards = empanelment?.carry_forward || false
+        setLeavePerMonth(leaveDays)
+        setCarryForward(carryFowards)
+      } catch (err) {
+        console.error(err)
+        setLeavePerMonth(null)
+      } finally {
+        setLoadingLeavePolicy(false)
+      }
+    }
+
+    fetchLeavePolicy()
+  }, [workOrder])
+
+  return (
+    <CContainer fluid>
+      <PageHeader title="Leave Record" />
+
+      <CCard className="leave-card">
+        <CCardBody>
+          {/* 🔹 Filters */}
+          <CRow className="g-3 mb-2 ">
+            <CCol md={4}>
+              <WorkOrderSelect workOrder={workOrder} setWorkOrder={setWorkOrder} />
+            </CCol>
+
+            <CCol md={4}>
+              <EmployeeMultiSelect
+                workOrder={workOrder}
+                selectedEmployees={selectedEmployees}
+                setSelectedEmployees={setSelectedEmployees}
+              />
+            </CCol>
+
+            <CCol md={4}>
+              <MonthYearSelect month={month} setMonth={setMonth} options={monthOptions} />
+            </CCol>
+          </CRow>
+
+          {/* 🔹 Info */}
+          {isReady && (
+            <CAlert color="info" className="info-box mt-3">
+              Employee can take{' '}
+              <strong> {loadingLeavePolicy ? '...' : (leavePerMonth ?? '-')} day(s)</strong> leave
+              per month with {!carryForward ? 'no' : ''} carry-forward.
+            </CAlert>
+          )}
+
+          {/* 🔹 Table */}
+          {isReady && (
+            <div className="mpr-table">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Emp Name</th>
+                    <th>Opening Bal.</th>
+                    <th>No.of Leave Taken</th>
+                    <th>No. of Holiday Worked</th>
+                    <th>Leave Adjusted</th>
+                    <th>Leave Granted</th>
+                    <th>Closing Bal.</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan="7" className="text-center">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredEmployees.map((emp, index) => {
+                      const empId = emp.id
+                      const empName = emp.name || `${emp.first_name || ''} ${emp.last_name || ''}`
+
+                      const data = employeeData[empId] || {}
+
+                      const opening = 3
+                      const adjusted = 1.5
+                      const granted = 1.5
+
+                      const closing =
+                        granted + Number(data.holidaysWorked || 0) - Number(data.leaveTaken || 0)
+
+                      return (
+                        <tr key={index}>
+                          <td>{empName}</td>
+                          <td>{opening}</td>
+
+                          <td>
+                            <CFormInput
+                              type="number"
+                              value={data.leaveTaken || 0}
+                              onChange={(e) =>
+                                handleInputChange(empId, 'leaveTaken', e.target.value)
+                              }
+                            />
+                          </td>
+
+                          <td>
+                            <CFormInput
+                              type="number"
+                              value={data.holidaysWorked || 0}
+                              onChange={(e) =>
+                                handleInputChange(empId, 'holidaysWorked', e.target.value)
+                              }
+                            />
+                          </td>
+
+                          <td>{leavePerMonth}</td>
+                          <td>{granted}</td>
+
+                          <td>
+                            <strong>{closing}</strong>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CCardBody>
+      </CCard>
+    </CContainer>
+  )
+}
+
+export default LeaveRecord

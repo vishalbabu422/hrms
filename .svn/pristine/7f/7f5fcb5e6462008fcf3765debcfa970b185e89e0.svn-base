@@ -1,0 +1,43 @@
+export const validateOfficeAddress = (address, type = "Address") => {
+  const errors = {};
+
+  const addr = address.address?.trim();
+  const city = address.city?.trim();
+  const state = address.state?.trim();
+  const pin = address.pin_code?.trim();
+  const landmark = address.landmark?.trim();
+
+  // =========================
+  // ✅ REQUIRED (like correspondence)
+  // =========================
+  if (!addr) {
+    errors.address = `${type}: Address is required`;
+  }
+
+  // =========================
+  // OPTIONAL VALIDATION
+  // =========================
+  if (city && city.length > 100) {
+    errors.city = `${type}: City max 100 characters`;
+  }
+
+  if (state && state.length > 100) {
+    errors.state = `${type}: State max 100 characters`;
+  }
+
+  if (landmark && landmark.length > 150) {
+    errors.landmark = `${type}: Landmark max 150 characters`;
+  }
+
+  // =========================
+  // PIN CODE
+  // =========================
+  if (pin) {
+    const pinRegex = /^[0-9]{4,10}$/;
+    if (!pinRegex.test(pin)) {
+      errors.pin_code = `${type}: Invalid pin code`;
+    }
+  }
+
+  return errors;
+};

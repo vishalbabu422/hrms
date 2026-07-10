@@ -1,0 +1,156 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import {
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+} from '@coreui/react'
+import { getEmployeePassportVisa } from '../../../services/employeePassportVisa'
+
+const PassportView = () => {
+  const { employeeId } = useParams()
+
+  const [employee, setEmployee] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  const fetchPassport = async () => {
+    try {
+      setLoading(true)
+
+      const response = await getEmployeePassportVisa(employeeId)
+
+      const data = response.data?.data[0] || response.data || {}
+      setEmployee(data)
+    } catch (error) {
+      console.error('Error fetching passport/visa:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPassport()
+  }, [employeeId])
+
+  return (
+    <CCol xs={12} sm={12} md={9} lg={10}>
+      <CCardBody style={{ minHeight: '400px' }}>
+        {/* Header */}
+        <div className="section-header mb-4">
+          <div className="section-accent"></div>
+          <h5 className="section-title">Passport & Visa Details</h5>
+        </div>
+
+        {/* Loading */}
+        {loading && <p>Loading passport details...</p>}
+
+        {/* Empty */}
+        {!loading && Object.keys(employee).length === 0 && (
+          <p className="text-muted">No passport/visa data available</p>
+        )}
+
+        {/* ================= PASSPORT ================= */}
+        {!loading && (
+          <>
+            <CCard className="border-0 shadow-sm mb-4">
+              <CCardHeader className="bg-light fw-semibold">
+                Passport Details
+              </CCardHeader>
+
+              <CCardBody>
+                <div className="row g-4">
+                  <div className="col-md-4">
+                    <small className="text-muted">Passport Number</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_number || '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Passport Type</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_type || '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Issuing Country</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_issuing_country || '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Place of Issue</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_place_of_issue || '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Issue Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_issue_date
+                        ? new Date(employee.issueDate).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Expiry Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.passport_expiry_date
+                        ? new Date(employee.expiryDate).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+                </div>
+              </CCardBody>
+            </CCard>
+
+            {/* ================= VISA ================= */}
+            <CCard className="border-0 shadow-sm">
+              <CCardHeader className="bg-light fw-semibold">
+                Visa Details (Optional)
+              </CCardHeader>
+
+              <CCardBody>
+                <div className="row g-4">
+                  <div className="col-md-4">
+                    <small className="text-muted">
+                      Visa Issuing Authority
+                    </small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.visa_issuing_authority || '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Visa Start Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.visa_start_date
+                        ? new Date(employee.visaStartDate).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+
+                  <div className="col-md-4">
+                    <small className="text-muted">Visa End Date</small>
+                    <div className="fw-semibold border-bottom pb-2">
+                      {employee.visa_end_date
+                        ? new Date(employee.visaEndDate).toLocaleDateString()
+                        : '-'}
+                    </div>
+                  </div>
+                </div>
+              </CCardBody>
+            </CCard>
+          </>
+        )}
+      </CCardBody>
+    </CCol>
+  )
+}
+
+export default PassportView

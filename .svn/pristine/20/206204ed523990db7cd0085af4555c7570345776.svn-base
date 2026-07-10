@@ -1,0 +1,109 @@
+const { EmployeeAddress,Employee } = require("../../../models");
+const AppError = require("../../../utils/appError");
+const sequelize = require("../../../utils/database");
+
+exports.getById = async (queryOptions) => {
+    return await EmployeeAddress.findAll({
+        ...queryOptions,
+        where: {
+            ...queryOptions.where
+        }
+    });
+};
+exports.assignAddress = async (employeeId, addressData, transaction) => {
+
+    // Check employee exists
+    const employee = await Employee.findByPk(employeeId, { transaction });
+    if (!employee) throw new AppError("Employee not found", 404);
+
+    // Duplicate address check (POST = create only)
+    const existingAddress = await EmployeeAddress.findOne({
+        where: {
+            employee_id: employeeId,
+            address_type: addressData.address_type
+        },
+        transaction
+    });
+
+    if (existingAddress) {
+        throw new AppError("Address already exists for this employee and address type", 409);
+    }
+
+    // Create only
+    return await EmployeeAddress.create(
+        {
+            ...addressData,
+            employee_id: employeeId
+        },
+        { transaction }
+    );
+};
+
+exports.updateAddress = async (addressId, addressData, transaction) => {
+
+    const address = await EmployeeAddress.findByPk(addressId, { transaction });
+
+    if (!address) {
+        throw new AppError("Address not found", 404);
+    }
+
+    return await address.update(addressData, { transaction });
+};
+
+exports.deleteAddress = async (addressId, transaction) => {
+
+    const address = await EmployeeAddress.findByPk(addressId, { transaction });
+
+    if (!address) {
+        throw new AppError("Address not found", 404);
+    }
+
+    return await address.update(
+        {
+            is_primary: false
+        },
+        { transaction }
+    );
+};
+// exports.assignAddress = async (employeeId, addressData, transaction) => {
+//     // Check if employee exists
+//     const employee = await Employee.findByPk(employeeId, { transaction });
+//     if (!employee) throw new AppError("Employee not found", 404);
+
+//     //  If new address is primary → remove previous primary
+//     if (addressData.is_primary) {
+//         await EmployeeAddress.update(
+//             { is_primary: false },
+//             {
+//                 where: {
+//                     employee_id: employeeId,
+//                     is_primary: true
+//                 },
+//                 transaction
+//             }
+//         );
+//     }
+
+//     // Check existing address by (employee_id + address_type)
+//     const existingAddress = await EmployeeAddress.findOne({
+//         where: {
+//             employee_id: employeeId,
+//             address_type: addressData.address_type
+//         },
+//         transaction
+//     });
+
+//     if (existingAddress) {
+//         // Update
+//         return await existingAddress.update(addressData, { transaction });
+//     }
+
+//     // Create
+//     return await EmployeeAddress.create(
+//         {
+//             ...addressData,
+//             employee_id: employeeId
+//         },
+//         { transaction }
+//     );
+// };

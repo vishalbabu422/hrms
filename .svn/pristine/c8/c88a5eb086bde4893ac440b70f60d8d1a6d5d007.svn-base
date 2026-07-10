@@ -1,0 +1,196 @@
+import React, { useState } from 'react'
+import profileImage from '../../assets/images/profile-image.png'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CNav,
+  CNavItem,
+  CNavLink,
+  CTabContent,
+  CTabPane,
+  CButton,
+  CImage,
+  CListGroup,
+  CListGroupItem,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import {
+  cilUser,
+  cilBriefcase,
+  cilFile,
+  cilLockLocked,
+  cilCalendar,
+  cilClipboard,
+} from '@coreui/icons'
+
+const EmployeeProfile = () => {
+  const [activeTab, setActiveTab] = useState('personal')
+
+  return (
+    <div style={{ background: '#f8f9fc', minHeight: '100vh', padding: '30px 0' }}>
+      <CContainer>
+        <CCard className="shadow-sm border-0">
+          <CCardBody>
+            {/* ================= HEADER ================= */}
+            <CRow className="align-items-center mb-4 pt-4">
+              <CCol md={8} className="d-flex align-items-center gap-3">
+                <CImage
+                  src={profileImage}
+                  width={80}
+                  height={80}
+                  style={{ borderRadius: '12px', objectFit: 'cover' }}
+                />
+                <div>
+                  <h4 className="mb-1 fw-bold">Brooklyn Simmons</h4>
+                  <div className="text-muted">Project Manager</div>
+                  <div className="text-muted">brooklyn.s@example.com</div>
+                </div>
+              </CCol>
+
+              <CCol md={4} className="text-end">
+                <CButton color="primary">Edit Profile</CButton>
+              </CCol>
+            </CRow>
+
+            <CRow>
+              {/* ================= SIDE NAV ================= */}
+              <CCol md={3} >
+                <CCard className="border-0 shadow-sm">
+                  <CListGroup flush>
+                    <CListGroupItem
+                      active={activeTab === 'personal'}
+                      onClick={() => setActiveTab('personal')}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center gap-2"
+                    >
+                      <CIcon icon={cilUser} />
+                      Basic Details
+                    </CListGroupItem>
+
+                    <CListGroupItem
+                      active={activeTab === 'attendance'}
+                      onClick={() => setActiveTab('attendance')}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center gap-2"
+                    >
+                      <CIcon icon={cilCalendar} />
+                      Attendance
+                    </CListGroupItem>
+
+                    <CListGroupItem
+                      active={activeTab === 'projects'}
+                      onClick={() => setActiveTab('projects')}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center gap-2"
+                    >
+                      <CIcon icon={cilClipboard} />
+                      Projects
+                    </CListGroupItem>
+
+                    <CListGroupItem
+                      active={activeTab === 'leave'}
+                      onClick={() => setActiveTab('leave')}
+                      style={{ cursor: 'pointer' }}
+                      className="d-flex align-items-center gap-2"
+                    >
+                      <CIcon icon={cilFile} />
+                      Leave
+                    </CListGroupItem>
+                  </CListGroup>
+                </CCard>
+              </CCol>
+
+              {/* ================= CENTER CONTENT ================= */}
+              <CCol md={9}>
+                <CCard className="border-0 shadow-sm">
+                  {/* ================= TOP TABS ================= */}
+                  <CCardHeader className="bg-white border-0">
+                    <CNav variant="tabs">
+                      <CNavItem>
+                        <CNavLink
+                          active={activeTab === 'personal'}
+                          onClick={() => setActiveTab('personal')}
+                        >
+                          <CIcon icon={cilUser} className="me-2" />
+                          Personal Information
+                        </CNavLink>
+                      </CNavItem>
+
+                      <CNavItem>
+                        <CNavLink
+                          active={activeTab === 'professional'}
+                          onClick={() => setActiveTab('professional')}
+                        >
+                          <CIcon icon={cilBriefcase} className="me-2" />
+                          Professional Information
+                        </CNavLink>
+                      </CNavItem>
+
+                      <CNavItem>
+                        <CNavLink
+                          active={activeTab === 'documents'}
+                          onClick={() => setActiveTab('documents')}
+                        >
+                          <CIcon icon={cilFile} className="me-2" />
+                          Documents
+                        </CNavLink>
+                      </CNavItem>
+
+                      <CNavItem>
+                        <CNavLink
+                          active={activeTab === 'account'}
+                          onClick={() => setActiveTab('account')}
+                        >
+                          <CIcon icon={cilLockLocked} className="me-2" />
+                          Account Access
+                        </CNavLink>
+                      </CNavItem>
+                    </CNav>
+                  </CCardHeader>
+
+                  <CCardBody style={{ minHeight: '400px' }}>
+                    <CTabContent>
+                      <CTabPane visible={activeTab === 'personal'}>
+                        <p className="mt-3">Personal Information Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'professional'}>
+                        <p className="mt-3">Professional Information Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'documents'}>
+                        <p className="mt-3">Documents Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'account'}>
+                        <p className="mt-3">Account Access Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'attendance'}>
+                        <p className="mt-3">Attendance Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'projects'}>
+                        <p className="mt-3">Projects Content</p>
+                      </CTabPane>
+
+                      <CTabPane visible={activeTab === 'leave'}>
+                        <p className="mt-3">Leave Content</p>
+                      </CTabPane>
+                    </CTabContent>
+                  </CCardBody>
+                </CCard>
+              </CCol>
+            </CRow>
+          </CCardBody>
+        </CCard>
+      </CContainer>
+    </div>
+  )
+}
+
+export default EmployeeProfile

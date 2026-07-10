@@ -1,0 +1,41 @@
+import DivisionFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+      await api.post('/admin/division/create', normalizedPayload)
+
+      toast.success('Division created successfully')
+      navigate('/division')
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        error.response?.data?.message || 'Failed to create Division'
+      )
+    }
+  }
+
+  const initialData = {
+    division: '',
+    is_active: true,
+  }
+
+  return (
+    <DivisionFormComponent
+      initialData={initialData}
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

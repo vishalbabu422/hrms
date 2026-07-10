@@ -1,0 +1,33 @@
+export const validateDocuments = (documents) => {
+  const errors = [];
+
+  documents.forEach((doc, index) => {
+    const err = {};
+
+    // ✅ REQUIRED
+    if (!doc.type) {
+      err.type = "Document type is required";
+    }
+
+    if (!doc.file && !doc.file_url) {
+      err.file = "File is required";
+    }
+
+    // ✅ VARCHAR CHECKS
+    if (doc.type && doc.type.length > 50) {
+      err.type = "Max 50 characters allowed";
+    }
+
+    if (doc.mime_type && doc.mime_type.length > 100) {
+      err.mime_type = "Max 100 characters allowed";
+    }
+
+    if (doc.file_hash && doc.file_hash.length !== 64) {
+      err.file_hash = "Invalid file hash";
+    }
+
+    errors[index] = err;
+  });
+
+  return errors;
+};

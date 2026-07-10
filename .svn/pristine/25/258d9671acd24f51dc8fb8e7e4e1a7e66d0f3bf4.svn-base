@@ -1,0 +1,529 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTooltip,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+} from '@coreui/react'
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import { cilHistory, cilPlus, cilViewColumn, cilDescription } from '@coreui/icons'
+import { validateEmpSalaryStructure } from '../../validations/empSalaryStructureValidation'
+import api from '../../api/axios'
+import { useSelector } from 'react-redux'
+import { useParams } from 'react-router-dom'
+import CIcon from '@coreui/icons-react'
+import IncrementModal from './IncrementModal'
+import CtcHistoryModal from './CtcHistoryModal'
+import SalaryBreakdownView from './SalaryBreakdownView'
+import './emp-salary-structure.css'
+
+const EmpSalaryStructureForm = ({ onSubmit }) => {
+  const { id: salaryStructureId } = useParams()
+
+  const [workOrder, setWorkOrder] = useState([])
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState('')
+  const [employees, setEmployees] = useState([])
+  const [selectedEmployees, setSelectedEmployees] = useState({})
+  const [selectAll, setSelectAll] = useState(false)
+  const [globalDate, setGlobalDate] = useState('')
+  const [errors, setErrors] = useState({})
+  const [incrementModal, setIncrementModal] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState(null)
+  const [historyModal, setHistoryModal] = useState(false)
+  const [historyEmployee, setHistoryEmployee] = useState(null)
+  const [viewModal, setViewModal] = useState(false)
+  const [viewEmployee, setViewEmployee] = useState(null)
+
+  const user = useSelector((state) => state.auth.user)
+
+  const fetchWorkOrder = async () => {
+    try {
+      const response = await api.get('admin/workorder/index?is_active=true')
+      setWorkOrder(response?.data?.data?.workOrderList || [])
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const fetchEmployees = async (workOrderId) => {
+    try {
+      const res = await api.get(
+        `employee-salary-structure/${salaryStructureId}/workorder/${workOrderId}`,
+      )
+
+      const list = res?.data?.data || []
+
+      const prefillMap = {}
+
+      list.forEach((emp) => {
+        if (emp.ctc || emp.effective_from) {
+          prefillMap[emp.employee_id] = {
+            checked: false,
+            value: emp.ctc,
+            effective_from: emp.effective_from,
+          }
+        }
+      })
+
+      setEmployees(list)
+      setSelectedEmployees(prefillMap)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
+    fetchWorkOrder()
+  }, [])
+
+  useEffect(() => {
+    if (selectedWorkOrder) {
+      fetchEmployees(selectedWorkOrder)
+    } else {
+      setEmployees([])
+    }
+
+    setSelectedEmployees({})
+    setSelectAll(false)
+  }, [selectedWorkOrder])
+
+  const show = selectedWorkOrder && salaryStructureId
+
+  /* ================= HANDLERS ================= */
+
+  const handleCheckbox = (id) => {
+    const updated = {
+      ...selectedEmployees,
+      [id]: {
+        ...selectedEmployees[id],
+        checked: !selectedEmployees[id]?.checked,
+      },
+    }
+
+    setSelectedEmployees(updated)
+
+    const allSelected = employees.every((emp) => updated[emp.employee_id]?.checked)
+    setSelectAll(allSelected)
+  }
+
+  const handleSelectAll = () => {
+    const newValue = !selectAll
+    setSelectAll(newValue)
+
+    const updated = {}
+    employees.forEach((emp) => {
+      updated[emp.employee_id] = {
+        ...selectedEmployees[emp.employee_id],
+        checked: newValue,
+      }
+    })
+
+    setSelectedEmployees(updated)
+  }
+
+  const handleChange = (id, field, value) => {
+    setSelectedEmployees((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }))
+  }
+
+  const handleApplyDateToSelected = () => {
+    if (!globalDate) {
+      alert('Please select a date first')
+      return
+    }
+
+    const updated = { ...selectedEmployees }
+
+    employees.forEach((emp) => {
+      if (updated[emp.employee_id]?.checked) {
+        updated[emp.employee_id].effective_from = globalDate
+      }
+    })
+
+    setSelectedEmployees(updated)
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    const validationErrors = validateEmpSalaryStructure(selectedEmployees)
+    setErrors(validationErrors)
+
+    if (Object.keys(validationErrors).length > 0) return
+
+    // const finalData = Object.entries(selectedEmployees)
+    //   .filter(([_, v]) => v.checked)
+    //   .map(([id, v]) => ({
+    //     employee_id: Number(id),
+    //     salary_structure_id: Number(salaryStructureId),
+    //     ctc: v.value,
+    //     effective_from: v.effective_from,
+    //     created_by: user?.id,
+    //   }))
+
+    const finalData = Object.entries(selectedEmployees)
+      .filter(([_, v]) => v.checked)
+      .map(([id, v]) => ({
+        employee_id: Number(id),
+
+        salary_structure_id: Number(salaryStructureId),
+
+        ctc: Number(v.annual_ctc || 0),
+
+        monthly_ctc: Number(v.monthly_ctc || 0),
+
+        annual_ctc: Number(v.annual_ctc || 0),
+
+        effective_from: v.effective_from,
+
+        created_by: user?.id,
+      }))
+
+    onSubmit(finalData)
+  }
+
+  const selectedCount = Object.values(selectedEmployees).filter((e) => e?.checked).length
+
+  /* ================= UI ================= */
+
+  return (
+    <CForm onSubmit={handleSubmit}>
+      <CRow>
+        <CCol md={12}>
+          <CCard className="mb-3">
+            <CCardBody>
+              <CRow>
+                <CCol md={6}>
+                  <CFormLabel>Work Orders</CFormLabel>
+                  <CFormSelect
+                    value={selectedWorkOrder}
+                    onChange={(e) => setSelectedWorkOrder(e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    {workOrder.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.work_order_no}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {show && (
+          <CCol md={12}>
+            <CCard>
+              <CCardBody>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6>Employees</h6>
+
+                  <div className="d-flex align-items-center gap-2">
+                    <span>Effective Date:</span>
+
+                    <CFormInput
+                      type="date"
+                      value={globalDate}
+                      onChange={(e) => setGlobalDate(e.target.value)}
+                      style={{ width: '180px' }}
+                    />
+
+                    <CButton
+                      size="sm"
+                      color="primary"
+                      onClick={handleApplyDateToSelected}
+                      disabled={selectedCount === 0}
+                    >
+                      Apply to Selected
+                    </CButton>
+
+                    <span className="text-muted">Selected: {selectedCount}</span>
+                  </div>
+                </div>
+
+                <table className="table table-bordered align-middle">
+                  <thead>
+                    <tr>
+                      <th className="text-center">
+                        <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+                      </th>
+
+                      <th>Employee Name</th>
+
+                      <th style={{ minWidth: '180px' }}>Monthly CTC</th>
+
+                      <th style={{ minWidth: '180px' }}>Annual CTC</th>
+
+                      <th>Effective From</th>
+
+                      <th className="text-center">Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {employees.map((emp) => {
+                      const selected = selectedEmployees[emp.employee_id] || {}
+
+                      return (
+                        <tr key={emp.employee_id}>
+                          {/* CHECKBOX */}
+                          <td className="text-center">
+                            <input
+                              type="checkbox"
+                              checked={!!selected.checked}
+                              onChange={() => handleCheckbox(emp.employee_id)}
+                            />
+                          </td>
+
+                          {/* EMPLOYEE NAME */}
+                          <td>{emp.name}</td>
+
+                          {/* MONTHLY CTC */}
+                          <td>
+                            <div className="input-group">
+                              <span className="input-group-text">₹</span>
+
+                              <CFormInput
+                                type="number"
+                                value={selected.monthly_ctc || ''}
+                                readOnly={!selected.checked}
+                                onChange={(e) => {
+                                  const monthly = e.target.value
+
+                                  setSelectedEmployees((prev) => ({
+                                    ...prev,
+                                    [emp.employee_id]: {
+                                      ...prev[emp.employee_id],
+                                      monthly_ctc: monthly,
+                                      annual_ctc: monthly ? Number(monthly) * 12 : '',
+                                    },
+                                  }))
+                                }}
+                              />
+                            </div>
+                          </td>
+
+                          {/* ANNUAL CTC */}
+                          <td>
+                            <div className="input-group">
+                              <span className="input-group-text">₹</span>
+
+                              <CFormInput
+                                type="number"
+                                value={selected.annual_ctc || ''}
+                                readOnly={!selected.checked}
+                                onChange={(e) => {
+                                  const annual = e.target.value
+
+                                  setSelectedEmployees((prev) => ({
+                                    ...prev,
+                                    [emp.employee_id]: {
+                                      ...prev[emp.employee_id],
+                                      annual_ctc: annual,
+                                      monthly_ctc: annual ? Math.round(Number(annual) / 12) : '',
+                                    },
+                                  }))
+                                }}
+                              />
+                            </div>
+                          </td>
+
+                          {/* EFFECTIVE FROM */}
+                          <td>
+                            <CFormInput
+                              type="date"
+                              value={selected.effective_from || ''}
+                              readOnly={!selected.checked}
+                              onChange={(e) =>
+                                handleChange(emp.employee_id, 'effective_from', e.target.value)
+                              }
+                            />
+                          </td>
+
+                          {/* ACTIONS */}
+                          <td>
+                            <div className="d-flex justify-content-center gap-2">
+                              <CTooltip content="Add Increment">
+                                <span>
+                                  <CButton
+                                    color="light"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedEmployee(emp)
+                                      setIncrementModal(true)
+                                    }}
+                                  >
+                                    <CIcon icon={cilPlus} />
+                                  </CButton>
+                                </span>
+                              </CTooltip>
+
+                              <CTooltip content="CTC History">
+                                <span>
+                                  <CButton
+                                    color="light"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedEmployee(emp)
+                                      setHistoryModal(true)
+                                    }}
+                                  >
+                                    <CIcon icon={cilHistory} />
+                                  </CButton>
+                                </span>
+                              </CTooltip>
+
+                              <CTooltip content="View Salary Breakdown">
+                                <span>
+                                  <CButton
+                                    color="light"
+                                    size="sm"
+                                    onClick={() => {
+                                      setViewEmployee(emp)
+                                      setViewModal(true)
+                                    }}
+                                  >
+                                    <CIcon icon={cilDescription} />
+                                  </CButton>
+                                </span>
+                              </CTooltip>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+
+                <div className="text-end mt-3">
+                  <CButton type="submit" color="primary" disabled={selectedCount === 0}>
+                    Save
+                  </CButton>
+                </div>
+              </CCardBody>
+            </CCard>
+          </CCol>
+        )}
+      </CRow>
+
+      <IncrementModal
+        visible={incrementModal}
+        employee={selectedEmployee}
+        onClose={() => {
+          setIncrementModal(false)
+          setSelectedEmployee(null)
+        }}
+        onSave={(data) => {
+          console.log('Increment Saved', data)
+
+          toast.success('Increment added successfully')
+
+          setIncrementModal(false)
+          setSelectedEmployee(null)
+        }}
+      />
+
+      <CtcHistoryModal
+        visible={historyModal}
+        employee={historyEmployee}
+        onClose={() => {
+          setHistoryModal(false)
+          setHistoryEmployee(null)
+        }}
+      />
+      <CModal
+        visible={viewModal}
+        size="xl"
+        fullscreen="xl-down"
+        alignment="center"
+        scrollable
+        style={{
+          maxWidth: '95vw',
+        }}
+        onClose={() => {
+          setViewModal(false)
+          setViewEmployee(null)
+        }}
+      >
+        <CModal
+          visible={viewModal}
+          size="xl"
+          fullscreen="xl-down"
+          alignment="center"
+          scrollable
+          className="salary-breakdown-modal"
+          onClose={() => {
+            setViewModal(false)
+            setViewEmployee(null)
+          }}
+        >
+          <CModalHeader>
+            <CModalTitle>
+              Salary Breakdown
+              {viewEmployee?.name ? ` - ${viewEmployee.name}` : ''}
+            </CModalTitle>
+          </CModalHeader>
+
+          <CModalBody
+            style={{
+              padding: '1rem 1.2rem',
+            }}
+          >
+            <SalaryBreakdownView employee={viewEmployee} />
+          </CModalBody>
+
+          <CModalFooter>
+            <CButton
+              color="secondary"
+              onClick={() => {
+                setViewModal(false)
+                setViewEmployee(null)
+              }}
+            >
+              Close
+            </CButton>
+          </CModalFooter>
+        </CModal>
+
+        <CModalBody
+          style={{
+            padding: '1rem 1.2rem',
+          }}
+        >
+          <SalaryBreakdownView employee={viewEmployee} />
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton
+            color="secondary"
+            onClick={() => {
+              setViewModal(false)
+              setViewEmployee(null)
+            }}
+          >
+            Close
+          </CButton>
+        </CModalFooter>
+      </CModal>
+    </CForm>
+  )
+}
+
+export default EmpSalaryStructureForm

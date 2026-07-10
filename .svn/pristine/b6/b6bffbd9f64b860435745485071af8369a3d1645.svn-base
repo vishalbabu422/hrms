@@ -1,0 +1,208 @@
+import { useState, useEffect } from 'react'
+import api from '../api/axios'
+
+const useLeaveMprForm = () => {
+  const [workOrder, setWorkOrder] = useState('')
+  const [month, setMonth] = useState('')
+  const [monthOptions, setMonthOptions] = useState([])
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+  const [employeeData, setEmployeeData] = useState({})
+  const [allEmployees, setAllEmployees] = useState([])
+
+  // Fetch month options
+  useEffect(() => {
+    const fetchWorkOrderDesign = async () => {
+      if (!workOrder) {
+        setMonthOptions([])
+        return
+      }
+
+      try {
+        const res = await api.get(`/admin/workorder-desgn/workorder/${workOrder}?modelFilter={}`)
+
+        const list = res.data?.data?.workOrderDesgnList || []
+
+        if (!list.length) {
+          setMonthOptions([])
+          return
+        }
+
+        const dates = list.flatMap((item) => [
+          new Date(item.deployment_from),
+          new Date(item.deployment_to),
+        ])
+
+        const minDate = new Date(Math.min(...dates))
+        const maxDate = new Date(Math.max(...dates))
+
+        const months = []
+        const current = new Date(minDate)
+
+        while (current <= maxDate) {
+          months.push({
+            label: current.toLocaleString('default', {
+              month: 'short',
+              year: 'numeric',
+            }),
+            value: `${current.getFullYear()}-${current.getMonth() + 1}`,
+          })
+
+          current.setMonth(current.getMonth() + 1)
+        }
+
+        setMonthOptions(months)
+      } catch (err) {
+        console.error(err)
+        setMonthOptions([])
+      }
+    }
+
+    fetchWorkOrderDesign()
+  }, [workOrder])
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      if (!workOrder || !month) {
+        setAllEmployees([])
+        return
+      }
+
+      try {
+        const modelFilter = {
+          EmployeeWorkOrderDeployment: {
+            is_deleted: false,
+          },
+          WoDesgnMapping: {
+            work_order_id: workOrder,
+          },
+        }
+
+        const url = `/employee?models=EmployeeWorkOrderDeployment.WoDesgnMapping&modelFilter=${encodeURIComponent(
+          JSON.stringify(modelFilter),
+        )}`
+        const res = await api.get(url)
+
+        const list = res.data?.data || []
+
+        setAllEmployees(list)
+
+        // map employee data from API
+        const dataMap = {}
+        list.forEach((emp) => {
+          dataMap[emp.id] = {
+            leaveTaken: emp.leave_taken || 0,
+            holidaysWorked: emp.holidays_worked || 0,
+          }
+        })
+
+        setEmployeeData(dataMap)
+      } catch (err) {
+        console.error(err)
+        setAllEmployees([])
+      }
+    }
+
+    fetchEmployees()
+  }, [workOrder, month])
+
+  // Reset when workOrder changes
+  useEffect(() => {
+    setSelectedEmployees([])
+    setEmployeeData({})
+    setMonth('')
+  }, [workOrder])
+
+  // Map employee data
+  useEffect(() => {
+    setEmployeeData((prev) => {
+      const updated = { ...prev }
+
+      selectedEmployees.forEach((emp) => {
+        if (!updated[emp.id]) {
+          updated[emp.id] = {
+            leaveTaken: 0,
+            holidaysWorked: 0,
+          }
+        }
+      })
+
+      return updated
+    })
+  }, [selectedEmployees])
+
+  // Ready state
+  const isReady = workOrder && month
+
+  // Input handler
+  const handleInputChange = (empId, field, value) => {
+    setEmployeeData((prev) => ({
+      ...prev,
+      [empId]: {
+        ...prev[empId],
+        [field]: value,
+      },
+    }))
+  }
+
+  const filteredEmployees =
+    selectedEmployees.length === 0
+      ? allEmployees
+      : allEmployees.filter((emp) => selectedEmployees.some((sel) => sel.id === emp.id))
+
+  useEffect(() => {
+    if (!allEmployees.length) return
+
+    setEmployeeData((prev) => {
+      const updated = { ...prev }
+
+      allEmployees.forEach((emp) => {
+        if (!updated[emp.id]) {
+          updated[emp.id] = {
+            leaveTaken: 0,
+            holidaysWorked: 0,
+          }
+        }
+      })
+
+      return updated
+    })
+  }, [allEmployees])
+
+  const mergeApiData = (data) => {
+    if (!data.length) return
+
+    setEmployeeData((prev) => {
+      const updated = { ...prev }
+
+      data.forEach((item) => {
+        const empId = Number(item.employee_id)
+
+        updated[empId] = {
+          leaveTaken: item.leave_taken,
+          holidaysWorked: item.holiday_worked,
+          recordId: item.id,
+        }
+      })
+
+      return updated
+    })
+  }
+
+  return {
+    workOrder,
+    setWorkOrder,
+    month,
+    setMonth,
+    monthOptions,
+    selectedEmployees,
+    setSelectedEmployees,
+    employeeData,
+    handleInputChange,
+    mergeApiData,
+    isReady,
+    filteredEmployees,
+    setEmployeeData
+  }
+}
+
+export default useLeaveMprForm

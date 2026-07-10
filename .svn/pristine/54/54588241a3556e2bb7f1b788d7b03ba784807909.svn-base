@@ -1,0 +1,125 @@
+CREATE SCHEMA IF NOT EXISTS pmu;
+
+--------------- MASTERS ----------------
+
+CREATE TABLE pmu.pmuv1_hsn_master (
+    id              BIGSERIAL PRIMARY KEY,
+    code_type       CHARACTER VARYING(10) NOT NULL,      
+    code            CHARACTER VARYING(10) NOT NULL,      
+    description     TEXT NOT NULL,              
+    gst_rate        NUMERIC(5,2) DEFAULT 0.00, 
+    cgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    sgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    igst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    cess_rate       NUMERIC(5,2) DEFAULT 0.00,
+	other_rate      NUMERIC(5,2) DEFAULT 0.00,
+    effective_from  DATE NOT NULL,
+    effective_to    DATE,
+    is_active       BOOLEAN DEFAULT TRUE,
+    created     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.pmuv1_cat_empanelment_master (
+    id                  BIGSERIAL PRIMARY KEY,
+    category            CHARACTER VARYING(20) NOT NULL,    
+    empanelment_no      CHARACTER VARYING(50) NOT NULL,
+	date        		DATE NOT NULL,
+	shortcode			CHARACTER VARYING(255) NOT NULL,
+	rfe					CHARACTER VARYING(255) NOT NULL,
+    is_active           BOOLEAN DEFAULT TRUE,
+    effective_from      DATE NOT NULL,
+    effective_to        DATE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.pmuv1_emp_ext_mapping (
+    id                  BIGSERIAL PRIMARY KEY, 
+    empanelment_id_fk   BIGINT NOT NULL,
+	ext_date        	DATE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.pmuv1_designation_master (
+    id              	BIGSERIAL PRIMARY KEY,
+	empanelment_id_fk   BIGINT NOT NULL,
+    type            	CHARACTER VARYING(100) NOT NULL,      
+    designation     	CHARACTER VARYING(150) NOT NULL,      
+    qualification   	TEXT NOT NULL, 
+    exp_in_years    	NUMERIC(4,1) NOT NULL, 
+    is_active       	BOOLEAN DEFAULT TRUE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.pmuv1_resource_rate_master (
+    id                          	BIGSERIAL PRIMARY KEY,
+    desgn_id_fk                 	BIGINT NOT NULL,
+    unit_rate_incl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    agency_margin_percent       	NUMERIC(5,2) DEFAULT 0.00,
+    agency_amount               	NUMERIC(15,2) DEFAULT 0.00,
+    unit_rate_excl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    nicsi_margin_percent        	NUMERIC(5,2) DEFAULT 0.00,
+    nicsi_margin_amount         	NUMERIC(15,2) DEFAULT 0.00,
+    total_amount                	NUMERIC(15,2) NOT NULL,
+    hsn_sac_code                	CHARACTER VARYING(10),
+    cgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    sgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    igst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    total_gst_amount            	NUMERIC(15,2) DEFAULT 0.00,
+    final_amount                	NUMERIC(15,2) NOT NULL,
+	is_active       				BOOLEAN DEFAULT TRUE,
+    created                     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified                    	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+
+--------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmu.pmuv1_work_order (
+    id 					BIGSERIAL PRIMARY KEY,
+    work_order_no       CHARACTER VARYING(255) UNIQUE NOT NULL,
+    work_order_date     DATE NOT NULL,
+    project_no          CHARACTER VARYING(255) NOT NULL,
+    pi_number           CHARACTER VARYING(255),
+    project_name        CHARACTER VARYING(255) NOT NULL,
+    issued_to_name      CHARACTER VARYING(255) NOT NULL,
+    issued_to_address   TEXT NOT NULL,
+    issued_to_contact   CHARACTER VARYING(255) NOT NULL,
+    issued_to_phone     CHARACTER VARYING(50) NOT NULL,
+    issued_to_email     CHARACTER VARYING(255) NOT NULL,
+    contact_name        CHARACTER VARYING(255) NOT NULL,
+    contact_number      TEXT NOT NULL,
+    contact_email       TEXT NOT NULL,
+    total_amt           NUMERIC(15,2) NOT NULL,
+    total_cgst_amt      NUMERIC(15,2) NOT NULL,
+    total_sgst_amt      NUMERIC(15,2) NOT NULL,
+    total_igst_amt      NUMERIC(15,2) NOT NULL,
+    grand_total         NUMERIC(15,2) NOT NULL,
+    is_active          	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by          INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pmu.pmuv1_wo_desgn_mapping (
+    id 					BIGSERIAL PRIMARY KEY,
+    work_order_id      	BIGINT NOT NULL,
+    sac_code           	CHARACTER VARYING(10) NOT NULL,
+    description        	TEXT NOT NULL,
+    req_person_count   	INTEGER NOT NULL,
+    duration_days      	INTEGER NOT NULL,
+    monthly_unit_rate  	NUMERIC(15,2) NOT NULL,
+    deployment_from    	DATE NOT NULL,
+    deployment_to      	DATE NOT NULL,
+    cgst_amount        	NUMERIC(15,2) NOT NULL,
+    sgst_amount        	NUMERIC(15,2) NOT NULL,
+    igst_amount        	NUMERIC(15,2) NOT NULL,
+    is_active        	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by         	INTEGER NOT NULL,
+	modified_by         INTEGER NOT NULL
+);

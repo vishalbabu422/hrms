@@ -1,0 +1,10 @@
+const router = require("express").Router();
+
+router.use("/salary-component", require("./salaryComponent/salaryComponent.routes"));
+router.use("/salary-structure", require("./salaryStructure/salaryStructure.routes"));
+router.use("/employee-salary-structure", require("./employeeSalaryStructure/employeeSalaryStructure.routes"));
+router.use("/employee-salary-register-monthly", require("./employeeSalaryRegisterMonthly/employeeSalaryRegisterMonthly.routes"));
+router.use("/salary-addon-master", require("./salaryAddonMaster/salaryAddonMaster.routes"));
+router.use("/employee-salary-addon", require("./employeeSalaryAddon/employeeSalaryAddon.routes"));
+
+module.exports = router;

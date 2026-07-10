@@ -1,0 +1,340 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CTooltip,
+  CSpinner,
+} from '@coreui/react'
+
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilDescription } from '@coreui/icons'
+
+import SimpleBar from 'simplebar-react'
+import { toast } from 'react-toastify'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+
+import api from '../../api/axios'
+import SortableHeaderCell from '../components/sort-table-header'
+import AppPagination from '../components/app-pagination'
+import TableEmptyState from '../components/table-empty'
+import PageHeader from '../components/form-header'
+import ActionButton from '../components/action-button'
+
+const Index = () => {
+  const navigate = useNavigate()
+
+  const [sort, setSort] = useState({
+    key: 'id',
+    order: 'desc',
+  })
+
+  const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
+  const [page, setPage] = useState(1)
+  const [limit] = useState(LIMIT)
+  const [totalPages, setTotalPages] = useState(1)
+
+  const [search, setSearch] = useState('')
+  const [resourceRate, setResourceRate] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  /* ================= FETCH ================= */
+
+  const fetchResourceRate = async () => {
+    try {
+      setLoading(true)
+
+      const params = {
+        sort: `${sort.key} ${sort.order}`,
+        page,
+        limit,
+      }
+
+      if (search.length >= 3) {
+        params.search = search
+      }
+
+      const response = await api.get('/admin/resourcerate/index?is_active=true&models=designation%2CgstCode', { params })
+
+      setResourceRate(response.data.data.resourceRateList)
+      setTotalPages(response.data.totalPages)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, sort])
+
+  useEffect(() => {
+    if (search.length === 0 || search.length >= 3) {
+      fetchResourceRate()
+    }
+  }, [search, sort, page])
+
+  /* ================= SORT ================= */
+
+  const handleSort = (key) => {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, order: 'asc' }
+    })
+  }
+
+  /* ================= DELETE ================= */
+
+  const confirmDelete = (id) => {
+    if (!window.confirm('Are you sure you want to delete this Resource Rate?')) return
+    handleDelete(id)
+  }
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/admin/resourcerate/delete/${id}`)
+      toast.success('Resource Rate deleted successfully')
+      fetchResourceRate()
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to delete Resource Rate')
+    }
+  }
+
+  /* ================= EXPORT ================= */
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 15
+
+    doc.setFontSize(14)
+    doc.text('Resource Rate List', 10, 10)
+
+    resourceRate.forEach((r, i) => {
+      doc.text(`${i + 1}. ${r.designation?.designation} - ${r.final_amount}`, 10, y)
+      y += 8
+    })
+
+    doc.save('resource-rate-list.pdf')
+  }
+
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(resourceRate)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Resource Rate')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'resource-rate-list.xlsx')
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CContainer fluid>
+      <PageHeader
+        title="Resource Rate"
+        searchValue={search}
+        onSearchChange={setSearch}
+        onAddClick={() => navigate('/rate/add')}
+        addLabel="Add Resource Rate"
+        showExport
+        onExportPDF={handleExportPDF}
+        onExportExcel={handleExportExcel}
+      />
+
+      <CCard className="shadow border-0 rounded-4">
+        <CCardBody>
+          <SimpleBar autoHide={true} style={{ marginBottom: '5px' }}>
+            <CTable hover responsive align="middle" className="rounded overflow-hidden">
+              <CTableHead style={{ backgroundColor: '#f8f9fc' }}>
+                <CTableRow>
+                  <SortableHeaderCell
+                    label="Designation"
+                    sortKey="desgn_id_fk"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Unit Rate (Excluding A.M)"
+                    sortKey="unit_rate_excl_agency_margin"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Unit Rate (Including A.M)"
+                    sortKey="unit_rate_incl_agency_margin"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Agency Amount"
+                    sortKey="agency_amount"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="NICSI Margin Amount"
+                    sortKey="nicsi_margin_amount"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Total Amount"
+                    sortKey="total_amount"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="GST Code"
+                    sortKey="gst_code_fk"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Total GST Amount"
+                    sortKey="total_gst_amount"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Final Amount"
+                    sortKey="final_amount"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Status"
+                    sortKey="is_active"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                {loading ? (
+                  <CTableRow>
+                    <CTableDataCell colSpan={13} className="text-center py-4">
+                      <CSpinner size="sm" />
+                    </CTableDataCell>
+                  </CTableRow>
+                ) : resourceRate?.length > 0 ? (
+                  resourceRate.map((item) => (
+                    <CTableRow key={item.id}>
+                      <CTableDataCell>{item.designation?.designation}</CTableDataCell>
+
+                      <CTableDataCell>{item.unit_rate_excl_agency_margin}</CTableDataCell>
+
+                      <CTableDataCell>{item.unit_rate_incl_agency_margin}</CTableDataCell>
+
+                      <CTableDataCell>{item.agency_amount}</CTableDataCell>
+                      <CTableDataCell>{item.nicsi_margin_amount}</CTableDataCell>
+                      <CTableDataCell>{item.total_amount}</CTableDataCell>
+                      <CTableDataCell>{item.gstCode?.code}</CTableDataCell>
+                      <CTableDataCell>{item.total_gst_amount}</CTableDataCell>
+                      <CTableDataCell>{item.final_amount}</CTableDataCell>
+
+                      <CTableDataCell>
+                        {item.is_active ? (
+                          <CIcon icon={cilCheckCircle} className="text-success" />
+                        ) : (
+                          <CIcon icon={cilXCircle} className="text-danger" />
+                        )}
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        <div
+                          className="d-flex justify-content-center align-items-center gap-2"
+                          style={{ minWidth: '120px' }}
+                        >
+                          {/* PREVIEW */}
+                          <CTooltip content="Preview" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/rate/preview/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilDescription} />
+                            </div>
+                          </CTooltip>
+
+                          {/* EDIT */}
+                          <CTooltip content="Edit" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/rate/edit/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilPencil} />
+                            </div>
+                          </CTooltip>
+
+                          {/* DELETE */}
+                          <div
+                            style={{
+                              width: '32px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {item.is_active ? (
+                              <CTooltip content="Delete" placement="top">
+                                <div
+                                  style={{ display: 'inline-block', cursor: 'pointer' }}
+                                  onClick={() => confirmDelete(item.id)}
+                                >
+                                  <ActionButton color="danger" icon={cilTrash} />
+                                </div>
+                              </CTooltip>
+                            ) : (
+                              <span style={{ visibility: 'hidden' }}>X</span>
+                            )}
+                          </div>
+                        </div>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))
+                ) : (
+                  <TableEmptyState colSpan={16} />
+                )}
+              </CTableBody>
+            </CTable>
+          </SimpleBar>
+
+          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </CCardBody>
+      </CCard>
+    </CContainer>
+  )
+}
+
+export default Index

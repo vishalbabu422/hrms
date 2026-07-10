@@ -1,0 +1,150 @@
+/* Card */
+.leave-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  border: none;
+}
+
+/* Header */
+.simple-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Dropdown wrapper */
+.dropdown-wrapper {
+  position: relative;
+}
+
+/* Multi select */
+.multi-select-input {
+  min-height: 38px;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;   /* 🔥 THIS FIXES ALIGNMENT */
+  gap: 6px;
+  flex-wrap: wrap;
+  cursor: pointer;
+}
+
+/* Dropdown panel */
+.multi-select-dropdown {
+  position: absolute;
+  width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  margin-top: 4px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  padding: 8px;
+  z-index: 1000;
+}
+
+/* Items */
+.dropdown-item {
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+/* Info */
+.info-box {
+  border-radius: 10px;
+}
+
+/* Employee card */
+.employee-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+/* Header row */
+.leave-header-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* Badge */
+.month-badge {
+  background: #2563eb;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+/* Rows */
+.leave-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.leave-row:last-child {
+  border-bottom: none;
+}
+
+/* Input */
+.small-input {
+  width: 80px;
+  text-align: right;
+}
+
+/* Closing */
+.closing {
+  font-weight: 600;
+}
+
+.closing-badge {
+  background: #2563eb;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+/* Button */
+.save-btn {
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+
+/* CoreUI-like dropdown */
+.coreui-multiselect {
+  display: flex;
+  align-items: center;
+  min-height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+  position: relative;
+  cursor: pointer;
+  background-color: #fff;
+}
+
+/* Arrow */
+.coreui-multiselect::after {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  content: "";
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-left: 0.3em solid transparent;
+}
+
+/* Focus */
+.coreui-multiselect.active {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.25);
+}

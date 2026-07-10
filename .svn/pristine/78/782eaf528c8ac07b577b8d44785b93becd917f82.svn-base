@@ -1,0 +1,20 @@
+const { DataTypes } = require("sequelize");
+const sequelize = require("../utils/database");
+
+const RolePermission = sequelize.define(
+    "RolePermission",
+    {
+        id: { type: DataTypes.BIGINT, primaryKey: true, autoIncrement: true },
+        role_id: DataTypes.BIGINT,
+        permission_id: DataTypes.BIGINT,
+        organization_id: DataTypes.BIGINT
+    },
+    {
+        tableName: "role_permissions",
+        schema: "pmu",
+        timestamps: false
+    }
+);
+
+module.exports = RolePermission;
+

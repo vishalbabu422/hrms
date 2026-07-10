@@ -1,0 +1,48 @@
+const express = require("express");
+const router = express.Router();
+
+const rolesController = require("../role/role.controller");
+
+const { protect, restrictTo } = require("../../middlewares/authMiddleware");
+
+const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
+
+router.use(protect);
+
+router.get(
+    "/roles/index",
+    restrictTo(...ROLES),
+    rolesController.getAllRoles
+);
+
+router.get(
+    "/roles/:id", 
+    restrictTo(...ROLES),
+    rolesController.getRoleById
+);
+
+router.post(
+    "/roles/create",
+    restrictTo(...ROLES),
+    rolesController.createRole
+);
+
+router.patch(
+    "/roles/edit/:id", 
+    restrictTo(...ROLES),
+    rolesController.updateRole
+);
+
+router.delete(
+    "/roles/delete/:id", 
+    restrictTo(...ROLES),
+    rolesController.deleteRole
+);
+
+router.post(
+  "/roles/:id/rolespermission",
+  restrictTo(...ROLES),
+  rolesController.assignRolePermissions
+);
+module.exports = router;
+

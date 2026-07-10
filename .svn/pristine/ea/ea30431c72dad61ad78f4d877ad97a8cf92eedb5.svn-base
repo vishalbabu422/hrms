@@ -1,0 +1,13 @@
+import api from '../api/axios'
+
+export const getDivisions = async () => {
+  return await api.get('/division?fields=id,division_name')
+}
+
+export const getDesignations = async () => {
+  return await api.get('/designation?fields=id,designation_name')
+}
+
+export const createEmployee = async (payload) => {
+  return await api.post('/employee', payload)
+}

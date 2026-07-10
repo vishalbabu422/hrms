@@ -1,0 +1,39 @@
+import ModuleFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (payload) => {
+    try {
+      await api.post('/admin/module/create', payload)
+
+      toast.success('Module created successfully')
+      navigate('/module')
+    } catch (error) {
+      console.error(error)
+      toast.error(
+        error.response?.data?.message || 'Failed to create Module'
+      )
+    }
+  }
+
+  const initialData = {
+    module_name: '',
+    module_code: '',
+    description: '',
+    is_active: true,
+  }
+
+  return (
+    <ModuleFormComponent
+      initialData={initialData}
+      mode="create"
+      onSubmit={handleSubmit}
+    />
+  )
+}
+
+export default Add

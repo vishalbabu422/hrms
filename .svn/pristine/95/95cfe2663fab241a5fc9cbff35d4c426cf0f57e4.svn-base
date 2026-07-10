@@ -1,0 +1,59 @@
+import { CCol, CFormLabel, CFormSelect } from '@coreui/react'
+import { useEffect, useState } from 'react'
+import api from '../../api/axios'
+import { useSelector } from 'react-redux'
+
+const OrganizationSelect = ({
+  name = 'organization_id',
+  value = '',
+  onChange,
+  label = 'Organisation',
+  placeholder = 'Select Organisation',
+  disabled = false,
+  colSize = 12,
+}) => {
+  const [orgList, setOrgList] = useState([])
+  const user = useSelector((state) => state.auth.user)
+  console.log(user)
+  useEffect(() => {
+    const fetchOrg = async () => {
+      const params = {
+        fields: 'id,org_name',
+      }
+
+      try {
+        const response = await api.get('/admin/organization/index', { params })
+        setOrgList(response.data.data.organizationList)
+      } catch (error) {
+        console.error('Failed to fetch Organisation:', error)
+      }
+    }
+
+    fetchOrg()
+  }, [])
+
+  if (!user?.isSuperAdmin) return null
+
+  return (
+    <>
+      <CCol md={colSize}>
+        <CFormLabel>{label}</CFormLabel>
+        <CFormSelect
+          name={name}
+          value={value === null || value === undefined ? '' : String(value)}
+          onChange={onChange}
+          disabled={disabled}
+        >
+          <option value="">{placeholder}</option>
+          {orgList.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.org_name}
+            </option>
+          ))}
+        </CFormSelect>
+      </CCol>
+    </>
+  )
+}
+
+export default OrganizationSelect

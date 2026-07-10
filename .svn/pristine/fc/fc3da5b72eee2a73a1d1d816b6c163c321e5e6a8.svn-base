@@ -1,0 +1,20 @@
+export const validateSalaryAddon = (data) => {
+  const errors = {}
+
+  /* NAME */
+  if (!data.name?.trim()) {
+    errors.name = 'Name is required'
+  }
+
+  /* CODE */
+  if (!data.code?.trim()) {
+    errors.code = 'Code is required'
+  }
+
+  /* TYPE */
+  if (!data.type) {
+    errors.type = 'Type is required'
+  }
+
+  return errors
+}

@@ -1,0 +1,247 @@
+CREATE SCHEMA IF NOT EXISTS pmu;
+
+--------------- MASTERS ----------------
+
+CREATE TABLE pmu.hsn_master (
+    id              BIGSERIAL PRIMARY KEY,
+    code_type       CHARACTER VARYING(10) NOT NULL,      
+    code            CHARACTER VARYING(10) NOT NULL,      
+    description     TEXT NOT NULL,              
+    gst_rate        NUMERIC(5,2) DEFAULT 0.00, 
+    cgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    sgst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    igst_rate       NUMERIC(5,2) DEFAULT 0.00,
+    cess_rate       NUMERIC(5,2) DEFAULT 0.00,
+	other_rate      NUMERIC(5,2) DEFAULT 0.00,
+    effective_from  DATE NOT NULL,
+    effective_to    DATE,
+    is_active       BOOLEAN DEFAULT TRUE,
+    created     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.cat_empanelment_master (
+    id                  BIGSERIAL PRIMARY KEY,
+    category            CHARACTER VARYING(20) NOT NULL,    
+    empanelment_no      CHARACTER VARYING(50) NOT NULL,
+	date        		DATE NOT NULL,
+	shortcode			CHARACTER VARYING(255) NOT NULL,
+	rfe					CHARACTER VARYING(255) NOT NULL,
+    is_active           BOOLEAN DEFAULT TRUE,
+    effective_from      DATE NOT NULL,
+    effective_to        DATE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.emp_ext_mapping (
+    id                  BIGSERIAL PRIMARY KEY, 
+    empanelment_id_fk   BIGINT NOT NULL,
+	ext_date        	DATE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.empanelment_designation (
+    id              	BIGSERIAL PRIMARY KEY,
+	empanelment_id_fk   BIGINT NOT NULL,
+    type            	CHARACTER VARYING(100) NOT NULL,      
+    designation     	CHARACTER VARYING(150) NOT NULL,      
+    qualification   	TEXT NOT NULL, 
+    exp_in_years    	NUMERIC(4,1) NOT NULL, 
+    is_active       	BOOLEAN DEFAULT TRUE,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+CREATE TABLE pmu.resource_rate (
+    id                          	BIGSERIAL PRIMARY KEY,
+    desgn_id_fk                 	BIGINT NOT NULL,
+    unit_rate_incl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    agency_margin_percent       	NUMERIC(5,2) DEFAULT 0.00,
+    agency_amount               	NUMERIC(15,2) DEFAULT 0.00,
+    unit_rate_excl_agency_margin 	NUMERIC(15,2) NOT NULL,
+    nicsi_margin_percent        	NUMERIC(5,2) DEFAULT 0.00,
+    nicsi_margin_amount         	NUMERIC(15,2) DEFAULT 0.00,
+    total_amount                	NUMERIC(15,2) NOT NULL,
+    hsn_sac_code                	CHARACTER VARYING(10),
+    cgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    sgst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    igst_amount                 	NUMERIC(15,2) DEFAULT 0.00,
+    total_gst_amount            	NUMERIC(15,2) DEFAULT 0.00,
+    final_amount                	NUMERIC(15,2) NOT NULL,
+	is_active       				BOOLEAN DEFAULT TRUE,
+    created                     	TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified                    	TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+
+--------------------------------------------
+
+CREATE TABLE IF NOT EXISTS pmu.work_order (
+    id 					BIGSERIAL PRIMARY KEY,
+    work_order_no       CHARACTER VARYING(255) UNIQUE NOT NULL,
+    work_order_date     DATE NOT NULL,
+    project_no          CHARACTER VARYING(255) NOT NULL,
+    pi_number           CHARACTER VARYING(255),
+    project_name        CHARACTER VARYING(255) NOT NULL,
+    issued_to_name      CHARACTER VARYING(255) NOT NULL,
+    issued_to_address   TEXT NOT NULL,
+    issued_to_contact   CHARACTER VARYING(255) NOT NULL,
+    issued_to_phone     CHARACTER VARYING(50) NOT NULL,
+    issued_to_email     CHARACTER VARYING(255) NOT NULL,
+    contact_name        CHARACTER VARYING(255) NOT NULL,
+    contact_number      TEXT NOT NULL,
+    contact_email       TEXT NOT NULL,
+    total_amt           NUMERIC(15,2) NOT NULL,
+    total_cgst_amt      NUMERIC(15,2) NOT NULL,
+    total_sgst_amt      NUMERIC(15,2) NOT NULL,
+    total_igst_amt      NUMERIC(15,2) NOT NULL,
+    grand_total         NUMERIC(15,2) NOT NULL,
+    is_active          	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by          INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS pmu.wo_desgn_mapping (
+    id 					BIGSERIAL PRIMARY KEY,
+    work_order_id      	BIGINT NOT NULL,
+    sac_code           	CHARACTER VARYING(10) NOT NULL,
+    description        	TEXT NOT NULL,
+    req_person_count   	INTEGER NOT NULL,
+    duration_days      	INTEGER NOT NULL,
+    monthly_unit_rate  	NUMERIC(15,2) NOT NULL,
+    deployment_from    	DATE NOT NULL,
+    deployment_to      	DATE NOT NULL,
+    cgst_amount        	NUMERIC(15,2) NOT NULL,
+    sgst_amount        	NUMERIC(15,2) NOT NULL,
+    igst_amount        	NUMERIC(15,2) NOT NULL,
+    is_active        	BOOLEAN DEFAULT true,
+    created     		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    modified      		TIMESTAMP WITH TIME ZONE DEFAULT now(),
+    created_by         	INTEGER NOT NULL,
+	modified_by         INTEGER NOT NULL
+);
+
+--------------------Employee----------------------
+CREATE TABLE pmu.employees (
+    id BIGSERIAL PRIMARY KEY,
+    employee_code VARCHAR(30) UNIQUE NOT NULL,        -- auto-generated
+    login_uid VARCHAR(50) UNIQUE NOT NULL,            -- auto-generated
+
+    full_name VARCHAR(150) NOT NULL,
+    dob DATE,
+    gender VARCHAR(20),
+
+    email VARCHAR(120),
+    contact_no VARCHAR(20),
+    emergency_contact_no VARCHAR(20),
+    blood_group VARCHAR(10),
+
+    year_of_passing INT,
+    experience_years VARCHAR(50),
+
+    pan_number VARCHAR(20),
+    aadhaar_number VARCHAR(20),
+    uan_number VARCHAR(30),
+    passport_number VARCHAR(30),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pmu.document_files (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES employees(id) ON DELETE CASCADE,
+
+    doc_type VARCHAR(50),  
+    -- PHOTO, RESUME, PAN_FILE, AADHAAR_FILE, EDUCATION_CERT, SALARY_SLIP, etc.
+
+    file_name TEXT,
+    file_path TEXT,
+    file_size BIGINT,
+    mime_type VARCHAR(100),
+
+    remarks TEXT,
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE pmu.employee_education (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES employees(id) ON DELETE CASCADE,
+
+    qualification TEXT,
+    year_of_passing INT,
+    notes TEXT
+);
+
+CREATE TABLE pmu.employee_bank_details (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT UNIQUE REFERENCES employees(id) ON DELETE CASCADE,
+
+    bank_name VARCHAR(120),
+    branch_name VARCHAR(120),
+    account_number VARCHAR(40),
+    ifsc VARCHAR(20)
+);
+
+CREATE TABLE pmu.employee_family_members (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES employees(id) ON DELETE CASCADE,
+
+    relation VARCHAR(30), 
+    -- SPOUSE, CHILD, FATHER, MOTHER, SIBLING
+
+    name VARCHAR(150),
+    dob DATE,
+    gender VARCHAR(20),
+    is_dependent BOOLEAN
+);
+
+CREATE TABLE pmu.employee_insurance (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES employees(id) ON DELETE CASCADE,
+
+    insurance_company VARCHAR(150),
+    policy_number VARCHAR(100),
+    from_date DATE,
+    to_date DATE,
+
+    sum_insured NUMERIC(14,2),
+    policy_premium NUMERIC(14,2),
+    family_members_covered TEXT
+);
+
+CREATE TABLE pmu.employee_screening_test (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT UNIQUE REFERENCES employees(id) ON DELETE CASCADE,
+
+    test_scheduled_date DATE,
+    test_given_date DATE,
+    marks_secured NUMERIC(6,2),
+    result VARCHAR(10)   -- PASS / FAIL
+);
+
+CREATE TABLE pmu.employee_addresses (
+    id BIGSERIAL PRIMARY KEY,
+    employee_id BIGINT REFERENCES employees(id) ON DELETE CASCADE,
+
+    address_type VARCHAR(30) NOT NULL,  
+    -- CURRENT / PERMANENT / OFFICE / CORRESPONDENCE
+
+    address_line1 TEXT NOT NULL,
+    address_line2 TEXT,
+    landmark TEXT,
+
+    city VARCHAR(100),
+    district VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'India',
+
+    pin_code VARCHAR(10),
+
+    is_primary BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

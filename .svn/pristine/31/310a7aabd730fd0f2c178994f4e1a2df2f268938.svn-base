@@ -1,0 +1,293 @@
+import { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import api from '../../../api/axios'
+import { toast } from 'react-toastify'
+import { validateAddress } from '../../../validations/addressValidation'
+
+const validateAddressData = (addr) => {
+  const errors = {}
+
+  if (!addr.address_line1 || addr.address_line1.trim() === '') {
+    errors.address_line1 = 'Address is required'
+  }
+
+  return errors
+}
+
+const Address = forwardRef(({ employeeId, isEdit }, ref) => {
+  const [loading, setLoading] = useState(false)
+
+  const [errors, setErrors] = useState({
+    correspondence: {},
+    permanent: {},
+  })
+
+  const createAddress = (type, isPrimary = false) => ({
+    address_type: type,
+    address_line1: '',
+    landmark: '',
+    city: '',
+    district: '',
+    state: '',
+    country: '',
+    pin_code: '',
+    is_primary: isPrimary,
+  })
+
+  const initialAddressDetails = {
+    correspondence: createAddress('CORRESPONDENCE', true),
+    permanent: createAddress('PERMANENT'),
+  }
+
+  const [employeeAddress, setEmployeeAddress] = useState(initialAddressDetails)
+  const [sameAddress, setSameAddress] = useState(false)
+
+  // ================= FETCH ADDRESS =================
+  useEffect(() => {
+    if (!employeeId) return
+
+    const fetchAddress = async () => {
+      try {
+        const response = await api.get(`/employee/${employeeId}/address`)
+
+        const data = response.data?.data || response.data
+        const correspondence = data.find((a) => a.address_type === 'CORRESPONDENCE')
+
+        const permanent = data.find((a) => a.address_type === 'PERMANENT')
+
+        setEmployeeAddress({
+          correspondence: correspondence || initialAddressDetails.correspondence,
+          permanent: permanent || initialAddressDetails.permanent,
+        })
+      } catch (error) {
+        console.error('Error fetching address', error)
+      }
+    }
+
+    fetchAddress()
+  }, [employeeId])
+
+  // EXPOSE SUBMIT TO PARENT
+
+  useImperativeHandle(ref, () => ({
+    submit: async () => {
+      try {
+        setLoading(true)
+
+        const url = `/employee/${employeeId}/address`
+        const addresses = [employeeAddress.correspondence, employeeAddress.permanent]
+
+        for (const addr of addresses) {
+          const isEmpty = !addr.address_line1 && !addr.city && !addr.state && !addr.pin_code
+
+          for (const addr of addresses) {
+            const validationErrors = validateAddressData(addr)
+
+            if (Object.keys(validationErrors).length > 0) {
+              setErrors((prev) => ({
+                ...prev,
+                [addr.address_type === 'CORRESPONDENCE' ? 'correspondence' : 'permanent']:
+                  validationErrors,
+              }))
+
+              return false
+            }
+
+            if (addr.id) {
+              await api.patch(url + '/' + addr.id, addr)
+            } else {
+              await api.post(url, addr)
+            }
+          }
+
+          // ✅ ADD VALIDATION HERE
+          const validationErrors = validateAddressData(addr)
+
+          if (Object.keys(validationErrors).length > 0) {
+            setErrors((prev) => ({
+              ...prev,
+              [addr.address_type === 'CORRESPONDENCE' ? 'correspondence' : 'permanent']:
+                validationErrors,
+            }))
+
+            return false // stop API call
+          }
+
+          if (addr.id) {
+            await api.patch(url + '/' + addr.id, addr)
+          } else {
+            await api.post(url, addr)
+          }
+        }
+
+        toast.success('Address saved successfully')
+        return true
+      } catch (error) {
+        console.error(error)
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+  }))
+
+  // ================= HANDLE CORRESPONDENCE =================
+
+  const handleCorrespondenceChange = (e) => {
+    const { name, value } = e.target
+
+    setEmployeeAddress((prev) => ({
+      ...prev,
+      correspondence: {
+        ...prev?.correspondence,
+        [name]: value,
+      },
+    }))
+
+    if (sameAddress) {
+      setEmployeeAddress((prev) => ({
+        ...prev,
+        permanent: {
+          ...prev?.permanent,
+          [name]: value,
+        },
+      }))
+    }
+  }
+
+  // ================= HANDLE PERMANENT =================
+
+  const handlePermanentChange = (e) => {
+    const { name, value } = e.target
+
+    setEmployeeAddress((prev) => ({
+      ...prev,
+      permanent: {
+        ...prev?.permanent,
+        [name]: value,
+      },
+    }))
+  }
+
+  // ================= SAME ADDRESS =================
+
+  const handleSameAddressToggle = () => {
+    const checked = !sameAddress
+    setSameAddress(checked)
+
+    if (checked) {
+      setEmployeeAddress((prev) => ({
+        ...prev,
+        permanent: {
+          ...prev?.correspondence,
+          address_type: 'PERMANENT',
+          is_primary: false,
+        },
+      }))
+    } else {
+      setEmployeeAddress((prev) => ({
+        ...prev,
+        permanent: initialAddressDetails.permanent,
+      }))
+    }
+  }
+
+  const addressFields = ['landmark', 'city', 'district', 'state', 'country', 'pin_code']
+
+  return (
+    <>
+      {/* ================= Correspondence ================= */}
+      <div className="card mb-4 shadow-sm">
+        <div className="card-header bg-light fw-semibold">Correspondence Address</div>
+
+        <div className="card-body">
+          <div className="row g-3">
+            <div className="col-md-12">
+              <textarea
+                className={`form-control ${
+                  errors.correspondence.address_line1 ? 'is-invalid' : ''
+                }`}
+                rows="3"
+                name="address_line1"
+                value={employeeAddress?.correspondence?.address_line1 || ''}
+                onChange={handleCorrespondenceChange}
+                placeholder="Enter address"
+              />
+
+              <div className="invalid-feedback">{errors.correspondence.address_line1}</div>
+            </div>
+
+            {addressFields.map((field) => (
+              <div className="col-md-3" key={field}>
+                <input
+                  className={`form-control ${errors.correspondence[field] ? 'is-invalid' : ''}`}
+                  name={field}
+                  value={employeeAddress?.correspondence?.[field] || ''}
+                  onChange={handleCorrespondenceChange}
+                  placeholder={`Enter ${field.replace('_', ' ')}`}
+                />
+
+                <div className="invalid-feedback">{errors.correspondence[field]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ================= Permanent ================= */}
+      <div className="card shadow-sm">
+        <div className="card-header bg-light fw-semibold d-flex justify-content-between align-items-center">
+          Permanent Address
+          <div className="form-check mb-0">
+            <input
+              className={`form-check-input ${errors.sameAddress ? 'is-invalid' : ''}`}
+              type="checkbox"
+              checked={sameAddress}
+              onChange={handleSameAddressToggle}
+            />
+
+            <label className="form-check-label small">Same as Correspondence</label>
+
+            {errors.sameAddress && (
+              <div className="invalid-feedback d-block">{errors.sameAddress}</div>
+            )}
+          </div>
+        </div>
+
+        <div className="card-body">
+          <div className="row g-3">
+            <div className="col-md-12">
+              <textarea
+                className={`form-control ${errors.permanent.address_line1 ? 'is-invalid' : ''}`}
+                rows="3"
+                name="address_line1"
+                value={employeeAddress?.permanent?.address_line1 || ''}
+                onChange={handlePermanentChange}
+                disabled={sameAddress}
+                placeholder="Enter address"
+              />
+
+              <div className="invalid-feedback">{errors.permanent.address_line1}</div>
+            </div>
+
+            {addressFields.map((field) => (
+              <div className="col-md-3" key={field}>
+                <input
+                  className={`form-control ${errors.permanent[field] ? 'is-invalid' : ''}`}
+                  name={field}
+                  value={employeeAddress?.permanent?.[field] || ''}
+                  onChange={handlePermanentChange}
+                  placeholder={`Enter ${field}`}
+                  disabled={sameAddress}
+                />
+
+                <div className="invalid-feedback">{errors.permanent[field]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+})
+
+export default Address

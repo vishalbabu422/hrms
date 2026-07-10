@@ -1,0 +1,182 @@
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CPagination,
+  CPaginationItem,
+  CTooltip,
+  CButton,
+  CBadge,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilPlus, cilDescription , cilCheckCircle, cilClock } from '@coreui/icons'
+import { useState } from 'react'
+import SortableHeaderCell from '../components/sort-table-header'
+import ExpandableSearch from '../components/expandable-search'
+import { useNavigate } from 'react-router-dom'
+
+const Index = () => {
+  const [sort, setSort] = useState({
+    key: 'employee_code',
+    order: 'asc',
+  })
+
+  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
+
+  const handleSort = (key) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+        : { key, order: 'asc' },
+    )
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardHeader className="d-flex justify-content-between align-items-center">
+            <strong>Employee Listing</strong>
+
+            <div className="d-flex align-items-center gap-3">
+              <ExpandableSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search employee..."
+              />
+
+              <CTooltip content="Add Employee">
+                <CButton color="primary" size="sm" onClick={() => navigate('/hrm/add')}>
+                  <CIcon icon={cilPlus} className="me-1" />
+                  Add
+                </CButton>
+              </CTooltip>
+            </div>
+          </CCardHeader>
+
+          <CCardBody>
+            <CTable striped hover responsive>
+              <CTableHead>
+                <CTableRow>
+                  <SortableHeaderCell label="S.No" sortKey="id" sort={sort} onSort={handleSort} />
+
+                  <SortableHeaderCell
+                    label="Emp Code"
+                    sortKey="employee_code"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+                  <SortableHeaderCell
+                    label="Full Name"
+                    sortKey="full_name"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  {/* <SortableHeaderCell
+                    label="Emp Code"
+                    sortKey="employee_code"
+                    sort={sort}
+                    onSort={handleSort}
+                  /> */}
+
+                  <SortableHeaderCell
+                    label="Email"
+                    sortKey="email"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Contact"
+                    sortKey="contact_no"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Status"
+                    sortKey="status"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="HR Verified"
+                    sortKey="email"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Onboarded On"
+                    sortKey="onboarded_on"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                <CTableRow>
+                  <CTableDataCell>1</CTableDataCell>
+                  <CTableDataCell>EMP-1015</CTableDataCell>
+                  <CTableDataCell>Rahul Verma</CTableDataCell>
+                  <CTableDataCell>rahul@pmu.in</CTableDataCell>
+                  <CTableDataCell>9812345678</CTableDataCell>
+                  <CTableDataCell>Status</CTableDataCell>
+                  <CTableDataCell>Verified</CTableDataCell>
+                  <CTableDataCell>05 Feb 2025</CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2">
+                      <CTooltip content="Edit">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                      </CTooltip>
+                      <CTooltip content="Add Additional Details">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPlus} />
+                        </CButton>
+                      </CTooltip>
+
+                      <CTooltip content="View">
+                        <CButton color="info" size="sm" variant="ghost">
+                          <CIcon icon={cilDescription } />
+                        </CButton>
+                      </CTooltip>
+
+                      <CTooltip content="Delete">
+                        <CButton color="danger" size="sm" variant="ghost">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTooltip>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+              </CTableBody>
+            </CTable>
+
+            <CPagination className="justify-content-end mt-3">
+              <CPaginationItem disabled>&laquo;</CPaginationItem>
+              <CPaginationItem active>1</CPaginationItem>
+              <CPaginationItem disabled>&raquo;</CPaginationItem>
+            </CPagination>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default Index

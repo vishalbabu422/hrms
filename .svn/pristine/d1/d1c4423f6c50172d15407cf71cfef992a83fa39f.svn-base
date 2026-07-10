@@ -1,0 +1,200 @@
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CPagination,
+  CPaginationItem,
+  CTooltip,
+  CButton,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash, cilPlus, cilCheckCircle, cilXCircle } from '@coreui/icons'
+import { useState, useRef } from 'react'
+import SortableHeaderCell from '../components/sort-table-header'
+import ExpandableSearch from '../components/expandable-search'
+import { useNavigate } from 'react-router-dom'
+
+const index = () => {
+  const [sort, setSort] = useState({
+    key: 'id',
+    order: 'desv',
+  })
+
+  const [search, setSearch] = useState('')
+
+  const handleSort = (key) => {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, order: 'asc' }
+    })
+  }
+
+  const navigate = useNavigate()
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardHeader className="d-flex justify-content-between align-items-center">
+            <strong>Work Orders</strong>
+
+            <div className="d-flex align-items-center gap-4">
+              <ExpandableSearch
+                value={search}
+                onChange={setSearch}
+                placeholder="Search designation..."
+              />
+              <CTooltip content="Add Designation" placement="bottom">
+                <CButton color="primary" size="sm" onClick={() => navigate('/des/add')}>
+                  <CIcon icon={cilPlus} className="me-1" />
+                </CButton>
+              </CTooltip>
+            </div>
+          </CCardHeader>
+
+          <CCardBody>
+            <CTable striped hover>
+              <CTableHead>
+                <CTableRow>
+                  <SortableHeaderCell label="Sno" sortKey="id" sort={sort} onSort={handleSort} />
+                  <SortableHeaderCell label="Type" sortKey="type" sort={sort} onSort={handleSort} />
+
+                  {/* <SortableHeaderCell label="Date" sortKey="date" sort={sort} onSort={handleSort} /> */}
+
+                  <SortableHeaderCell
+                    label="Position"
+                    sortKey="position"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Qualification"
+                    sortKey="qualification"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Exp(in yrs)"
+                    sortKey="qualification"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <SortableHeaderCell
+                    label="Status"
+                    sortKey="status"
+                    sort={sort}
+                    onSort={handleSort}
+                  />
+
+                  <CTableHeaderCell scope="col">Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                <CTableRow>
+                  <CTableDataCell scope="row">1</CTableDataCell>
+                  <CTableDataCell>Technical</CTableDataCell>
+                  <CTableDataCell>Programmer</CTableDataCell>
+                  <CTableDataCell>BCA</CTableDataCell>
+                  <CTableDataCell>5 yrs</CTableDataCell>
+                  <CTableDataCell>
+                    <CIcon icon={cilCheckCircle} className="text-success" />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2">
+                      <CTooltip content="Edit" placement="left">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                      </CTooltip>
+                      <CTooltip content="Delete" placement="right">
+                        <CButton color="danger" size="sm" variant="ghost">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTooltip>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+
+                <CTableRow>
+                  <CTableDataCell scope="row">2</CTableDataCell>
+                  <CTableDataCell>Non-Technical</CTableDataCell>
+                  <CTableDataCell>Consultant</CTableDataCell>
+                  <CTableDataCell>B.Tech</CTableDataCell>
+                  <CTableDataCell>8 yrs</CTableDataCell>
+                  <CTableDataCell>
+                    <CIcon icon={cilCheckCircle} className="text-success" />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2">
+                      <CTooltip content="Edit" placement="left">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                      </CTooltip>
+                      <CTooltip content="Delete" placement="right">
+                        <CButton color="danger" size="sm" variant="ghost">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTooltip>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+
+                <CTableRow>
+                  <CTableDataCell scope="row">3</CTableDataCell>
+                  <CTableDataCell>Technical</CTableDataCell>
+                  <CTableDataCell>Consultant</CTableDataCell>
+                  <CTableDataCell>MCA</CTableDataCell>
+                  <CTableDataCell>6 yrs</CTableDataCell>
+                  <CTableDataCell>
+                    <CIcon icon={cilCheckCircle} className="text-success" />
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    <div className="d-flex gap-2">
+                      <CTooltip content="Edit" placement="left">
+                        <CButton color="primary" size="sm" variant="ghost">
+                          <CIcon icon={cilPencil} />
+                        </CButton>
+                      </CTooltip>
+                      <CTooltip content="Delete" placement="right">
+                        <CButton color="danger" size="sm" variant="ghost">
+                          <CIcon icon={cilTrash} />
+                        </CButton>
+                      </CTooltip>
+                    </div>
+                  </CTableDataCell>
+                </CTableRow>
+
+
+              </CTableBody>
+            </CTable>
+            <CPagination className="justify-content-end" aria-label="Page navigation example">
+              <CPaginationItem aria-label="Previous" disabled>
+                <span aria-hidden="true">&laquo;</span>
+              </CPaginationItem>
+              <CPaginationItem active>1</CPaginationItem>
+              <CPaginationItem aria-label="Next" disabled>
+                <span aria-hidden="true">&raquo;</span>
+              </CPaginationItem>
+            </CPagination>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default index

@@ -1,0 +1,473 @@
+// import {
+//   CButton,
+//   CCard,
+//   CCardBody,
+//   CCol,
+//   CFormLabel,
+//   CFormSelect,
+//   CRow,
+//   CTable,
+//   CTableHead,
+//   CTableRow,
+//   CTableHeaderCell,
+//   CTableBody,
+//   CTableDataCell,
+// } from '@coreui/react'
+// import { useState, useEffect } from 'react'
+// import { toast } from 'react-toastify'
+
+// const SalaryRegister = () => {
+//   /* ================= STATE ================= */
+
+//   const [type, setType] = useState('')
+//   const [filters, setFilters] = useState({
+//     month: '',
+//     year: '',
+//     structure: '',
+//   })
+
+//   const [salaryData, setSalaryData] = useState([])
+//   const [filteredData, setFilteredData] = useState([])
+//   const [searched, setSearched] = useState(false)
+
+//   /* ================= LOAD DATA ================= */
+
+//   useEffect(() => {
+//     const data =
+//       JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+//     setSalaryData(data)
+//   }, [])
+
+//   /* ================= HANDLERS ================= */
+
+//   const handleTypeChange = (e) => {
+//     setType(e.target.value)
+//     setFilters({ month: '', year: '', structure: '' })
+//     setFilteredData([])
+//     setSearched(false)
+//   }
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target
+
+//     setFilters((prev) => ({
+//       ...prev,
+//       [name]: value,
+//     }))
+//   }
+
+//   /* ================= CORRECT FILTER LOGIC ================= */
+
+//   const handleSearch = () => {
+//     let data = [...salaryData]
+
+//     data = data.filter((item) => {
+//       return (
+//         (!filters.month || Number(item.month) === Number(filters.month)) &&
+//         (!filters.year || Number(item.year) === Number(filters.year)) &&
+//         (!filters.structure ||
+//           Number(item.salary_structure_id) === Number(filters.structure))
+//       )
+//     })
+
+//     setFilteredData(data)
+//     setSearched(true)
+//   }
+
+//   /* ================= ACTIONS ================= */
+
+//   const handleDispatch = (row) => {
+//     toast.success(`Dispatched: ${row.employee_name}`)
+//   }
+
+//   const handlePayslip = (row) => {
+//     toast.info(`Payslip generated for ${row.employee_name}`)
+//   }
+
+//   const handleDownload = (row) => {
+//     toast.info(`Downloading payslip for ${row.employee_name}`)
+//   }
+
+//   /* ================= UI ================= */
+
+//   return (
+//     <CCard>
+//       <CCardBody>
+
+//         <h5 className="mb-3">Salary Register</h5>
+
+//         {/* TYPE */}
+//         <CRow className="mb-3">
+//           <CCol md={4}>
+//             <CFormLabel>Type</CFormLabel>
+//             <CFormSelect onChange={handleTypeChange}>
+//               <option value="">Select</option>
+//               <option value="monthly">Monthly</option>
+//             </CFormSelect>
+//           </CCol>
+//         </CRow>
+
+//         {/* FILTERS */}
+//         {type === 'monthly' && (
+//           <CRow className="mb-4">
+
+//             <CCol md={3}>
+//               <CFormLabel>Month</CFormLabel>
+//               <CFormSelect name="month" onChange={handleChange}>
+//                 <option value="">All</option>
+//                 <option value="1">Jan</option>
+//                 <option value="2">Feb</option>
+//                 <option value="3">Mar</option>
+//                 <option value="4">Apr</option>
+//                 <option value="5">May</option>
+//               </CFormSelect>
+//             </CCol>
+
+//             <CCol md={3}>
+//               <CFormLabel>Year</CFormLabel>
+//               <CFormSelect name="year" onChange={handleChange}>
+//                 <option value="">All</option>
+//                 <option value="2026">2026</option>
+//                 <option value="2025">2025</option>
+//               </CFormSelect>
+//             </CCol>
+
+//             <CCol md={3}>
+//               <CFormLabel>Salary Structure</CFormLabel>
+//               <CFormSelect name="structure" onChange={handleChange}>
+//                 <option value="">All</option>
+//                 <option value="1">Structure A</option>
+//                 <option value="2">Structure B</option>
+//               </CFormSelect>
+//             </CCol>
+
+//             <CCol md={3} className="d-flex align-items-end">
+//               <CButton color="primary" onClick={handleSearch}>
+//                 Search
+//               </CButton>
+//             </CCol>
+
+//           </CRow>
+//         )}
+
+//         {/* TABLE */}
+//         {type === 'monthly' && searched && (
+//           filteredData.length === 0 ? (
+//             <div className="text-center text-danger">
+//               No data found
+//             </div>
+//           ) : (
+//             <CTable bordered hover>
+//               <CTableHead>
+//                 <CTableRow>
+//                   <CTableHeaderCell>Employee</CTableHeaderCell>
+//                   <CTableHeaderCell>CTC</CTableHeaderCell>
+//                   <CTableHeaderCell>Gross</CTableHeaderCell>
+//                   <CTableHeaderCell>Deduction</CTableHeaderCell>
+//                   <CTableHeaderCell>Net Pay</CTableHeaderCell>
+//                   <CTableHeaderCell>Status</CTableHeaderCell>
+//                   <CTableHeaderCell>Action</CTableHeaderCell>
+//                 </CTableRow>
+//               </CTableHead>
+
+//               <CTableBody>
+//                 {filteredData.map((item) => (
+//                   <CTableRow key={item.id}>
+//                     <CTableDataCell>{item.employee_name}</CTableDataCell>
+
+//                     <CTableDataCell>
+//                       ₹ {Number(item.ctc).toLocaleString()}
+//                     </CTableDataCell>
+
+//                     <CTableDataCell>
+//                       ₹ {Number(item.gross_earnings || 0).toLocaleString()}
+//                     </CTableDataCell>
+
+//                     <CTableDataCell>
+//                       ₹ {Number(item.total_deductions || 0).toLocaleString()}
+//                     </CTableDataCell>
+
+//                     <CTableDataCell>
+//                       ₹ {Number(item.net_salary || 0).toLocaleString()}
+//                     </CTableDataCell>
+
+//                     <CTableDataCell>{item.status || '-'}</CTableDataCell>
+
+//                     <CTableDataCell>
+//                       <div className="d-flex gap-2">
+
+//                         <CButton
+//                           size="sm"
+//                           color="success"
+//                           onClick={() => handleDispatch(item)}
+//                         >
+//                           Dispatch
+//                         </CButton>
+
+//                         <CButton
+//                           size="sm"
+//                           color="info"
+//                           onClick={() => handlePayslip(item)}
+//                         >
+//                           Payslip
+//                         </CButton>
+
+//                         <CButton
+//                           size="sm"
+//                           color="secondary"
+//                           onClick={() => handleDownload(item)}
+//                         >
+//                           Download
+//                         </CButton>
+
+//                       </div>
+//                     </CTableDataCell>
+
+//                   </CTableRow>
+//                 ))}
+//               </CTableBody>
+//             </CTable>
+//           )
+//         )}
+
+//       </CCardBody>
+//     </CCard>
+//   )
+// }
+
+// export default SalaryRegister
+
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+} from '@coreui/react'
+import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
+
+const SalaryRegister = () => {
+  const [type, setType] = useState('')
+  const [filters, setFilters] = useState({
+    month: '',
+    year: '',
+    structure: '',
+  })
+
+  const [salaryData, setSalaryData] = useState([])
+  const [filteredData, setFilteredData] = useState([])
+  const [searched, setSearched] = useState(false)
+
+  /* ================= LOAD DATA ================= */
+
+  useEffect(() => {
+    const data =
+      JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+    setSalaryData(data)
+  }, [])
+
+  /* ================= HANDLERS ================= */
+
+  const handleTypeChange = (e) => {
+    setType(e.target.value)
+    setFilters({ month: '', year: '', structure: '' })
+    setFilteredData([])
+    setSearched(false)
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSearch = () => {
+    let data = [...salaryData]
+
+    data = data.filter((item) => {
+      return (
+        (!filters.month || Number(item.month) === Number(filters.month)) &&
+        (!filters.year || Number(item.year) === Number(filters.year)) &&
+        (!filters.structure ||
+          Number(item.salary_structure_id) === Number(filters.structure))
+      )
+    })
+
+    setFilteredData(data)
+    setSearched(true)
+  }
+
+  /* ================= ACTIONS ================= */
+
+  const handleDispatch = (row) => {
+    toast.success(`Dispatched: ${row.employee_name}`)
+  }
+
+  const handlePayslip = (row) => {
+    toast.info(`Payslip generated for ${row.employee_name}`)
+  }
+
+  const handleDownload = (row) => {
+    toast.info(`Downloading payslip for ${row.employee_name}`)
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CCard>
+      <CCardBody>
+
+        <h5 className="mb-3">Salary Register</h5>
+
+        {/* TYPE */}
+        <CRow className="mb-3">
+          <CCol md={4}>
+            <CFormLabel>Type</CFormLabel>
+            <CFormSelect onChange={handleTypeChange}>
+              <option value="">Select</option>
+              <option value="monthly">Monthly</option>
+            </CFormSelect>
+          </CCol>
+        </CRow>
+
+        {/* FILTERS */}
+        {type === 'monthly' && (
+          <CRow className="mb-4">
+
+            <CCol md={3}>
+              <CFormLabel>Month</CFormLabel>
+              <CFormSelect name="month" onChange={handleChange}>
+                <option value="">All</option>
+                <option value="1">Jan</option>
+                <option value="2">Feb</option>
+                <option value="3">Mar</option>
+                <option value="4">Apr</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3}>
+              <CFormLabel>Year</CFormLabel>
+              <CFormSelect name="year" onChange={handleChange}>
+                <option value="">All</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3}>
+              <CFormLabel>Salary Structure</CFormLabel>
+              <CFormSelect name="structure" onChange={handleChange}>
+                <option value="">All</option>
+                <option value="1">Structure A</option>
+                <option value="2">Structure B</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={3} className="d-flex align-items-end">
+              <CButton color="primary" onClick={handleSearch}>
+                Search
+              </CButton>
+            </CCol>
+
+          </CRow>
+        )}
+
+        {/* TABLE */}
+        {type === 'monthly' && searched && (
+          filteredData.length === 0 ? (
+            <div className="text-center text-danger">
+              No data found
+            </div>
+          ) : (
+            <CTable bordered hover>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell>Employee</CTableHeaderCell>
+                  <CTableHeaderCell>CTC</CTableHeaderCell>
+                  <CTableHeaderCell>Gross</CTableHeaderCell>
+                  <CTableHeaderCell>Deduction</CTableHeaderCell>
+                  <CTableHeaderCell>Net Pay</CTableHeaderCell>
+
+                  {/* 🔥 NEW */}
+                  <CTableHeaderCell>Working Days</CTableHeaderCell>
+                  <CTableHeaderCell>Paid Days</CTableHeaderCell>
+                  <CTableHeaderCell>LOP</CTableHeaderCell>
+
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+                  <CTableHeaderCell>Action</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+                {filteredData.map((item) => (
+                  <CTableRow key={item.id}>
+                    <CTableDataCell>{item.employee_name}</CTableDataCell>
+
+                    <CTableDataCell>
+                      ₹ {Number(item.ctc).toLocaleString()}
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      ₹ {Number(item.gross_earnings || 0).toLocaleString()}
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      ₹ {Number(item.total_deductions || 0).toLocaleString()}
+                    </CTableDataCell>
+
+                    <CTableDataCell>
+                      ₹ {Number(item.net_salary || 0).toLocaleString()}
+                    </CTableDataCell>
+
+                    {/* 🔥 DAYS */}
+                    <CTableDataCell>{item.working_days || 0}</CTableDataCell>
+                    <CTableDataCell>{item.paid_days || 0}</CTableDataCell>
+                    <CTableDataCell>{item.lop_days || 0}</CTableDataCell>
+
+                    <CTableDataCell>{item.status || '-'}</CTableDataCell>
+
+                    <CTableDataCell>
+                      <div className="d-flex gap-2">
+
+                        <CButton size="sm" color="success" onClick={() => handleDispatch(item)}>
+                          Dispatch
+                        </CButton>
+
+                        <CButton size="sm" color="info" onClick={() => handlePayslip(item)}>
+                          Payslip
+                        </CButton>
+
+                        <CButton size="sm" color="secondary" onClick={() => handleDownload(item)}>
+                          Download
+                        </CButton>
+
+                      </div>
+                    </CTableDataCell>
+
+                  </CTableRow>
+                ))}
+              </CTableBody>
+            </CTable>
+          )
+        )}
+
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default SalaryRegister

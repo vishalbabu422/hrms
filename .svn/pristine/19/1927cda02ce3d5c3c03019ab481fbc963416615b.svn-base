@@ -1,0 +1,139 @@
+const sequelize = require("../../../utils/database");
+const { Employee, DivisionMaster, EmployeeDivision } = require("../../../models");
+const catchAsync = require("../../../utils/catchAsync");
+const APIFeatures = require("../../../utils/apiFeature");
+const AppError = require("../../../utils/appError");
+
+exports.assignDivision = catchAsync(async (req, res, next) => {
+    const { employeeId } = req.params;
+    const { division_id, effective_from } = req.body;
+
+    if (!effective_from) {
+        throw new AppError("effective_from is required", 400);
+    }
+
+    await sequelize.transaction(async (t) => {
+
+        const employee = await Employee.findByPk(employeeId, { transaction: t });
+        if (!employee) throw new AppError("Employee not found", 404);
+
+        const division = await DivisionMaster.findByPk(division_id, { transaction: t });
+        if (!division) throw new AppError("Division not found", 404);
+
+        // Org validation (VERY IMPORTANT)
+        if (employee.organization_id !== division.organization_id) {
+            throw new AppError("Cross organization assignment not allowed", 400);
+        }
+
+        // Close previous current division
+        await EmployeeDivision.update(
+            {
+                is_current: false,
+                effective_to: new Date()
+            },
+            {
+                where: {
+                    employee_id: employeeId,
+                    is_current: true
+                },
+                transaction: t
+            }
+        );
+
+        // Create new record
+        await EmployeeDivision.create(
+            {
+                employee_id: employeeId,
+                division_id,
+                effective_from,
+                is_current: true
+            },
+            { transaction: t }
+        );
+    });
+
+    res.status(201).json({
+        status: "success",
+        message: "Division assigned successfully"
+    });
+});
+
+exports.getEmployeeDivisions = catchAsync(async (req, res) => {
+    const { employeeId } = req.params;
+
+    const employee = await Employee.findByPk(employeeId);
+
+    if (!employee) {
+        throw new AppError("Employee not found", 404);
+    }
+
+    const records = await EmployeeDivision.findAll({
+        where: { employee_id: employeeId },
+        include: [
+            {
+                model: DivisionMaster,
+                as: "division"
+            }
+        ],
+        order: [["effective_from", "DESC"]]
+    });
+
+    res.status(200).json({
+        status: "success",
+        message: "Get Employee Division",
+        data: records
+    });
+});
+
+exports.updateEmployeeDivision = catchAsync(async (req, res, next) => {
+
+    const { employeeId, id } = req.params;
+    const { effective_from, effective_to, is_current } = req.body;
+
+    await sequelize.transaction(async (t) => {
+
+        const record = await EmployeeDivision.findOne({
+            where: { id, employee_id: employeeId },
+            transaction: t
+        });
+
+        if (!record) {
+            throw new AppError("Division record not found", 404);
+        }
+
+        if (is_current === true) {
+
+            await EmployeeDivision.update(
+                {
+                    is_current: false,
+                    effective_to: new Date()
+                },
+                {
+                    where: {
+                        employee_id: employeeId,
+                        is_current: true
+                    },
+                    transaction: t
+                }
+            );
+
+        }
+
+        await record.update(
+            {
+                effective_from: effective_from ?? record.effective_from,
+                effective_to: effective_to ?? record.effective_to,
+                is_current: is_current ?? record.is_current
+            },
+            { transaction: t }
+        );
+
+    });
+
+    res.status(200).json({
+        status: "success",
+        message: "Employee Division updated successfully"
+    });
+
+});
+

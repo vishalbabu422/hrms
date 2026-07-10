@@ -1,0 +1,92 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormTextarea,
+  CRow,
+} from '@coreui/react'
+import InFormLabel from 'src/components/InFormLabel'
+
+const add = () => {
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardBody>
+            <CForm className="row g-3">
+              <CCol md={6}>
+                <CFormLabel htmlFor="inputWorkOrderNo">Work Order No</CFormLabel>
+                <CFormInput type="text" id="inputWorkOrderNo" />
+              </CCol>
+              <CCol md={6}>
+                <CFormLabel htmlFor="inputWorkOrderDate">Date</CFormLabel>
+                <CFormInput type="date" id="inputWorkOrderDate" />
+              </CCol>
+              <CCol xs={6}>
+                <CFormLabel htmlFor="inputProjectNo">Project No</CFormLabel>
+                <CFormInput id="inputProjectNo" type="text" />
+              </CCol>
+              <CCol xs={6}>
+                <CFormLabel htmlFor="inputPiNo">PI No</CFormLabel>
+                <CFormInput id="inputPiNo" type="text" />
+              </CCol>
+              <CCol xs={12} className="mb-3">
+                <CFormLabel htmlFor="inputProjectName">Project Name</CFormLabel>
+                <CFormInput id="inputProjectName" type="text" />
+              </CCol>
+              <InFormLabel labelName="Issued To" icon="cilBuilding">
+                <CCol xs={12} className="mb-3">
+                  <CFormLabel htmlFor="inputIssuedToName">Name</CFormLabel>
+                  <CFormInput id="inputIssuedToName" />
+                </CCol>
+                <CCol xs={12} className="mb-3">
+                  <CFormLabel htmlFor="inputIssuedToAddress">Address</CFormLabel>
+                  <CFormTextarea id="inputIssuedToAddress" rows={3} placeholder="Enter address" />
+                </CCol>
+
+                <div className="d-flex gap-3">
+                  <CCol xs={6} className="mb-3">
+                    <CFormLabel htmlFor="inputIssuedToEmail">Email</CFormLabel>
+                    <CFormInput id="inputIssuedToEmail" />
+                  </CCol>
+                  <CCol xs={6} className="mb-3">
+                    <CFormLabel htmlFor="inputIssuedToPhone">Phone</CFormLabel>
+                    <CFormInput id="inputIssuedToPhone" />
+                  </CCol>
+                </div>
+              </InFormLabel>
+              <InFormLabel labelName="Contact Person" icon="cilUser">
+                <CCol xs={12} className="mb-3">
+                  <CFormLabel htmlFor="inputContactName">Name</CFormLabel>
+                  <CFormInput id="inputContactName" />
+                </CCol>
+                <div className="d-flex gap-3">
+                  <CCol xs={6} className="mb-3">
+                    <CFormLabel htmlFor="inputContactEmail">Email</CFormLabel>
+                    <CFormInput id="inputContactEmail" />
+                  </CCol>
+                  <CCol xs={6} className="mb-3">
+                    <CFormLabel htmlFor="inputContactPhone">Phone</CFormLabel>
+                    <CFormInput id="inputContactPhone" />
+                  </CCol>
+                </div>
+              </InFormLabel>
+
+              <CCol xs={12}>
+                <CButton color="primary" type="submit">
+                  Submit
+                </CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default add

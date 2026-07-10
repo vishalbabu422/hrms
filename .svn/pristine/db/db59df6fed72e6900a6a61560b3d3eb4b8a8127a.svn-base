@@ -1,0 +1,97 @@
+import React from "react";
+
+const Ltc = ({ step, ltcData, setLtcData, ltcLocked }) => {
+
+  const handleLtcChange = (e) => {
+    const { name, value } = e.target;
+
+    setLtcData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <>
+      {step === 8 && (
+        <div className="step-content">
+          <div className="row border rounded g-3 mt-2 p-3">
+
+            {/* Hometown */}
+            <div className="col-md-6">
+              <label className="form-label">Hometown</label>
+              <input
+                type="text"
+                className="form-control"
+                name="hometown"
+                maxLength={100}
+                value={ltcData.hometown || ""}
+                onChange={handleLtcChange}
+                disabled={ltcLocked}
+              />
+            </div>
+
+            {/* District */}
+            <div className="col-md-6">
+              <label className="form-label">District</label>
+              <input
+                type="text"
+                className="form-control"
+                name="district"
+                maxLength={100}
+                value={ltcData.district || ""}
+                onChange={handleLtcChange}
+                disabled={ltcLocked}
+              />
+            </div>
+
+            {/* State */}
+            <div className="col-md-6">
+              <label className="form-label">State</label>
+              <input
+                type="text"
+                className="form-control"
+                name="state"
+                maxLength={100}
+                value={ltcData.state || ""}
+                onChange={handleLtcChange}
+                disabled={ltcLocked}
+              />
+            </div>
+
+            {/* Nearest Railway */}
+            <div className="col-md-6">
+              <label className="form-label">Nearest Railway</label>
+              <input
+                type="text"
+                className="form-control"
+                name="nearest_railway"
+                maxLength={150}
+                value={ltcData.nearest_railway || ""}
+                onChange={handleLtcChange}
+                disabled={ltcLocked}
+              />
+            </div>
+
+            {/* Nearest Airport */}
+            <div className="col-md-12">
+              <label className="form-label">Nearest Airport</label>
+              <input
+                type="text"
+                className="form-control"
+                name="nearest_airport"
+                maxLength={150}
+                value={ltcData.nearest_airport || ""}
+                onChange={handleLtcChange}
+                disabled={ltcLocked}
+              />
+            </div>
+
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Ltc;

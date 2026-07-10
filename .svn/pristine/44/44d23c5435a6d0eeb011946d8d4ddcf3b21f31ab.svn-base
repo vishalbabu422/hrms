@@ -1,0 +1,170 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import EmpanelmentSelect from '../components/empanelment-select'
+import { validateDesignation } from '../../validations/empDesignationValidation'
+
+
+const DesignationFormComponent = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData)
+  const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
+    }
+  }, [initialData])
+
+  if (!formData) return null
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value === '' ? null : name === 'is_active' ? value === 'true' : value,
+    }))
+  }
+
+  // const handleSubmit = (e) => {
+  //   e.preventDefault()
+  //   onSubmit(formData)
+  // }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    const validationErrors = validateDesignation(formData)
+    setErrors(validationErrors)
+
+    if (Object.keys(validationErrors).length) return
+
+    onSubmit(formData)
+  }
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard className="mb-4">
+          <CCardBody>
+            <CForm className="row g-3" onSubmit={handleSubmit}>
+             
+              <CCol md={6}>
+                <CFormLabel>
+                  Type <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="type"
+                  value={formData.type || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.type}
+                  feedback={errors.type}
+                  placeholder="Enter type"
+                  maxLength={100}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <EmpanelmentSelect
+                  name="empanelment_id_fk"
+                  value={formData.empanelment_id_fk}
+                  onChange={handleChange}
+                  label="Empanelment"
+                  placeholder="Select Empanelment"
+                  required
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Designation <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="designation"
+                  value={formData.designation || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.designation}
+                  feedback={errors.designation}
+                  placeholder="Enter designation"
+                  maxLength={150}
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Qualification <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  name="qualification"
+                  value={formData.qualification || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.qualification}
+                  feedback={errors.qualification}
+                  placeholder="Enter qualification"
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Experience (in years) <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  type="number"
+                  name="exp_in_years"
+                  value={formData.exp_in_years || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.exp_in_years}
+                  feedback={errors.exp_in_years}
+                  placeholder="Enter experience"
+                  min="0"
+                  max="999.9"
+                  step="0.1"
+                />
+              </CCol>
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Status <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active ?? '')}
+                  onChange={handleChange}
+                  invalid={!!errors.is_active}
+                  feedback={errors.is_active}
+                >
+                  <option value="">Select Status</option>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </CFormSelect>
+              </CCol>
+
+              <CCol xs={12}>
+                <CButton type="submit" className="btn btn-primary">
+                  {mode === 'edit' ? 'Update' : 'Create'}
+                </CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default DesignationFormComponent

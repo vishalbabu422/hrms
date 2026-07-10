@@ -1,0 +1,276 @@
+import React, { useState, useEffect, useRef } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CRow,
+  CCol,
+  CFormSelect,
+  CButton,
+} from '@coreui/react'
+
+import './mpr.css'
+import CIcon from '@coreui/icons-react'
+import { cilCloudDownload } from '@coreui/icons'
+
+const MPR = () => {
+  const [workOrder, setWorkOrder] = useState('')
+  const [month, setMonth] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+  const [checkedEmployees, setCheckedEmployees] = useState([])
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [isGenerated, setIsGenerated] = useState(false)
+  const [generatedFile, setGeneratedFile] = useState(null)
+
+  const dropdownRef = useRef(null)
+
+  const workOrderEmployees = {
+    'WO-001': ['Shrikant', 'Vishal', 'Akansha'],
+    'WO-002': ['Paras', 'Sarita'],
+  }
+
+  const employeesList = workOrder ? workOrderEmployees[workOrder] || [] : []
+
+  // ✅ FILTERED LIST
+  const displayEmployees =
+    selectedEmployees.length > 0 ? selectedEmployees : employeesList
+
+  // ✅ HEADER CHECK
+  const isAllChecked =
+    displayEmployees.length > 0 &&
+    displayEmployees.every((emp) => checkedEmployees.includes(emp))
+
+  const handleHeaderCheck = () => {
+    if (isAllChecked) {
+      setCheckedEmployees([])
+    } else {
+      setCheckedEmployees(displayEmployees)
+    }
+  }
+
+  // 🔹 Close dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 🔹 Reset only on WO change
+  useEffect(() => {
+    setSelectedEmployees([])
+    setCheckedEmployees([])
+    setIsGenerated(false)
+    setGeneratedFile(null)
+  }, [workOrder])
+
+  // 🔹 Dropdown select
+  const handleEmployeeToggle = (emp) => {
+    if (selectedEmployees.includes(emp)) {
+      setSelectedEmployees(selectedEmployees.filter((e) => e !== emp))
+    } else {
+      setSelectedEmployees([...selectedEmployees, emp])
+    }
+  }
+
+  const handleSelectAllDropdown = () => {
+    if (selectedEmployees.length === employeesList.length) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(employeesList)
+    }
+  }
+
+  // 🔹 Row checkbox
+  const handleRowCheck = (emp) => {
+    if (checkedEmployees.includes(emp)) {
+      setCheckedEmployees(checkedEmployees.filter((e) => e !== emp))
+    } else {
+      setCheckedEmployees([...checkedEmployees, emp])
+    }
+  }
+
+  // 🔹 Generate
+  const handleGenerate = () => {
+    if (checkedEmployees.length === 0) {
+      alert('Select employees from table')
+      return
+    }
+
+    setIsGenerated(true)
+
+    const blob = new Blob(
+      [`Generated for: ${checkedEmployees.join(', ')}`],
+      { type: 'application/pdf' }
+    )
+
+    setGeneratedFile(URL.createObjectURL(blob))
+  }
+
+  const showTable = workOrder && month
+
+  return (
+    <CCard className="mpr-card">
+      <CCardBody>
+
+        <h4 className="mb-3">MPR</h4>
+
+        {/* 🔹 Filters */}
+        <CRow className="mb-3">
+
+          {/* Work Order */}
+          <CCol md={4}>
+            <CFormSelect
+              value={workOrder}
+              onChange={(e) => setWorkOrder(e.target.value)}
+            >
+              <option value="">Select Work Order</option>
+              <option value="WO-001">WO-001</option>
+              <option value="WO-002">WO-002</option>
+            </CFormSelect>
+          </CCol>
+
+          {/* Employee Dropdown */}
+          <CCol md={4}>
+            <div ref={dropdownRef} className="dropdown-wrapper">
+
+              <div
+                className="form-select custom-multiselect"
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                {selectedEmployees.length === 0
+                  ? 'Select Employee'
+                  : selectedEmployees.slice(0, 2).join(', ') +
+                    (selectedEmployees.length > 2
+                      ? ` +${selectedEmployees.length - 2} more`
+                      : '')}
+              </div>
+
+              {showDropdown && (
+                <div className="multi-select-dropdown">
+
+                  <div className="dropdown-item">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedEmployees.length === employeesList.length
+                      }
+                      onChange={handleSelectAllDropdown}
+                    /> Select All
+                  </div>
+
+                  <hr />
+
+                  {employeesList.map((emp, index) => (
+                    <div key={index} className="dropdown-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployees.includes(emp)}
+                        onChange={() => handleEmployeeToggle(emp)}
+                      /> {emp}
+                    </div>
+                  ))}
+
+                </div>
+              )}
+
+            </div>
+          </CCol>
+
+          {/* Month */}
+          <CCol md={4}>
+            <CFormSelect
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+            >
+              <option value="">Select Month</option>
+              <option>Jan 2026</option>
+              <option>Feb 2026</option>
+            </CFormSelect>
+          </CCol>
+
+        </CRow>
+
+        {/* 🔹 TABLE */}
+        {showTable && (
+          <div className="mpr-table">
+
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>
+                    <input
+                      type="checkbox"
+                      checked={isAllChecked}
+                      onChange={handleHeaderCheck}
+                    /> Emp Name
+                  </th>
+                  <th>Leave Granted</th>
+                  <th>Leave Taken</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {displayEmployees.map((emp, i) => (
+                  <tr key={i}>
+
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={checkedEmployees.includes(emp)}
+                        onChange={() => handleRowCheck(emp)}
+                      /> {emp}
+                    </td>
+
+                    <td>5</td>
+                    <td>{i + 1}</td>
+
+                    <td>
+                      {isGenerated &&
+                        checkedEmployees.includes(emp) &&
+                        generatedFile && (
+                          <a href={generatedFile} download="mpr.pdf">
+                            <CIcon icon={cilCloudDownload} size="lg" />
+                          </a>
+                        )}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+
+            </table>
+
+            {/* Generate button BELOW */}
+           <div className="mt-3 d-flex gap-2">
+
+  {/* Generate */}
+  <CButton color="primary" onClick={handleGenerate}>
+    Generate
+  </CButton>
+
+  {/* Upload */}
+  <label className="btn btn-light mb-0">
+    Upload
+    <input
+      type="file"
+      hidden
+      accept=".pdf"
+      onChange={handleFileUpload}
+    />
+  </label>
+
+</div>
+
+          </div>
+        )}
+
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default MPR

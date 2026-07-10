@@ -1,0 +1,11 @@
+export const validateSalaryStructure = (data, type = 'Salary Structure') => {
+  const errors = {}
+
+  const name = data.name?.trim()
+
+  if (!name) {
+    errors.name = `${type}: Name is required`
+  }
+
+  return errors
+}

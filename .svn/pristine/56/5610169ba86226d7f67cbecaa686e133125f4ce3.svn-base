@@ -1,0 +1,139 @@
+import React, { forwardRef, useImperativeHandle, useState, useEffect } from 'react'
+import api from '../../../api/axios'
+import { toast } from 'react-toastify'
+
+const Ltc = forwardRef(({ employeeId, isEdit }, ref) => {
+  const [loading, setLoading] = useState(false)
+  const [isExisting, setIsExisting] = useState(false)
+  const [ltcLocked, setLtcLocked] = useState(false)
+
+  const [ltcData, setLtcData] = useState({
+    hometown: '',
+    district: '',
+    state: '',
+    nearest_railway: '',
+    nearest_airport: '',
+  })
+
+  // ================= FETCH =================
+  useEffect(() => {
+    if (!employeeId) return
+
+    const fetchLtc = async () => {
+      try {
+        const res = await api.get(`/employee/${employeeId}/ltc`)
+        const data = res.data?.data
+
+        if (data) {
+          setLtcData(data)
+          setIsExisting(true)
+        }
+
+        if (!data?.can_update) setLtcLocked(true)
+      } catch (err) {
+        console.error('Fetch LTC error', err)
+      }
+    }
+
+    fetchLtc()
+  }, [employeeId])
+
+  // ================= HANDLE =================
+  const handleLtcChange = (e) => {
+    const { name, value } = e.target
+
+    setLtcData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  // ================= SUBMIT =================
+  useImperativeHandle(ref, () => ({
+    submit: async () => {
+      try {
+        setLoading(true)
+
+        const url = `/employee/${employeeId}/ltc`
+
+        if (isExisting) {
+          await api.patch(url, ltcData)
+        } else {
+          await api.post(url, ltcData)
+        }
+
+        toast.success('LTC saved')
+        return true
+      } catch (error) {
+        console.error(error)
+        toast.error(error.response?.data?.message || 'Failed to save LTC')
+        return false
+      } finally {
+        setLoading(false)
+      }
+    },
+  }))
+
+  return (
+    <div className="step-content">
+      <div className="row border rounded g-3 mt-2 p-3">
+        <div className="col-md-6">
+          <label className="form-label">Hometown</label>
+          <input
+            className="form-control"
+            name="hometown"
+            value={ltcData.hometown || ''}
+            onChange={handleLtcChange}
+            disabled={ltcLocked}
+          />
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">District</label>
+          <input
+            className="form-control"
+            name="district"
+            value={ltcData.district || ''}
+            onChange={handleLtcChange}
+            disabled={ltcLocked}
+          />
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">State</label>
+          <input
+            className="form-control"
+            name="state"
+            value={ltcData.state || ''}
+            onChange={handleLtcChange}
+            disabled={ltcLocked}
+          />
+        </div>
+
+        <div className="col-md-6">
+          <label className="form-label">Nearest Railway</label>
+          <input
+            className="form-control"
+            name="nearest_railway"
+            value={ltcData.nearest_railway || ''}
+            onChange={handleLtcChange}
+            disabled={ltcLocked}
+          />
+        </div>
+
+        <div className="col-md-12">
+          <label className="form-label">Nearest Airport</label>
+          <input
+            className="form-control"
+            name="nearest_airport"
+            value={ltcData.nearest_airport || ''}
+            onChange={handleLtcChange}
+            disabled={ltcLocked}
+          />
+        </div>
+      </div>
+    </div>
+  )
+})
+
+export default Ltc

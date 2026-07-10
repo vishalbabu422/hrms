@@ -35,7 +35,7 @@ const Add = () => {
     issued_to_contact: '',
     issued_to_phone: '',
     issued_to_email: '',
-
+    type: '',
     contact_name: '',
     contact_number: '',
     contact_email: '',

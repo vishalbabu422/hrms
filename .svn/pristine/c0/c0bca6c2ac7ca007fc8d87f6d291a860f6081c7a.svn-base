@@ -1,0 +1,264 @@
+import {
+  CRow,
+  CCol,
+  CFormLabel,
+  CFormSelect,
+  CButton,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+} from '@coreui/react'
+import { useState } from 'react'
+
+const months = [
+  'Apr','May','Jun','Jul','Aug','Sep',
+  'Oct','Nov','Dec','Jan','Feb','Mar'
+]
+
+const monthMap = [
+  'Jan','Feb','Mar','Apr','May','Jun',
+  'Jul','Aug','Sep','Oct','Nov','Dec'
+]
+
+const FinancialRegister = ({ data = [] }) => {
+  const [filters, setFilters] = useState({
+    year: '',
+    structure: '',
+    employee: '',
+  })
+
+  const [selectedEmployeeData, setSelectedEmployeeData] = useState(null)
+
+  // 🔁 handle change
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFilters((prev) => ({ ...prev, [name]: value }))
+  }
+
+  // 🔍 search
+  const handleSearch = () => {
+    if (!filters.employee) {
+      alert('Please select employee')
+      return
+    }
+
+    let result = data.filter((item) => {
+      return (
+        (!filters.year || item.year === Number(filters.year)) &&
+        (!filters.structure ||
+          item.salary_structure_id === Number(filters.structure)) &&
+        item.employee_name === filters.employee
+      )
+    })
+
+    const monthlyData = {}
+
+    result.forEach((item) => {
+      const m = monthMap[item.month - 1]
+      monthlyData[m] = item
+    })
+
+    setSelectedEmployeeData({
+      name: filters.employee,
+      data: monthlyData,
+    })
+  }
+
+  // 🔥 default values
+  const getDefault = (field) => {
+    switch (field) {
+      case 'ctc': return 50000
+      case 'gross_earnings': return 45000
+      case 'total_deductions': return 5000
+      case 'net_salary': return 40000
+      default: return 0
+    }
+  }
+
+  // 🔥 carry forward
+  const getCarryForward = (dataMap, field) => {
+    let last = null
+    const out = {}
+
+    months.forEach((m) => {
+      const val = dataMap[m]?.[field]
+
+      if (val !== undefined && val !== null) {
+        last = Number(val)
+        out[m] = last
+      } else {
+        out[m] = last !== null ? last : getDefault(field)
+      }
+    })
+
+    return out
+  }
+
+  // 🎨 styling
+  const cell = {
+    border: '1px solid #dee2e6',
+    padding: '12px 10px',
+    fontSize: '14px',
+    textAlign: 'center',
+  }
+
+  const headerCell = {
+    ...cell,
+    fontWeight: '600',
+    fontSize: '15px',
+    background: '#f4f6f9',
+  }
+
+  return (
+    <div>
+      {/* FILTERS */}
+      <CRow className="mb-4">
+        <CCol md={3}>
+          <CFormLabel>Year</CFormLabel>
+          <CFormSelect name="year" onChange={handleChange}>
+            <option value="">Select</option>
+            <option value="2026">2026</option>
+          </CFormSelect>
+        </CCol>
+
+        <CCol md={3}>
+          <CFormLabel>Salary Structure</CFormLabel>
+          <CFormSelect name="structure" onChange={handleChange}>
+            <option value="">Select</option>
+            <option value="1">Structure A</option>
+            <option value="2">Structure B</option>
+          </CFormSelect>
+        </CCol>
+
+        <CCol md={3}>
+          <CFormLabel>Employee</CFormLabel>
+          <CFormSelect name="employee" onChange={handleChange}>
+            <option value="">Select</option>
+            {[...new Set(data.map((d) => d.employee_name))].map((emp) => (
+              <option key={emp} value={emp}>{emp}</option>
+            ))}
+          </CFormSelect>
+        </CCol>
+
+        <CCol md={3} className="d-flex align-items-end">
+          <CButton color="primary" onClick={handleSearch}>
+            Search
+          </CButton>
+        </CCol>
+      </CRow>
+
+      {/* TABLE */}
+      {selectedEmployeeData && (() => {
+        const mData = selectedEmployeeData.data
+
+        const netMap = getCarryForward(mData, 'net_salary')
+        const grossMap = getCarryForward(mData, 'gross_earnings')
+        const dedMap = getCarryForward(mData, 'total_deductions')
+        const ctcMap = getCarryForward(mData, 'ctc')
+
+        return (
+          <div style={{ overflowX: 'auto' }}>
+            <CTable bordered hover>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell style={headerCell}>
+                    {selectedEmployeeData.name}
+                  </CTableHeaderCell>
+
+                  {months.map((m) => (
+                    <CTableHeaderCell key={m} style={headerCell}>
+                      {m}
+                    </CTableHeaderCell>
+                  ))}
+
+                  <CTableHeaderCell style={headerCell}>
+                    Total
+                  </CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+
+              <CTableBody>
+
+                {/* BASIC */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: '600' }}>Basic</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>
+                      ₹ {Math.round(ctcMap[m] * 0.5)}
+                    </CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>
+                    ₹ {months.reduce((s, m) => s + Math.round(ctcMap[m] * 0.5), 0)}
+                  </CTableDataCell>
+                </CTableRow>
+
+                {/* HRA */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: '600' }}>HRA</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>
+                      ₹ {Math.round(ctcMap[m] * 0.25)}
+                    </CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>
+                    ₹ {months.reduce((s, m) => s + Math.round(ctcMap[m] * 0.25), 0)}
+                  </CTableDataCell>
+                </CTableRow>
+
+                {/* TRANSPORT */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: '600' }}>Transport</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>₹ 1600</CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>
+                    ₹ {1600 * 12}
+                  </CTableDataCell>
+                </CTableRow>
+
+                {/* GROSS */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: '600' }}>Gross</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>₹ {grossMap[m]}</CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>
+                    ₹ {months.reduce((s, m) => s + grossMap[m], 0)}
+                  </CTableDataCell>
+                </CTableRow>
+
+                {/* DEDUCTION */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: '600' }}>Total Deduction</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>₹ {dedMap[m]}</CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>
+                    ₹ {months.reduce((s, m) => s + dedMap[m], 0)}
+                  </CTableDataCell>
+                </CTableRow>
+
+                {/* NET */}
+                <CTableRow>
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold' }}>Net Pay</CTableDataCell>
+                  {months.map((m) => (
+                    <CTableDataCell key={m} style={cell}>₹ {netMap[m]}</CTableDataCell>
+                  ))}
+                  <CTableDataCell style={{ ...cell, fontWeight: 'bold', background: '#eef2f7' }}>
+                    ₹ {months.reduce((s, m) => s + netMap[m], 0)}
+                  </CTableDataCell>
+                </CTableRow>
+
+              </CTableBody>
+            </CTable>
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
+export default FinancialRegister

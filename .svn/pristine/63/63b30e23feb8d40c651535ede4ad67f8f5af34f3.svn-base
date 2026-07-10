@@ -1,0 +1,195 @@
+const catchAsync = require("../utils/catchAsync");
+const APIFeatures = require("../utils/apiFeature");
+
+// Model
+const Organizations = require("../models/organization");
+const { Op } = require("sequelize");
+
+
+// Get Organization List (Index)
+const index = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .join()
+    .paginate();
+
+  const page = req.query.page * 1 || 1;
+  const limit = req.query.limit * 1 || 10;
+
+  if (!features.query.where) features.query.where = {};
+
+  features.query.where.is_active = true;
+  
+  if (req.query.search && req.query.search.trim().length >= 3) {
+    const search = req.query.search.trim();
+
+    features.query.where[Op.or] = [
+      { org_name: { [Op.iLike]: `%${search}%` } },
+      { org_code: { [Op.iLike]: `%${search}%` } },
+      { contact_email: { [Op.iLike]: `%${search}%` } },
+      { contact_phone: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  const { rows: organizationList, count } =
+    await Organizations.findAndCountAll(features.query);
+
+  res.status(200).json({
+    status: "success",
+    message: "Get Organization List!",
+    total: count,
+    page,
+    limit,
+    totalPages: Math.ceil(count / limit),
+    results: organizationList.length,
+    data: { organizationList },
+  });
+});
+
+
+// Get Organization By ID
+const dataById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const { is_active } = req.query;
+
+  const where = { id };
+
+  if (is_active !== undefined) {
+    where.is_active = is_active === "true";
+  }
+
+  const organization = await Organizations.findOne({ where });
+
+  if (!organization) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Organization not found",
+    });
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: organization,
+  });
+});
+
+
+// Create Organization
+const create = catchAsync(async (req, res, next) => {
+  const payload = req.body;
+
+  // Duplicate check (org_code unique)
+  if (payload.org_code) {
+    const existing = await Organizations.findOne({
+      where: {
+        org_code: payload.org_code,
+        is_active: true,
+      },
+    });
+
+    if (existing) {
+      return res.status(409).json({
+        status: "fail",
+        message: "Organization code already exists",
+      });
+    }
+  }
+
+  const organization = await Organizations.create({
+    ...payload,
+    is_active: true,
+    created_at: new Date(),
+  });
+
+  res.status(201).json({
+    status: "success",
+    data: organization,
+  });
+});
+
+
+// Edit Organization
+const edit = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  const updates = req.body;
+
+  const organization = await Organizations.findByPk(id);
+
+  if (!organization) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Organization not found",
+    });
+  }
+
+  // Duplicate check only if org_code changing
+  if (
+    updates.org_code &&
+    updates.org_code !== organization.org_code
+  ) {
+    const duplicate = await Organizations.findOne({
+      where: {
+        org_code: updates.org_code,
+        is_active: true,
+      },
+    });
+
+    if (duplicate && duplicate.id !== organization.id) {
+      return res.status(409).json({
+        status: "fail",
+        message: "Organization code already exists",
+      });
+    }
+  }
+
+  await organization.update({
+    ...updates,
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: organization,
+  });
+});
+
+
+// Soft Delete Organization
+const deleteById = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const organization = await Organizations.findByPk(id);
+
+  if (!organization) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Organization not found",
+    });
+  }
+
+  if (organization.is_active === false) {
+    return res.status(409).json({
+      status: "fail",
+      message: "Organization already inactive",
+    });
+  }
+
+  await organization.update({
+    is_active: false,
+  });
+
+  return res.status(200).json({
+    status: "success",
+    message: "Organization deleted successfully",
+  });
+});
+
+
+module.exports = {
+  index,
+  dataById,
+  create,
+  edit,
+  deleteById,
+};

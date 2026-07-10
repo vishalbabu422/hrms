@@ -1,0 +1,89 @@
+const { Op } = require("sequelize");
+const { EmployeeWorkOrderMpr } = require("../../../models");
+const AppError = require("../../../utils/appError");
+
+/**
+ * 🔹 GET MPR (with filters)
+ */
+const getEmployeeWOMpr = async (options = {}) => {
+    return await EmployeeWorkOrderMpr.findAll({
+        ...options,
+        order: [["created_at", "DESC"]],
+    });
+};
+
+/**
+ * 🔹 CREATE MPR
+ */
+const createEmployeeWOMpr = async (data, transaction) => {
+    return await EmployeeWorkOrderMpr.create(data, {
+        transaction,
+    });
+};
+
+/**
+ * 🔹 BULK CREATE (optional but recommended)
+ */
+const bulkCreateEmployeeWOMpr = async (dataArray, transaction) => {
+    return await EmployeeWorkOrderMpr.bulkCreate(dataArray, {
+        transaction,
+    });
+};
+
+/**
+ * 🔹 UPDATE MPR
+ */
+const updateEmployeeWOMpr = async (mprId, data, transaction) => {
+    const [updatedRows] = await EmployeeWorkOrderMpr.update(data, {
+        where: { id: mprId },
+        transaction,
+    });
+
+    if (updatedRows === 0) {
+        throw new AppError("Update failed or record not found", 404);
+    }
+
+    return await EmployeeWorkOrderMpr.findByPk(mprId, { transaction });
+};
+
+/**
+ * 🔹 DELETE MPR (Hard Delete)
+ */
+const deleteEmployeeWOMpr = async (mprId, wo_id, transaction) => {
+    const deletedRows = await EmployeeWorkOrderMpr.destroy({
+        where: {
+            id: mprId,
+            wo_id,
+        },
+        transaction,
+    });
+
+    return deletedRows; // 0 or 1
+};
+
+/**
+ * 🔹 CHECK DUPLICATE
+ */
+const checkDuplicateMpr = async ({ employee_id, wo_id, month, year, excludeId }) => {
+    let where = {
+        employee_id,
+        wo_id,
+        month,
+        year,
+    };
+
+    if (excludeId) {
+        where.id = { [Op.ne]: excludeId };
+    }
+
+    return await EmployeeWorkOrderMpr.findOne({ where });
+};
+
+module.exports = {
+    getEmployeeWOMpr,
+    createEmployeeWOMpr,
+    bulkCreateEmployeeWOMpr,
+    updateEmployeeWOMpr,
+    deleteEmployeeWOMpr,
+    checkDuplicateMpr,
+};

@@ -1,0 +1,230 @@
+const {
+  EmployeeSalaryRegister,
+  EmpSalaryStructure,
+  SalaryStructureComponent,
+  SalaryComponent,
+  EmployeeSalaryRegisterSnapshot,
+  Employee
+} = require("../../../models");
+
+const AppError = require("../../../utils/appError");
+
+exports.generateMonthlySalary = async (data) => {
+  const { employee_id, month, year, salary_structure_id } = data;
+
+
+  // 1️⃣ Check existing
+  const existing = await EmployeeSalaryRegister.findOne({
+    where: { employee_id, month, year, is_deleted: false },
+  });
+
+  if (existing) {
+    return {
+      is_existing: true,
+      employee_id: existing.employee_id,
+      month: existing.month,
+      year: existing.year,
+      gross_earnings: Number(existing.gross_earnings || 0),
+      total_deductions: Number(existing.total_deductions || 0),
+      net_salary: Number(existing.net_salary || 0),
+      status: existing.status,
+    };
+  }
+
+  const employee = await Employee.findOne({
+  where: {
+    id: employee_id,
+    is_deleted: false,
+  },
+  attributes: ["id", "first_name", "middle_name", "last_name"],
+});
+
+if (!employee) {
+  throw new AppError("Employee not found", 404);
+}
+
+// full name bana lo
+const employee_name = [
+  employee.first_name,
+  employee.middle_name,
+  employee.last_name,
+]
+  .filter(Boolean)
+  .join(" ");
+
+  // 2️⃣ Get employee salary structure (CTC)
+  const empSalary = await EmpSalaryStructure.findOne({
+    where: {
+      employee_id,
+      is_deleted: false,
+    },
+  });
+
+  if (!empSalary) {
+    throw new AppError("Employee salary structure not found", 404);
+  }
+
+  const CTC = Number(empSalary.ctc);
+
+  // 3️⃣ Get structure components
+  const components = await SalaryStructureComponent.findAll({
+    where: {
+      salary_structure_id,
+      is_deleted: false,
+    },
+    include: [
+      {
+        model: SalaryComponent,
+        as: "salaryComponent",
+      },
+    ],
+    order: [
+      ["calculation_priority", "ASC"],
+      [
+        { model: SalaryComponent, as: "salaryComponent" },
+        "calculation_priority",
+        "ASC",
+      ],
+    ],
+  });
+
+  if (!components.length) {
+    throw new AppError("No components found for structure", 404);
+  }
+
+  let gross = 0;
+  let deduction = 0;
+
+  const componentValues = {};
+  const breakdown = [];
+
+  // 4️⃣ Calculation loop
+  for (const item of components) {
+    const comp = item.salaryComponent;
+
+    if (!comp) continue;
+
+    const value_type = item.value_type || comp.value_type;
+
+    let amount = 0;
+
+    // ✅ FIXED
+    if (value_type === "FIXED") {
+      amount = Number(item.amount ?? comp.amount ?? 0);
+    }
+
+    // ✅ PERCENTAGE
+    if (value_type === "PERCENTAGE") {
+      const percentage = Number(item.percentage ?? comp.percentage ?? 0);
+
+      if (comp.base_type === "CTC") {
+        amount = (percentage / 100) * CTC;
+      }
+
+      if (comp.base_type === "COMPONENT") {
+        const baseVal = componentValues[comp.base_component_id];
+
+        if (baseVal === undefined) {
+          throw new AppError(
+            `Base component not calculated for component ${comp.name}`,
+            400
+          );
+        }
+
+        amount = (percentage / 100) * baseVal;
+      }
+    }
+
+    // store value
+    componentValues[comp.id] = amount;
+
+    // earnings / deductions
+    if (comp.type === "EARNING") {
+      gross += amount;
+    } else {
+      deduction += amount;
+    }
+
+    // breakdown for frontend
+    breakdown.push({
+      component_id: comp.id,
+      name: comp.name,
+      code: comp.code,
+      type: comp.type,
+      amount,
+    });
+  }
+
+  const net = gross - deduction;
+
+  // 5️⃣ Final response
+  return {
+    is_existing: false,
+    employee_id,
+    employee_name,
+    month,
+    year,
+    ctc: CTC,
+    gross_earnings: gross,
+    total_deductions: deduction,
+    net_salary: net,
+    components: breakdown,
+  };
+};
+
+exports.dispatchSalary = async (data, transaction) => {
+  const {
+    transaction_number,
+    employee_id,
+    month,
+    year,
+    gross_earnings,
+    total_deductions,
+    net_salary,
+    components,
+  } = data;
+
+  // 1️⃣ Duplicate check
+  const existing = await EmployeeSalaryRegister.findOne({
+    where: { employee_id, month, year, is_deleted: false },
+    transaction,
+  });
+
+  if (existing) {
+    throw new AppError("Salary already dispatched for this month", 409);
+  }
+
+  // 2️⃣ Insert main register
+  const register = await EmployeeSalaryRegister.create(
+    {
+      employee_id,
+      year,
+      month,
+      gross_earnings,
+      total_deductions,
+      net_salary,
+      status: "DISPATCHED",
+      dispatched_at: new Date(),
+      transaction_number,
+    },
+    { transaction }
+  );
+
+  // 3️⃣ Insert snapshot
+  const snapshotData = components.map((item) => ({
+    employee_salary_register_id: register.id,
+    salary_component_id: item.component_id,
+    component_name: item.name,
+    component_type: item.type,
+    final_amount: item.amount,
+  }));
+
+  await EmployeeSalaryRegisterSnapshot.bulkCreate(snapshotData, {
+    transaction,
+  });
+
+  return {
+    message: "Salary dispatched successfully",
+    register_id: register.id,
+  };
+};

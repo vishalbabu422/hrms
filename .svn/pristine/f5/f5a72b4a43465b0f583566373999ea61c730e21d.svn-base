@@ -1,0 +1,57 @@
+import OrganisationFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+
+const edit = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [initialData, setInitialData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchOrganisationData = async () => {
+      try {
+        const res = await api.get(`/admin/organization/${id}`)
+        const mapped = mapApiToForm(res.data.data)
+        setInitialData(mapped)
+      } catch (err) {
+        toast.error('Failed to load Organisation')
+        navigate('/organisation')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrganisationData()
+  }, [id])
+
+  const mapApiToForm = (data) => ({
+    org_name: data.org_name ?? '',
+    org_code: data.org_code ?? '',
+    contact_email: data.contact_email ?? '',
+    contact_phone: data.contact_phone ?? '',
+    address: data.address ?? '',
+    is_active: data?.is_active !== undefined ? Boolean(data.is_active) : true,
+  })
+
+  const handleUpdate = async (payload) => {
+    try {
+      const normalizedPayload = {
+        ...payload,
+      }
+
+      await api.patch(`/admin/organization/edit/${id}`, normalizedPayload)
+      toast.success('Organisation updated successfully')
+      navigate('/organization')
+    } catch (error) {
+      console.error(error)
+      toast.error(error.response?.data?.message || 'Failed to update Organisation')
+    }
+  }
+
+  return <OrganisationFormComponent initialData={initialData} mode="edit" onSubmit={handleUpdate} />
+}
+
+export default edit

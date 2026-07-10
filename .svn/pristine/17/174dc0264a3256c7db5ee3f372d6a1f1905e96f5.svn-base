@@ -1,0 +1,27 @@
+import OrganisationFormComponent from './form-component'
+import api from '../../api/axios'
+import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
+
+const Add = () => {
+  const navigate = useNavigate()
+
+  const handleSubmit = async (payload) => {
+    alert('submit clicked')
+  }
+
+  const initialData = {
+    org_name: '',
+    org_code: '',
+    contact_email: '',
+    contact_phone: '',
+    address: '',
+    is_active: true,
+  }
+
+  return (
+    <OrganisationFormComponent initialData={initialData} mode="create" onSubmit={handleSubmit} />
+  )
+}
+
+export default Add

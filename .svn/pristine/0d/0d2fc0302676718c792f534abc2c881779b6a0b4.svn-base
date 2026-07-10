@@ -1,0 +1,202 @@
+import React from 'react'
+import {
+  CContainer,
+  CCard,
+  CCardBody,
+  CCol,
+  CRow,
+  CButton,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil } from '@coreui/icons'
+import { useNavigate, useParams } from 'react-router-dom'
+import jsPDF from 'jspdf'
+import * as XLSX from 'xlsx'
+import { saveAs } from 'file-saver'
+
+const Preview = () => {
+  const navigate = useNavigate()
+  const { id } = useParams()
+
+  /* ================= DUMMY DATA ================= */
+  const empanelment = {
+    id,
+    organisation: 'ABC Healthcare Pvt Ltd',
+    category: 'General Services',
+    empanelment_no: 'EMP-2026-001',
+    date: '2026-02-18',
+    short_code: 'ABC01',
+    rfe: 'RFE-9981',
+    amc: 5,
+    agm: 2,
+    leaves_per_month: 2,
+    leave_category: 'Calendar Month',
+    carry_forward: false,
+    maternity: false,
+    effective_from: '2026-04-01',
+    effective_to: '2027-03-31',
+    remarks: 'Empanelment approved for 1 year.',
+    document: 'empanelment-file.pdf',
+    is_active: true,
+  }
+
+  const formatDate = (date) =>
+    date
+      ? new Date(date).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '-'
+
+  /* ================= FIELD COMPONENT ================= */
+  const ViewField = ({ label, value }) => (
+    <CCol xs={12} md={4}>
+      <div className="mb-3">
+        <small className="text-muted">{label}</small>
+        <div className="fw-semibold mt-1">{value ?? '-'}</div>
+      </div>
+    </CCol>
+  )
+
+  /* ================= PDF EXPORT ================= */
+  const handleExportPDF = () => {
+    const doc = new jsPDF()
+    let y = 10
+
+    doc.setFontSize(14)
+    doc.text('Empanelment Details', 10, y)
+    y += 10
+
+    doc.setFontSize(10)
+    Object.entries(empanelment).forEach(([key, value]) => {
+      doc.text(`${key} : ${value}`, 10, y)
+      y += 8
+    })
+
+    doc.save('empanelment-details.pdf')
+  }
+
+  /* ================= EXCEL EXPORT ================= */
+  const handleExportExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet([empanelment])
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Empanelment')
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array',
+    })
+
+    const fileData = new Blob([excelBuffer], {
+      type:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+    })
+
+    saveAs(fileData, 'empanelment-details.xlsx')
+  }
+
+  return (
+    <CContainer fluid className="py-4">
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="shadow border-0 rounded-4">
+            <CCardBody className="p-4">
+
+              {/* ================= HEADER ================= */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                  <h3 className="fw-bold mb-1 text-primary">
+                    {empanelment.empanelment_no}
+                  </h3>
+                  <div className="text-muted">{empanelment.organisation}</div>
+                </div>
+
+                <div className="d-flex gap-3">
+                  <CButton
+                    color="primary"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/empanelment/edit/${empanelment.id}`)
+                    }
+                  >
+                    <CIcon icon={cilPencil} className="me-1" />
+                    Edit
+                  </CButton>
+
+                  <CDropdown>
+                    <CDropdownToggle color="primary" size="sm">
+                      Export
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={handleExportPDF}>
+                        Download PDF
+                      </CDropdownItem>
+                      <CDropdownItem onClick={handleExportExcel}>
+                        Download Excel
+                      </CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </div>
+              </div>
+
+              {/* ================= DETAILS ================= */}
+              <div className="p-4 rounded-3 bg-light">
+                <h5 className="fw-semibold text-dark mb-4 border-start border-4 border-primary ps-3">
+                  Empanelment Details
+                </h5>
+
+                <CRow>
+                  <ViewField label="Organisation" value={empanelment.organisation} />
+                  <ViewField label="Category" value={empanelment.category} />
+                  <ViewField label="Date" value={formatDate(empanelment.date)} />
+
+                  <ViewField label="Short Code" value={empanelment.short_code} />
+                  <ViewField label="RFE" value={empanelment.rfe} />
+                  <ViewField label="AMC (%)" value={`${empanelment.amc}%`} />
+
+                  <ViewField label="AGM (%)" value={`${empanelment.agm}%`} />
+                  <ViewField label="Leaves (Per Month)" value={empanelment.leaves_per_month} />
+                  <ViewField label="Leave Category" value={empanelment.leave_category} />
+
+                  <ViewField label="Carry Forward" value={empanelment.carry_forward ? 'True' : 'False'} />
+                  <ViewField label="Maternity" value={empanelment.maternity ? 'True' : 'False'} />
+                  <ViewField label="Effective From" value={formatDate(empanelment.effective_from)} />
+
+                  <ViewField label="Effective To" value={formatDate(empanelment.effective_to)} />
+                  <ViewField label="Status" value={empanelment.is_active ? 'Active' : 'Inactive'} />
+
+                  <CCol xs={12}>
+                    <div className="mb-3">
+                      <small className="text-muted">Remarks</small>
+                      <div className="fw-semibold mt-1">
+                        {empanelment.remarks}
+                      </div>
+                    </div>
+                  </CCol>
+
+                  <CCol xs={12}>
+                    <div className="mb-3">
+                      <small className="text-muted">Uploaded Document</small>
+                      <div className="fw-semibold mt-1">
+                        {empanelment.document}
+                      </div>
+                    </div>
+                  </CCol>
+
+                </CRow>
+              </div>
+
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+    </CContainer>
+  )
+}
+
+export default Preview

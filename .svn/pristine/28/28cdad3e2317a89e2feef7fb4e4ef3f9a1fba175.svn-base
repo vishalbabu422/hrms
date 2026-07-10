@@ -1,0 +1,304 @@
+import {
+    CButton,
+    CFormInput,
+    CFormTextarea,
+    CFormCheck
+} from "@coreui/react";
+
+import { useEffect } from "react";
+
+import {
+    getEmployeeAssets,
+    createEmployeeAsset,
+    updateEmployeeAsset
+} from "../../../../services/employeeAssets";
+
+
+const AssetsStep = ({ state, dispatch, employeeId }) => {
+
+    const { assets } = state;
+
+    useEffect(() => {
+
+        const loadAssets = async () => {
+
+            try {
+
+                const res = await getEmployeeAssets(employeeId)
+
+                dispatch({
+                    type: "SET_ASSETS",
+                    payload: res.data.data?.length
+                        ? res.data.data
+                        : [{
+                            asset_name: "",
+                            asset_code: "",
+                            asset_issue_date: "",
+                            quantity_issued: "",
+                            should_be_returned: false,
+                            remarks: ""
+                        }]
+                })
+
+            } catch (err) {
+                console.error(err)
+            }
+
+        }
+
+        loadAssets()
+
+    }, [employeeId])
+
+
+    const saveAsset = async (asset, index) => {
+
+        try {
+
+            let res;
+
+            if (asset.id) {
+
+                res = await updateEmployeeAsset(
+                    employeeId,
+                    asset.id,
+                    asset
+                )
+
+            } else {
+
+                res = await createEmployeeAsset(
+                    employeeId,
+                    asset
+                )
+
+                dispatch({
+                    type: "UPDATE_ITEM",
+                    section: "assets",
+                    index: index,
+                    field: "id",
+                    value: res.data.data.id
+                })
+
+            }
+
+        } catch (err) {
+            console.error(err)
+        }
+
+    }
+
+
+    const handleNext = async () => {
+
+        const validAssets = assets.filter(
+            a => a.asset_name || a.asset_code
+        )
+
+        for (let i = 0; i < validAssets.length; i++) {
+            await saveAsset(validAssets[i], i)
+        }
+
+        dispatch({
+            type: "SET_STEP",
+            payload: state.step + 1
+        })
+
+    }
+
+
+    return (
+
+        <div className="step-content">
+
+            <h5 className="mb-3">Employee Assets</h5>
+
+            {assets.map((asset, index) => (
+
+                <div key={index} className="border rounded p-3 mb-3">
+
+                    <div className="row g-3">
+
+                        <div className="col-md-4">
+                            <CFormInput
+                                label="Asset Name"
+                                value={asset.asset_name}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "asset_name",
+                                        value: e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <CFormInput
+                                label="Asset Code"
+                                value={asset.asset_code}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "asset_code",
+                                        value: e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <CFormInput
+                                label="Asset Issue Date"
+                                type="date"
+                                value={asset.asset_issue_date}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "asset_issue_date",
+                                        value: e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="col-md-4">
+                            <CFormInput
+                                label="Quantity Issued"
+                                type="number"
+                                value={asset.quantity_issued}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "quantity_issued",
+                                        value: e.target.value
+                                    })
+                                }
+                            />
+                        </div>
+
+                        <div className="col-md-4 d-flex align-items-end">
+
+                            <CFormCheck
+                                label="Should Be Returned"
+                                checked={asset.should_be_returned || false}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "should_be_returned",
+                                        value: e.target.checked
+                                    })
+                                }
+                            />
+
+                        </div>
+
+                        <div className="col-md-12">
+
+                            <CFormTextarea
+                                label="Remarks"
+                                rows={2}
+                                value={asset.remarks}
+                                onChange={(e) =>
+                                    dispatch({
+                                        type: "UPDATE_ITEM",
+                                        section: "assets",
+                                        index: index,
+                                        field: "remarks",
+                                        value: e.target.value
+                                    })
+                                }
+                            />
+
+                        </div>
+
+                    </div>
+
+                    {assets.length > 1 && (
+
+                        <div className="text-end mt-2">
+
+                            <CButton
+                                color="danger"
+                                size="sm"
+                                onClick={() =>
+                                    dispatch({
+                                        type: "REMOVE_ITEM",
+                                        section: "assets",
+                                        index: index
+                                    })
+                                }
+                            >
+                                Remove
+                            </CButton>
+
+                        </div>
+
+                    )}
+
+                </div>
+
+            ))}
+
+            <CButton
+                className="btn btn-outline-primary"
+                onClick={() =>
+                    dispatch({
+                        type: "ADD_ITEM",
+                        section: "assets",
+                        payload: {
+                            asset_name: "",
+                            asset_code: "",
+                            asset_issue_date: "",
+                            quantity_issued: "",
+                            should_be_returned: false,
+                            remarks: ""
+                        }
+                    })
+                }
+            >
+                + Add Asset
+            </CButton>
+
+
+            <div className="d-flex justify-content-end gap-2 mt-4">
+
+                <CButton
+                    className="btn btn-outline-secondary"
+                    onClick={() =>
+                        dispatch({
+                            type: "SET_STEP",
+                            payload: state.step - 1
+                        })
+                    }
+                >
+                    Previous
+                </CButton>
+
+                <CButton
+                    color="primary"
+                    className="btn btn-primary"
+                    onClick={handleNext}
+                >
+                    Save & Next
+                </CButton>
+
+            </div>
+
+        </div>
+
+    )
+
+}
+
+export default AssetsStep;

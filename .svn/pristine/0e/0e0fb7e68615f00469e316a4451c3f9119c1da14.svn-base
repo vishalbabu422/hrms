@@ -1,0 +1,302 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CFormCheck,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { validateSalaryComponent } from '../../validations/salaryComponentValidation'
+
+const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
+  const [formData, setFormData] = useState(initialData)
+  const [errors, setErrors] = useState({})
+
+  const componentOptions = [
+    { id: 1, name: 'Basic' },
+    { id: 2, name: 'HRA' },
+    { id: 3, name: 'DA' },
+  ]
+
+  useEffect(() => {
+    if (initialData) setFormData(initialData)
+  }, [initialData])
+
+  if (!formData) return null
+
+  /* ================= VALIDATION ================= */
+
+  const validateForm = () => {
+    const validationErrors = validateSalaryComponent(formData)
+    setErrors(validationErrors)
+    return Object.keys(validationErrors).length === 0
+  }
+
+  /* ================= CHANGE ================= */
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    let updatedValue = value
+
+    if (name === 'is_active') {
+      updatedValue = value === 'true'
+    }
+
+    if (name === 'base_type' && value === 'ctc') {
+      setFormData((prev) => ({
+        ...prev,
+        base_type: value,
+        base_component_id: null,
+      }))
+      return
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: updatedValue === '' ? null : updatedValue,
+    }))
+  }
+
+  /* ================= SUBMIT ================= */
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!validateForm()) return
+
+    let payload = { ...formData }
+
+    if (payload.base_type === 'ctc') {
+      payload.base_component_id = null
+    }
+
+    // Optional logic (only apply if selected)
+    if (payload.value_type === 'fixed') {
+      payload.percentage = null
+    }
+
+    if (payload.value_type === 'percentage') {
+      payload.amount = null
+    }
+
+    // If not selected → both null
+    if (!payload.value_type) {
+      payload.amount = null
+      payload.percentage = null
+    }
+
+    onSubmit(payload)
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard>
+          <CCardBody>
+            <CForm onSubmit={handleSubmit} className="row g-3">
+
+              {/* Name */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Name <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormInput
+                  name="name"
+                  placeholder="Name"
+                  value={formData.name || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.name}
+                  feedback={errors.name}
+                />
+              </CCol>
+
+              {/* Code */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Code <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormInput
+                  name="code"
+                  placeholder="Code"
+                  value={formData.code || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.code}
+                  feedback={errors.code}
+                />
+              </CCol>
+
+              {/* Type */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Type <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormSelect
+                  name="type"
+                  value={formData.type || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.type}
+                  feedback={errors.type}
+                >
+                  <option value="">Select</option>
+                  <option value="earning">Earning</option>
+                  <option value="deduction">Deduction</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* Base Type */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Base Type <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormSelect
+                  name="base_type"
+                  value={formData.base_type || ''}
+                  onChange={handleChange}
+                  invalid={!!errors.base_type}
+                  feedback={errors.base_type}
+                >
+                  <option value="">Select</option>
+                  <option value="ctc">CTC</option>
+                  <option value="component">Component</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* Base Component */}
+              {formData.base_type === 'component' && (
+                <CCol md={6}>
+                  <CFormLabel>
+                    Base Component <span className="text-danger">*</span>
+                  </CFormLabel>
+                  <CFormSelect
+                    name="base_component_id"
+                    value={formData.base_component_id || ''}
+                    onChange={handleChange}
+                    invalid={!!errors.base_component_id}
+                    feedback={errors.base_component_id}
+                  >
+                    <option value="">Select Component</option>
+                    {componentOptions.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </CCol>
+              )}
+
+              {/* 🔥 Value Type (NOT mandatory now) */}
+              <CCol md={6}>
+                <CFormLabel>Value Type</CFormLabel>
+                <CFormSelect
+                  name="value_type"
+                  value={formData.value_type || ''}
+                  onChange={handleChange}
+                >
+                  <option value="">Select</option>
+                  <option value="fixed">Fixed</option>
+                  <option value="percentage">Percentage</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* Amount */}
+              {formData.value_type === 'fixed' && (
+                <CCol md={6}>
+                  <CFormLabel>
+                    Amount <span className="text-danger">*</span>
+                  </CFormLabel>
+                  <CFormInput
+                    type="number"
+                    name="amount"
+                    value={formData.amount || ''}
+                    onChange={handleChange}
+                    invalid={!!errors.amount}
+                    feedback={errors.amount}
+                  />
+                </CCol>
+              )}
+
+              {/* Percentage */}
+              {formData.value_type === 'percentage' && (
+                <CCol md={6}>
+                  <CFormLabel>
+                    Percentage <span className="text-danger">*</span>
+                  </CFormLabel>
+                  <CFormInput
+                    type="number"
+                    name="percentage"
+                    value={formData.percentage || ''}
+                    onChange={handleChange}
+                    invalid={!!errors.percentage}
+                    feedback={errors.percentage}
+                  />
+                </CCol>
+              )}
+
+              {/* Priority */}
+              <CCol md={6}>
+                <CFormLabel>
+                  Priority <span className="text-danger">*</span>
+                </CFormLabel>
+                <CFormInput
+                  type="number"
+                  name="calculation_priority"
+                  value={formData.calculation_priority || 1}
+                  onChange={handleChange}
+                  invalid={!!errors.calculation_priority}
+                  feedback={errors.calculation_priority}
+                />
+              </CCol>
+
+              {/* Status */}
+              <CCol md={6}>
+                <CFormLabel>Status</CFormLabel>
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active)}
+                  onChange={handleChange}
+                >
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* Is Mandatory */}
+              <CCol md={6} className="d-flex align-items-end">
+                <CFormCheck
+                  label="Is Mandatory"
+                  name="is_mandatory"
+                  checked={formData.is_mandatory || false}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      is_mandatory: e.target.checked,
+                    }))
+                  }
+                />
+              </CCol>
+
+              {/* Submit */}
+              <CCol xs={12}>
+                <CButton type="submit" color="primary">
+                  {mode === 'edit' ? 'Update' : 'Create'}
+                </CButton>
+              </CCol>
+
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default SalaryComponentForm

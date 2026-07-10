@@ -1,0 +1,521 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CForm,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+
+import { useParams } from 'react-router-dom'
+
+import { toast } from 'react-toastify'
+
+import api from '../../api/axios'
+
+import { validateEmployeeAddon } from '../../validations/employeeAddonValidation'
+import { useSelector } from 'react-redux'
+
+const EmployeeAddon = () => {
+  /* ================= PARAMS ================= */
+
+  const { id } = useParams()
+  const user = useSelector((state) => state.auth.user)
+
+  /* ================= STATES ================= */
+
+  const [workorderOptions, setWorkorderOptions] = useState([])
+
+  const [employeeOptions, setEmployeeOptions] = useState([])
+
+  const [loading, setLoading] = useState(false)
+
+  const [errors, setErrors] = useState({})
+
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false)
+
+  /* ================= FORM ================= */
+
+  const [formData, setFormData] = useState({
+    workorder_id: '',
+    employee_id: [],
+    salary_addon_master_id: id || '',
+    amount: '',
+    effective_from: '',
+    effective_to: '',
+    is_active: true,
+  })
+
+  /* ================= INITIAL LOAD ================= */
+
+  useEffect(() => {
+    fetchWorkorders()
+  }, [])
+
+  useEffect(() => {
+    if (formData.workorder_id) {
+      fetchEmployees()
+    } else {
+      setEmployeeOptions([])
+    }
+  }, [formData.workorder_id])
+
+  /* ================= FETCH WORKORDERS ================= */
+
+  const fetchWorkorders = async () => {
+    try {
+      const response = await api.get('/admin/workorder/index')
+
+      const list = response.data?.data?.workOrderList || []
+
+      const formatted = list.map((item) => ({
+        value: item.id,
+        label: item.work_order_no,
+      }))
+
+      setWorkorderOptions(formatted)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch Workorders')
+    }
+  }
+
+  /* ================= FETCH EMPLOYEES ================= */
+
+  const fetchEmployees = async () => {
+    try {
+      const params = {
+        models: 'employeeWorkOrderDeployment.WoDesgnMapping,employeeSalaryAddon',
+
+        is_active: true,
+      }
+
+      const modelFilter = {}
+
+      /* ================= WORK ORDER FILTER ================= */
+
+      if (formData.workorder_id) {
+        modelFilter.WoDesgnMapping = {
+          work_order_id: Number(formData.workorder_id),
+        }
+
+        modelFilter.employeeWorkOrderDeployment = {
+          required: true,
+        }
+      }
+
+      /* ================= APPLY FILTER ================= */
+
+      if (Object.keys(modelFilter).length > 0) {
+        params.modelFilter = JSON.stringify(modelFilter)
+      }
+
+      const response = await api.get('/employee', {
+        params,
+      })
+
+      const list = response.data?.data || []
+
+      const filteredList = list.filter((employee) => {
+        const addons = employee.employeeSalaryAddon || []
+
+        const alreadyMapped = addons.some(
+          (addon) =>
+            Number(addon.salary_addon_master_id) === Number(formData.salary_addon_master_id),
+        )
+
+        return !alreadyMapped
+      })
+
+      const formatted = filteredList.map((item) => ({
+        value: String(item.id),
+
+        label: `${item.first_name || ''} ${item.last_name || ''}`,
+      }))
+
+      setEmployeeOptions(formatted)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch Employees')
+    }
+  }
+
+  /* ================= HANDLE CHANGE ================= */
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+
+    let updatedValue = value
+
+    /* BOOLEAN */
+
+    if (name === 'is_active') {
+      updatedValue = value === 'true'
+    }
+
+    /* ONLY NUMBER */
+
+    if (name === 'amount') {
+      updatedValue = value.replace(/[^0-9.]/g, '')
+    }
+
+    /* WORKORDER CHANGE */
+
+    if (name === 'workorder_id') {
+      setFormData((prev) => ({
+        ...prev,
+        workorder_id: value,
+        employee_id: [],
+      }))
+
+      return
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: updatedValue,
+    }))
+  }
+
+  /* ================= VALIDATION ================= */
+
+  const validateForm = () => {
+    const validationErrors = validateEmployeeAddon(formData)
+    console.log(validationErrors)
+
+    setErrors(validationErrors)
+
+    return Object.keys(validationErrors).length === 0
+  }
+
+  /* ================= SUBMIT ================= */
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const isValid = validateForm()
+    if (!isValid) return
+
+    try {
+      setLoading(true)
+
+      const payload = formData.employee_id.map((empId) => ({
+        employee_id: Number(empId),
+
+        work_order_id: Number(formData.workorder_id),
+
+        salary_addon_master_id: Number(formData.salary_addon_master_id),
+
+        amount: Number(formData.amount),
+
+        recurrence_type: 'ONCE',
+
+        effective_from: formData.effective_from,
+
+        effective_to: formData.effective_to || null,
+
+        remarks: '',
+
+        created_by: user?.id,
+      }))
+
+      const response = await api.post('/employee-salary-addon/create', payload)
+
+      toast.success('Employee Salary Addon created successfully')
+
+      /* RESET FORM */
+
+      setFormData({
+        workorder_id: '',
+        employee_id: [],
+        salary_addon_master_id: id || '',
+        amount: '',
+        effective_from: '',
+        effective_to: '',
+        is_active: true,
+      })
+    } catch (error) {
+      console.error(error)
+
+      console.log('SUBMIT ERROR : ', error.response?.data)
+
+      toast.error(error.response?.data?.message || 'Failed to create Employee Salary Addon')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  /* ================= UI ================= */
+
+  return (
+    <CRow>
+      <CCol xs={12}>
+        <CCard>
+          <CCardBody>
+            <CForm onSubmit={handleSubmit} className="row g-3">
+              {/* WORKORDER */}
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Workorder <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormSelect
+                  name="workorder_id"
+                  value={formData.workorder_id}
+                  onChange={handleChange}
+                  invalid={!!errors.workorder_id}
+                >
+                  <option value="">Select Workorder</option>
+
+                  {workorderOptions.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+
+                {errors.workorder_id && (
+                  <div className="text-danger mt-1 small">{errors.workorder_id}</div>
+                )}
+              </CCol>
+
+              {/* EMPLOYEE */}
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Employee <span className="text-danger">*</span>
+                </CFormLabel>
+
+                {/* CUSTOM DROPDOWN */}
+
+                <div
+                  className="border rounded"
+                  style={{
+                    position: 'relative',
+                    background: '#fff',
+                    borderColor: '#d8dbe0',
+                  }}
+                >
+                  {/* HEADER */}
+
+                  <div
+                    onClick={() => setEmployeeDropdownOpen(!employeeDropdownOpen)}
+                    className="d-flex justify-content-between align-items-center px-3"
+                    style={{
+                      cursor: 'pointer',
+                      height: '33px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: formData.employee_id.length > 0 ? '#111827' : '#6b7280',
+                        fontSize: '14px',
+                      }}
+                    >
+                      {formData.employee_id.length > 0
+                        ? `${formData.employee_id.length} Employee Selected`
+                        : 'Select Employee'}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: '12px',
+                      }}
+                    >
+                      ▼
+                    </span>
+                  </div>
+
+                  {/* DROPDOWN */}
+
+                  {employeeDropdownOpen && (
+                    <div
+                      style={{
+                        borderTop: '1px solid #e5e7eb',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                        padding: '10px',
+                        background: '#fff',
+                        zIndex: 999,
+                      }}
+                    >
+                      {/* SELECT ALL */}
+
+                      <div
+                        className="d-flex align-items-center mb-2 pb-2"
+                        style={{
+                          borderBottom: '1px solid #f1f5f9',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={
+                            employeeOptions.length > 0 &&
+                            formData.employee_id.length === employeeOptions.length
+                          }
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData((prev) => ({
+                                ...prev,
+
+                                employee_id: employeeOptions.map((item) => String(item.value)),
+                              }))
+                            } else {
+                              setFormData((prev) => ({
+                                ...prev,
+
+                                employee_id: [],
+                              }))
+                            }
+                          }}
+                        />
+
+                        <span
+                          className="ms-2 fw-semibold"
+                          style={{
+                            fontSize: '14px',
+                          }}
+                        >
+                          Select All
+                        </span>
+                      </div>
+
+                      {/* EMPLOYEE LIST */}
+
+                      {employeeOptions.map((item) => (
+                        <label
+                          key={item.value}
+                          className="d-flex align-items-center mb-2"
+                          style={{
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.employee_id.includes(String(item.value))}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData((prev) => ({
+                                  ...prev,
+
+                                  employee_id: [...prev.employee_id, String(item.value)],
+                                }))
+                              } else {
+                                setFormData((prev) => ({
+                                  ...prev,
+
+                                  employee_id: prev.employee_id.filter(
+                                    (id) => id !== String(item.value),
+                                  ),
+                                }))
+                              }
+                            }}
+                          />
+
+                          <span className="ms-2">{item.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* SELECTED EMPLOYEES */}
+
+                {errors.employee_id && (
+                  <div className="text-danger mt-1 small">{errors.employee_id}</div>
+                )}
+              </CCol>
+
+              {/* AMOUNT */}
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Amount <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  type="text"
+                  name="amount"
+                  placeholder="Enter Amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  invalid={!!errors.amount}
+                />
+
+                {errors.amount && <div className="text-danger mt-1 small">{errors.amount}</div>}
+              </CCol>
+
+              {/* EFFECTIVE FROM */}
+
+              <CCol md={6}>
+                <CFormLabel>
+                  Effective From <span className="text-danger">*</span>
+                </CFormLabel>
+
+                <CFormInput
+                  type="date"
+                  name="effective_from"
+                  value={formData.effective_from}
+                  onChange={handleChange}
+                  invalid={!!errors.effective_from}
+                />
+
+                {errors.effective_from && (
+                  <div className="text-danger mt-1 small">{errors.effective_from}</div>
+                )}
+              </CCol>
+
+              {/* EFFECTIVE TO */}
+
+              <CCol md={6}>
+                <CFormLabel>Effective To</CFormLabel>
+
+                <CFormInput
+                  type="date"
+                  name="effective_to"
+                  value={formData.effective_to}
+                  onChange={handleChange}
+                />
+              </CCol>
+
+              {/* STATUS */}
+
+              <CCol md={6}>
+                <CFormLabel>Status</CFormLabel>
+
+                <CFormSelect
+                  name="is_active"
+                  value={String(formData.is_active)}
+                  onChange={handleChange}
+                >
+                  <option value="true">Active</option>
+
+                  <option value="false">Inactive</option>
+                </CFormSelect>
+              </CCol>
+
+              {/* SUBMIT */}
+
+              <CCol xs={12}>
+                <CButton type="submit" color="primary" disabled={loading}>
+                  {loading ? 'Submitting...' : 'Submit'}
+                </CButton>
+              </CCol>
+            </CForm>
+          </CCardBody>
+        </CCard>
+      </CCol>
+    </CRow>
+  )
+}
+
+export default EmployeeAddon

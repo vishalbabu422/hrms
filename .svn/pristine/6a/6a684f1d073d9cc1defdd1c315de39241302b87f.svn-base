@@ -1,0 +1,122 @@
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CForm,
+  CFormLabel,
+  CFormSelect,
+  CFormInput,
+  CButton,
+  CRow,
+  CCol,
+} from '@coreui/react'
+
+const ExamFormComponent = ({ initialData, onSubmit, mode }) => {
+  const [formData, setFormData] = useState(initialData)
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!formData.exam_name) {
+      alert('Examination Name is required')
+      return
+    }
+
+    if (!formData.exam_date) {
+      alert('Examination Date is required')
+      return
+    }
+
+    if (!formData.marks_obtained) {
+      alert('Marks Obtained is required')
+      return
+    }
+
+    onSubmit(formData)
+  }
+
+  return (
+    <CCard>
+      <CCardBody>
+        <CForm onSubmit={handleSubmit}>
+          <CRow>
+            {/* Exam Name */}
+            <CCol md={4}>
+              <CFormLabel>Examination Name</CFormLabel>
+              <CFormSelect name="exam_name" value={formData.exam_name} onChange={handleChange}>
+                <option value="">Select Examination</option>
+                <option value="Civil Services Examination">Civil Services Examination</option>
+                <option value="State Public Service Commission Examination">
+                  State Public Service Commission Examination
+                </option>
+                <option value="Departmental Promotion Examination">
+                  Departmental Promotion Examination
+                </option>
+                <option value="Limited Departmental Competitive Examination (LDCE)">
+                  Limited Departmental Competitive Examination (LDCE)
+                </option>
+                <option value="Accounts Test">Accounts Test</option>
+                <option value="Proficiency Test">Proficiency Test</option>
+              </CFormSelect>
+            </CCol>
+
+            {/* Exam Type */}
+            <CCol md={4}>
+              <CFormLabel>Exam Type</CFormLabel>
+              <CFormSelect name="exam_type" value={formData.exam_type} onChange={handleChange}>
+                <option value="">Select Type</option>
+                <option value="Competitive">Competitive</option>
+                <option value="Departmental">Departmental</option>
+                <option value="Promotion">Promotion</option>
+                <option value="Certification">Certification</option>
+              </CFormSelect>
+            </CCol>
+
+            {/* Passing Marks */}
+            <CCol md={4}>
+              <CFormLabel>Passing Marks</CFormLabel>
+              <CFormInput
+                type="number"
+                name="passing_marks"
+                value={formData.passing_marks}
+                onChange={handleChange}
+                min="0"
+                placeholder="Enter passing marks"
+              />
+            </CCol>
+
+            {/* Marks Obtained */}
+            <CCol md={4}>
+              <CFormLabel>Marks Obtained</CFormLabel>
+              <CFormInput
+                type="number"
+                name="marks_obtained"
+                value={formData.marks_obtained}
+                onChange={handleChange}
+                min="0"
+                placeholder="Enter marks"
+              />
+            </CCol>
+          </CRow>
+
+          <div className="mt-3">
+            <CButton type="submit" color="primary">
+              {mode === 'create' ? 'Save' : 'Update'}
+            </CButton>
+          </div>
+        </CForm>
+      </CCardBody>
+    </CCard>
+  )
+}
+
+export default ExamFormComponent

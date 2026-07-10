@@ -1,0 +1,748 @@
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CFormInput,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
+} from '@coreui/react'
+
+import { useEffect, useState } from 'react'
+import { toast } from 'react-toastify'
+import api from '../../api/axios'
+import { cilFilter } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+import SalaryDispatchModal from './salaryDispatchModal'
+import PayslipModal from './payslipModal'
+import SalaryFilterSection from './SalaryFilterSection'
+
+const SalaryRegister = () => {
+  /* ================= FILTERS ================= */
+
+  const [month, setMonth] = useState('5')
+
+  const [year, setYear] = useState(new Date().getFullYear().toString())
+
+  const [salaryStructure, setSalaryStructure] = useState('')
+  const [selectedStructures, setSelectedStructures] = useState([])
+  const [selectedWorkOrders, setSelectedWorkOrders] = useState([])
+  /* ================= DATA ================= */
+
+  const [salaryStructures, setSalaryStructures] = useState([])
+
+  const [salaryData, setSalaryData] = useState([])
+
+  /* ================= MULTI SELECT ================= */
+
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+
+  const [selectAll, setSelectAll] = useState(false)
+
+  /* ================= BULK DISPATCH ================= */
+
+  const [bulkDispatchModal, setBulkDispatchModal] = useState(false)
+
+  const [transactionNo, setTransactionNo] = useState('')
+
+  const [transactionDate, setTransactionDate] = useState('')
+
+  /* ================= INDIVIDUAL DISPATCH ================= */
+
+  const [individualDispatchModal, setIndividualDispatchModal] = useState(false)
+
+  /* ================= PAYSLIP ================= */
+
+  const [payslipModal, setPayslipModal] = useState(false)
+
+  /* ================= SELECTED ROW ================= */
+
+  const [selectedRow, setSelectedRow] = useState(null)
+
+  /* ================= FETCH STRUCTURES ================= */
+
+  useEffect(() => {
+    fetchSalaryStructures()
+  }, [])
+
+  const fetchSalaryStructures = async () => {
+    try {
+      const response = await api.get('salary-structure')
+
+      setSalaryStructures(response?.data?.data || [])
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch salary structures')
+    }
+  }
+
+  /* ================= SEARCH ================= */
+
+  const handleSearch = async () => {
+    try {
+      const res = await api.get(`salary-structure/${salaryStructure}/employees`, {
+        params: {
+          month,
+          year,
+        },
+      })
+
+      const employees = res?.data?.data || []
+
+      setSalaryData(employees)
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to fetch employees')
+    }
+  }
+
+  /* ================= CHECKBOX ================= */
+
+  const handleCheckbox = (id) => {
+    setSelectedEmployees((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(salaryData.map((item) => item.employee_id))
+    }
+
+    setSelectAll(!selectAll)
+  }
+
+  /* ================= BULK DISPATCH ================= */
+
+  const handleBulkDispatch = async () => {
+    try {
+      const payload = {
+        employee_ids: selectedEmployees,
+
+        transaction_no: transactionNo,
+
+        transaction_date: transactionDate,
+      }
+
+      console.log('Bulk Payload:', payload)
+
+      // await api.post(
+      //   'employee-salary-register-monthly/bulk-dispatch',
+      //   payload,
+      // )
+
+      toast.success('Salary dispatched successfully')
+
+      setBulkDispatchModal(false)
+
+      setTransactionNo('')
+
+      setTransactionDate('')
+
+      setSelectedEmployees([])
+
+      setSelectAll(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Dispatch failed')
+    }
+  }
+
+  /* ================= INDIVIDUAL DISPATCH ================= */
+
+  const handleIndividualDispatch = async (payload) => {
+    try {
+      await api.post('employee-salary-register-monthly/dispatch', payload)
+
+      toast.success('Salary dispatched successfully')
+
+      setIndividualDispatchModal(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Dispatch failed')
+    }
+  }
+
+  /* ================= GENERATE PAYSLIP ================= */
+
+  const handleGenerate = async (registerId) => {
+    try {
+      console.log(registerId)
+
+      // await api.post(
+      //   `employee-salary-register-monthly/generate-slip/${registerId}`,
+      // )
+
+      toast.success('Payslip generated successfully')
+
+      setPayslipModal(false)
+
+      await handleSearch()
+    } catch (error) {
+      console.error(error)
+
+      toast.error('Failed to generate payslip')
+    }
+  }
+
+  return (
+    <>
+      {/* FILTERS */}
+      <CCard className="border-0 rounded-4 mb-3">
+        <CCardBody>
+          <CRow className="g-3 align-items-end justify-content-between">
+            {/* MONTH */}
+            <CCol md={3}>
+              <CFormLabel className="fw-semibold small text-muted">Month</CFormLabel>
+
+              <CFormSelect
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="rounded-3"
+              >
+                <option value="">Select Month</option>
+
+                <option value="1">Jan</option>
+
+                <option value="2">Feb</option>
+
+                <option value="3">Mar</option>
+
+                <option value="4">Apr</option>
+
+                <option value="5">May</option>
+
+                <option value="6">Jun</option>
+
+                <option value="7">Jul</option>
+
+                <option value="8">Aug</option>
+
+                <option value="9">Sep</option>
+
+                <option value="10">Oct</option>
+
+                <option value="11">Nov</option>
+
+                <option value="12">Dec</option>
+              </CFormSelect>
+            </CCol>
+
+            {/* YEAR */}
+            <CCol md={3}>
+              <CFormLabel className="fw-semibold small text-muted">Year</CFormLabel>
+
+              <CFormSelect
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="rounded-3"
+              >
+                <option value="">Select Year</option>
+
+                {[2025, 2026, 2027, 2028].map((yr) => (
+                  <option key={yr} value={yr}>
+                    {yr}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {/* SEARCH */}
+            <CCol md={1}>
+            <CButton
+  className="w-100 rounded-3 fw-semibold border-0"
+  style={{
+    width: '100%',
+    height: '36px',
+    background: '#5856d6',
+    color: '#fff',
+    boxShadow: 'none',
+  }}
+>
+  Search
+</CButton>
+            </CCol>
+
+            {/* FILTER BUTTON */}
+            <CCol md="auto" className="d-flex justify-content-end ms-auto">
+              <CDropdown alignment="end">
+                {/* BUTTON */}
+                <CDropdownToggle
+                  color="light"
+                  className="rounded-3 d-flex align-items-center justify-content-center gap-2 fw-semibold"
+                  style={{
+                    height: '36px',
+                    border: '1px solid #d8dbe0',
+                    color: '#3c4b64',
+                    background: '#fff',
+                    boxShadow: 'none',
+                    minWidth: '120px',
+                    transition: '0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#5856d6'
+
+                    e.target.style.borderColor = '#5856d6'
+
+                    e.target.style.color = '#fff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#fff'
+
+                    e.target.style.borderColor = '#d8dbe0'
+
+                    e.target.style.color = '#3c4b64'
+                  }}
+                >
+                  <CIcon icon={cilFilter} />
+
+                  <span>Filters</span>
+                </CDropdownToggle>
+                {/* DROPDOWN */}
+                <CDropdownMenu
+                  className="border-0 rounded-4 shadow p-0 overflow-hidden"
+                  style={{
+                    width: '750px',
+                    marginTop: '12px',
+                    boxShadow: '0 10px 30px rgba(15, 23, 42, 0.12)',
+                  }}
+                >
+                  {/* HEADER */}
+                  <div
+                    className="px-4 py-3"
+                    style={{
+                      borderBottom: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                    }}
+                  >
+                    <div
+                      className="fw-bold text-uppercase"
+                      style={{
+                        fontSize: '15px',
+                        letterSpacing: '0.5px',
+                        color: '#0f172a',
+                      }}
+                    >
+                      Filters
+                    </div>
+                  </div>
+
+                  {/* BODY */}
+                  <div className="px-4 py-4">
+                    <div className="row">
+                      {/* WORK ORDER */}
+                      <div className="col-6">
+                        <div
+                          className="mb-3"
+                          style={{
+                            fontSize: '12px',
+                            letterSpacing: '0.5px',
+                            color: '#64748b',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Work Order
+                        </div>
+
+                        {/* SEARCH */}
+                        <div className="mb-3">
+                          <CFormInput
+                            size="sm"
+                            placeholder="Search Work Order..."
+                            className="rounded-3"
+                          />
+                        </div>
+
+                        {/* LIST */}
+                        <div
+                          style={{
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            paddingRight: '8px',
+                          }}
+                        >
+                          <div className="d-flex flex-column gap-3">
+                            {/* SELECT ALL */}
+                            <label
+                              className="d-flex align-items-center gap-3"
+                              style={{
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  selectedWorkOrders.length === 10 && selectedWorkOrders.length > 0
+                                }
+                                onChange={() => {
+                                  if (selectedWorkOrders.length === 10) {
+                                    setSelectedWorkOrders([])
+                                  } else {
+                                    setSelectedWorkOrders([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+                                  }
+                                }}
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  accentColor: '#0f2b7a',
+                                }}
+                              />
+
+                              <span
+                                style={{
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  color: '#0f172a',
+                                }}
+                              >
+                                Select All
+                              </span>
+                            </label>
+
+                            {/* OPTIONS */}
+                            {[
+                              'WO-2026-1001',
+                              'WO-2026-1002',
+                              'WO-2026-1003',
+                              'WO-2026-1004',
+                              'WO-2026-1005',
+                              'WO-2026-1006',
+                              'WO-2026-1007',
+                              'WO-2026-1008',
+                              'WO-2026-1009',
+                              'WO-2026-1010',
+                            ].map((workOrder, index) => (
+                              <label
+                                key={index}
+                                className="d-flex align-items-center gap-3"
+                                style={{
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedWorkOrders.includes(index + 1)}
+                                  onChange={() => {
+                                    setSelectedWorkOrders((prev) =>
+                                      prev.includes(index + 1)
+                                        ? prev.filter((x) => x !== index + 1)
+                                        : [...prev, index + 1],
+                                    )
+                                  }}
+                                  style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    accentColor: '#0f2b7a',
+                                  }}
+                                />
+
+                                <span
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#475569',
+                                  }}
+                                >
+                                  {workOrder}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SALARY STRUCTURE */}
+                      <div className="col-6 border-start">
+                        <div
+                          className="ps-3"
+                          style={{
+                            fontSize: '12px',
+                            letterSpacing: '0.5px',
+                            color: '#64748b',
+                            fontWeight: '600',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          Salary Structure
+                        </div>
+
+                        {/* SEARCH */}
+                        <div className="ps-3 mt-3 mb-3">
+                          <CFormInput
+                            size="sm"
+                            placeholder="Search Structure..."
+                            className="rounded-3"
+                          />
+                        </div>
+
+                        {/* LIST */}
+                        <div
+                          className="ps-3"
+                          style={{
+                            maxHeight: '300px',
+                            overflowY: 'auto',
+                            paddingRight: '8px',
+                          }}
+                        >
+                          <div className="d-flex flex-column gap-3">
+                            {/* SELECT ALL */}
+                            <label
+                              className="d-flex align-items-center gap-3"
+                              style={{
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={
+                                  selectedStructures.length === 10 && selectedStructures.length > 0
+                                }
+                                onChange={() => {
+                                  if (selectedStructures.length === 10) {
+                                    setSelectedStructures([])
+                                  } else {
+                                    setSelectedStructures([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+                                  }
+                                }}
+                                style={{
+                                  width: '16px',
+                                  height: '16px',
+                                  accentColor: '#0f2b7a',
+                                }}
+                              />
+
+                              <span
+                                style={{
+                                  fontSize: '14px',
+                                  fontWeight: '600',
+                                  color: '#0f172a',
+                                }}
+                              >
+                                Select All
+                              </span>
+                            </label>
+
+                            {/* OPTIONS */}
+                            {[
+                              'Senior Management Compensation',
+                              'Executive Pay Structure',
+                              'Organisation Structure',
+                              'Payroll Structure',
+                              'Corporate Salary Plan',
+                              'Leadership Compensation',
+                              'Project Based Salary',
+                              'Consultant Salary Structure',
+                              'Operations Salary Structure',
+                              'IT Salary Structure',
+                            ].map((structure, index) => (
+                              <label
+                                key={index}
+                                className="d-flex align-items-center gap-3"
+                                style={{
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedStructures.includes(index + 1)}
+                                  onChange={() => {
+                                    setSelectedStructures((prev) =>
+                                      prev.includes(index + 1)
+                                        ? prev.filter((x) => x !== index + 1)
+                                        : [...prev, index + 1],
+                                    )
+                                  }}
+                                  style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    accentColor: '#0f2b7a',
+                                  }}
+                                />
+
+                                <span
+                                  style={{
+                                    fontSize: '14px',
+                                    color: '#475569',
+                                  }}
+                                >
+                                  {structure}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FOOTER */}
+                  <div
+                    className="d-flex justify-content-between align-items-center px-4 py-3"
+                    style={{
+                      borderTop: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                    }}
+                  >
+                    {/* CLEAR ALL */}
+                    <CButton
+                      color="light"
+                      className="rounded-3 fw-semibold px-4"
+                      style={{
+                        height: '44px',
+                        border: '1px solid #d8dbe0',
+                        color: '#3c4b64',
+                        background: '#fff',
+                        boxShadow: 'none',
+                        transition: '0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#5856d6'
+
+                        e.target.style.borderColor = '#5856d6'
+
+                        e.target.style.color = '#fff'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#fff'
+
+                        e.target.style.borderColor = '#d8dbe0'
+
+                        e.target.style.color = '#3c4b64'
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+
+                        setSelectedWorkOrders([])
+
+                        setSelectedStructures([])
+                      }}
+                    >
+                      Clear All
+                    </CButton>
+
+                    {/* APPLY */}
+                    <CButton
+                      className="border-0 rounded-3 px-4 fw-semibold"
+                      style={{
+                        height: '42px',
+                        background: '#0f2b7a',
+                        color: '#fff',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 12px rgba(15, 43, 122, 0.25)',
+                      }}
+                    >
+                      Apply Filter
+                    </CButton>
+                  </div>
+                </CDropdownMenu>
+              </CDropdown>
+            </CCol>
+          </CRow>
+        </CCardBody>
+      </CCard>
+
+      {/* ================= BULK DISPATCH MODAL ================= */}
+
+      <CModal
+        visible={bulkDispatchModal}
+        alignment="center"
+        onClose={() => setBulkDispatchModal(false)}
+      >
+        <CModalHeader>
+          <CModalTitle>Bulk Dispatch</CModalTitle>
+        </CModalHeader>
+
+        <CModalBody>
+          {/* TRANSACTION NUMBER */}
+
+          <div className="mb-3">
+            <CFormLabel>Transaction Number</CFormLabel>
+
+            <CFormInput
+              value={transactionNo}
+              onChange={(e) => setTransactionNo(e.target.value)}
+              placeholder="Enter Transaction Number"
+            />
+          </div>
+
+          {/* TRANSACTION DATE */}
+          <div className="mb-3">
+            <CFormLabel>Transaction Date</CFormLabel>
+
+            <CFormInput
+              type="date"
+              value={transactionDate}
+              onChange={(e) => setTransactionDate(e.target.value)}
+            />
+          </div>
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setBulkDispatchModal(false)}>
+            Cancel
+          </CButton>
+
+          <CButton color="primary" onClick={handleBulkDispatch}>
+            Submit
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* ================= INDIVIDUAL DISPATCH MODAL ================= */}
+
+      <SalaryDispatchModal
+        visible={individualDispatchModal}
+        onClose={() => setIndividualDispatchModal(false)}
+        employeeId={selectedRow?.employee_id}
+        month={month}
+        year={year}
+        salaryStructureId={salaryStructure}
+        onSubmit={handleIndividualDispatch}
+      />
+
+      {/* ================= PAYSLIP MODAL ================= */}
+
+      <PayslipModal
+        visible={payslipModal}
+        onClose={() => setPayslipModal(false)}
+        employeeId={selectedRow?.employee_id}
+        month={month}
+        year={year}
+        salaryStructureId={salaryStructure}
+        onGenerate={handleGenerate}
+      />
+    </>
+  )
+}
+
+export default SalaryRegister

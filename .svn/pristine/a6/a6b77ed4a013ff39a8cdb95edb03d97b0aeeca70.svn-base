@@ -1,0 +1,429 @@
+import React, { useState } from 'react'
+import {
+  CContainer,
+  CRow,
+  CCol,
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CButton,
+  CFormInput,
+  CBadge,
+  CTable,
+  CTableHead,
+  CTableRow,
+  CTableHeaderCell,
+  CTableBody,
+  CTableDataCell,
+  CFormSwitch,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CFormSelect,
+} from '@coreui/react'
+import CIcon from '@coreui/icons-react'
+import { cilPencil, cilTrash } from '@coreui/icons'
+
+const Permission = () => {
+  const [activeTab, setActiveTab] = useState('users')
+  const [visible, setVisible] = useState(false)
+
+  const [selectedUser, setSelectedUser] = useState('')
+  const [selectedRoles, setSelectedRoles] = useState([])
+  const [selectedRoleTab, setSelectedRoleTab] = useState('Admin')
+
+  const [roles, setRoles] = useState([
+    'Admin',
+    'Developer',
+    'HR',
+    'Manager',
+  ])
+
+  const [showAddRole, setShowAddRole] = useState(false)
+  const [newRole, setNewRole] = useState('')
+
+  const [users, setUsers] = useState([
+    {
+      id: 1,
+      name: 'Akansha',
+      email: 'akansha231192@gmail.com',
+      roles: ['Admin'],
+      status: 'Active',
+    },
+    {
+      id: 2,
+      name: 'Parul',
+      email: 'parul23@gmail.com',
+      roles: ['Developer'],
+      status: 'Active',
+    },
+  ])
+
+  const modules = [
+    'Employee Management',
+    'Role Management',
+    'Permission Management',
+    'Organization Management',
+    'Workorder Management',
+    'Empanelment Management',
+    'Leave Management',
+  ]
+
+  const defaultPermissions = {
+    create: false,
+    read: false,
+    update: false,
+    delete: false,
+    approve: false,
+  }
+
+  const [permissions, setPermissions] = useState(
+    modules.reduce((acc, module) => {
+      acc[module] = { ...defaultPermissions }
+      return acc
+    }, {})
+  )
+
+  const togglePermission = (module, key) => {
+    setPermissions((prev) => ({
+      ...prev,
+      [module]: {
+        ...prev[module],
+        [key]: !prev[module][key],
+      },
+    }))
+  }
+
+  const toggleAll = (module, value) => {
+    setPermissions((prev) => ({
+      ...prev,
+      [module]: {
+        create: value,
+        read: value,
+        update: value,
+        delete: value,
+        approve: value,
+      },
+    }))
+  }
+
+  const getRoleUserCount = (roleName) => {
+    return users.filter((user) =>
+      user.roles.includes(roleName)
+    ).length
+  }
+
+  const handleSaveRole = () => {
+    if (!selectedUser || selectedRoles.length === 0) return
+
+    const updatedUsers = users.map((user) =>
+      user.name === selectedUser
+        ? { ...user, roles: selectedRoles }
+        : user
+    )
+
+    setUsers(updatedUsers)
+    setVisible(false)
+    setSelectedUser('')
+    setSelectedRoles([])
+  }
+
+  const handleAddRole = () => {
+    if (!newRole.trim()) return
+    if (roles.includes(newRole)) return
+
+    setRoles([...roles, newRole])
+    setNewRole('')
+    setShowAddRole(false)
+  }
+
+  return (
+    <CContainer fluid className="py-3">
+      <CRow className="g-4">
+
+        {/* SIDEBAR */}
+        <CCol xs={12} md={4} lg={3}>
+          <CCard className="h-100 shadow-sm">
+            <CCardBody>
+
+              <div className="d-flex mb-3">
+                <CButton
+                  color={activeTab === 'users' ? 'primary' : 'light'}
+                  className="w-50 me-2"
+                  onClick={() => setActiveTab('users')}
+                >
+                  User Role
+                </CButton>
+
+                <CButton
+                  color={activeTab === 'roles' ? 'primary' : 'light'}
+                  className="w-50"
+                  onClick={() => setActiveTab('roles')}
+                >
+                  Role Permissions
+                </CButton>
+              </div>
+
+              {/* USER TAB SIDEBAR */}
+              {activeTab === 'users' && (
+                <>
+                  <CFormInput placeholder="Search User" className="mb-3" />
+                  <CButton
+                    color="outline-primary"
+                    className="w-100"
+                    onClick={() => setVisible(true)}
+                  >
+                    + Set Role
+                  </CButton>
+                </>
+              )}
+
+              {/* ROLE TAB SIDEBAR */}
+              {activeTab === 'roles' && (
+                <>
+                  <CFormInput placeholder="Search Role" className="mb-3" />
+
+                  {roles.map((role) => {
+                    const isActive = selectedRoleTab === role
+                    const userCount = getRoleUserCount(role)
+
+                    return (
+                      <div
+                        key={role}
+                        onClick={() => setSelectedRoleTab(role)}
+                        style={{
+                          cursor: 'pointer',
+                          borderRadius: '6px',
+                          padding: '10px 14px',
+                          marginBottom: '6px',
+                          backgroundColor: isActive ? '#5856d6' : '#ffffff',
+                          color: isActive ? '#ffffff' : '#212529',
+                          border: isActive
+                            ? '1px solid #3c78d8'
+                            : '1px solid #e9ecef',
+                        }}
+                      >
+                        <div style={{ fontWeight: 400 }}>
+                          {role}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: '13px',
+                            opacity: isActive ? 0.9 : 0.6,
+                          }}
+                        >
+                          {userCount} {userCount === 1 ? 'user' : 'users'}
+                        </div>
+                      </div>
+                    )
+                  })}
+
+                  {!showAddRole && (
+                    <CButton
+                      size="sm"
+                      color="primary"
+                      className="w-100 mt-2"
+                      onClick={() => setShowAddRole(true)}
+                    >
+                      + Add Role
+                    </CButton>
+                  )}
+
+                  {showAddRole && (
+                    <>
+                      <CFormInput
+                        className="mt-2"
+                        placeholder="Enter new role"
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value)}
+                      />
+                      <CButton
+                        size="sm"
+                        color="success"
+                        className="w-100 mt-2"
+                        onClick={handleAddRole}
+                      >
+                        Save Role
+                      </CButton>
+                    </>
+                  )}
+                </>
+              )}
+
+            </CCardBody>
+          </CCard>
+        </CCol>
+
+        {/* MAIN CONTENT */}
+        <CCol xs={12} md={8} lg={9}>
+
+          {/* USER TAB TABLE */}
+          {activeTab === 'users' && (
+            <CCard className="shadow-sm">
+              <CCardHeader>
+                <strong>User Role</strong>
+              </CCardHeader>
+              <CCardBody>
+                <CTable hover responsive align="middle">
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell>Name</CTableHeaderCell>
+                      <CTableHeaderCell>Email</CTableHeaderCell>
+                      <CTableHeaderCell>Roles</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell>Actions</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {users.map((user) => (
+                      <CTableRow key={user.id}>
+                        <CTableDataCell>{user.name}</CTableDataCell>
+                        <CTableDataCell>{user.email}</CTableDataCell>
+                        <CTableDataCell>
+                          {user.roles.map((r, i) => (
+                            <CBadge key={i} color="primary" className="me-1">
+                              {r}
+                            </CBadge>
+                          ))}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color="success">{user.status}</CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CButton size="sm" color="light" className="me-2">
+                            <CIcon icon={cilPencil} />
+                          </CButton>
+                          <CButton size="sm" color="light">
+                            <CIcon icon={cilTrash} />
+                          </CButton>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </CCardBody>
+            </CCard>
+          )}
+
+          {/* ROLE PERMISSION TAB */}
+          {activeTab === 'roles' && (
+            <CRow className="g-4">
+              {modules.map((module, index) => {
+                const modulePermissions = permissions[module]
+                const allEnabled =
+                  Object.values(modulePermissions).every(Boolean)
+
+                return (
+                  <CCol xs={12} md={6} key={index}>
+                    <CCard className="shadow-sm">
+                      <div className="permission-header d-flex justify-content-between align-items-center  px-3 py-2">
+                        
+                        <h6 className="mb-0">{module}</h6>
+                        <CFormSwitch
+                          checked={allEnabled}
+                          onChange={(e) =>
+                            toggleAll(module, e.target.checked)
+                          }
+                        />
+                      </div>
+
+                      <CCardBody>
+                        <div className="d-flex flex-wrap gap-4">
+                          {Object.keys(defaultPermissions).map((key) => (
+                            <CFormSwitch
+                              key={key}
+                              label={
+                                key.charAt(0).toUpperCase() +
+                                key.slice(1)
+                              }
+                              checked={modulePermissions[key]}
+                              onChange={() =>
+                                togglePermission(module, key)
+                              }
+                            />
+                          ))}
+                        </div>
+                      </CCardBody>
+                    </CCard>
+                  </CCol>
+                )
+              })}
+            </CRow>
+          )}
+
+        </CCol>
+      </CRow>
+
+      {/* MODAL */}
+      <CModal visible={visible} onClose={() => setVisible(false)} alignment="center">
+        <CModalHeader>
+          <CModalTitle>Set User Role</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <div className="mb-3">
+            <label className="form-label">Username</label>
+            <CFormSelect
+              value={selectedUser}
+              onChange={(e) => {
+                const userName = e.target.value
+                setSelectedUser(userName)
+                const foundUser = users.find(u => u.name === userName)
+                setSelectedRoles(foundUser ? foundUser.roles : [])
+              }}
+            >
+              <option value="">Select User</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.name}>
+                  {user.name}
+                </option>
+              ))}
+            </CFormSelect>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Roles</label>
+            {roles.map((role, index) => (
+              <div key={index} className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id={`role-${index}`}
+                  checked={selectedRoles.includes(role)}
+                  onChange={() => {
+                    if (selectedRoles.includes(role)) {
+                      setSelectedRoles(selectedRoles.filter((r) => r !== role))
+                    } else {
+                      setSelectedRoles([...selectedRoles, role])
+                    }
+                  }}
+                />
+                <label className="form-check-label" htmlFor={`role-${index}`}>
+                  {role}
+                </label>
+              </div>
+            ))}
+          </div>
+        </CModalBody>
+
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setVisible(false)}>
+            Cancel
+          </CButton>
+          <CButton
+            color="primary"
+            onClick={handleSaveRole}
+            disabled={!selectedUser || selectedRoles.length === 0}
+          >
+            Save
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+    </CContainer>
+  )
+}
+
+export default Permission

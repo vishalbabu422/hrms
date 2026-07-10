@@ -1,0 +1,209 @@
+import React, { useState } from 'react'
+import {
+  CCard,
+  CCardBody,
+  CRow,
+  CCol,
+  CFormSelect,
+  CButton,
+} from '@coreui/react'
+
+import './mpr.css'
+
+const MPR = () => {
+  const [workOrder, setWorkOrder] = useState('')
+  const [month, setMonth] = useState('')
+  const [selectedEmployees, setSelectedEmployees] = useState([])
+  const [generatedFile, setGeneratedFile] = useState(null)
+
+  // 🔹 Employee list
+  const employees = ['ABC', 'John Doe', 'Jane Smith']
+
+  // 🔹 Select employee
+  const handleSelect = (emp) => {
+    if (selectedEmployees.includes(emp)) {
+      setSelectedEmployees(selectedEmployees.filter((e) => e !== emp))
+    } else {
+      setSelectedEmployees([...selectedEmployees, emp])
+    }
+  }
+
+  // 🔹 Select All
+  const handleSelectAll = () => {
+    if (selectedEmployees.length === employees.length) {
+      setSelectedEmployees([])
+    } else {
+      setSelectedEmployees(employees)
+    }
+  }
+
+  // 🔹 Generate file
+  const handleGenerate = () => {
+    if (selectedEmployees.length === 0) {
+      alert('Select at least one employee')
+      return
+    }
+
+    const content = `
+      MPR REPORT
+      
+      Work Order: ${workOrder}
+      Month: ${month}
+      
+      Employees:
+      ${selectedEmployees.join('\n')}
+    `
+
+    const blob = new Blob([content], { type: 'application/pdf' })
+    const url = URL.createObjectURL(blob)
+
+    setGeneratedFile(url)
+  }
+
+  // 🔹 Upload
+  const handleUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      alert(`File uploaded: ${file.name}`)
+    }
+  }
+
+  return (
+    <div className="mpr-container">
+      <CCard className="mpr-card">
+        <CCardBody>
+
+          {/* Header */}
+          <div className="mpr-header">
+           
+          </div>
+
+          {/* Filters */}
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <CFormSelect
+                value={workOrder}
+                onChange={(e) => setWorkOrder(e.target.value)}
+              >
+                <option>Select WO</option>
+                <option>WO-001</option>
+                <option>WO-002</option>
+              </CFormSelect>
+            </CCol>
+
+            <CCol md={6}>
+              <CFormSelect
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              >
+                <option>Select Month</option>
+                <option>April 2024</option>
+                <option>May 2024</option>
+              </CFormSelect>
+            </CCol>
+          </CRow>
+
+          {/* Middle Section */}
+          <div className="mpr-middle">
+
+            {/* Employee Dropdown */}
+            <div className="mpr-section">
+              <label>Employee Name</label>
+
+              <div className="mpr-dropdown">
+                <div className="dropdown-header">
+                  <input
+                    type="checkbox"
+                    checked={selectedEmployees.length === employees.length}
+                    onChange={handleSelectAll}
+                  /> Select All
+                </div>
+
+                <div className="dropdown-body">
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    className="search-box"
+                  />
+
+                  {employees.map((emp, index) => (
+                    <div key={index} className="dropdown-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedEmployees.includes(emp)}
+                        onChange={() => handleSelect(emp)}
+                      />{' '}
+                      {emp}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="mpr-section">
+              <label>Month</label>
+<div className="stats">
+  <div className="stat-box">
+    <span>
+      Leave Granted
+      {generatedFile && (
+        <a
+          href={generatedFile}
+          download="mpr.pdf"
+          className="download-btn"
+        >
+          ⬇
+        </a>
+      )}
+    </span>
+  </div>
+
+  <div className="stat-box">
+    <span>
+      Leaves Taken
+      {generatedFile && (
+        <a
+          href={generatedFile}
+          download="mpr.pdf"
+          className="download-btn"
+        >
+          ⬇
+        </a>
+      )}
+    </span>
+  </div>
+</div>
+            </div>
+
+          </div>
+
+          {/* Buttons */}
+          <div className="mpr-actions">
+            <CButton color="primary" onClick={handleGenerate}>
+              Generate
+            </CButton>
+
+            <CButton
+              color="light"
+              onClick={() => document.getElementById('fileUpload').click()}
+            >
+              Upload MPR
+            </CButton>
+
+            {/* Hidden input */}
+            <input
+              type="file"
+              id="fileUpload"
+              style={{ display: 'none' }}
+              onChange={handleUpload}
+            />
+          </div>
+
+        </CCardBody>
+      </CCard>
+    </div>
+  )
+}
+
+export default MPR

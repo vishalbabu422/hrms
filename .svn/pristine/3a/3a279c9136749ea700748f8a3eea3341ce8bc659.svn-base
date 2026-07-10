@@ -1,0 +1,76 @@
+const router = require('express').Router();
+const EmployeeController = require('./employee.controller');
+
+const {
+    protect,
+    restrictTo,
+    checkPermission,
+    checkOrgScope,
+    injectOrgScope
+} = require("../../middlewares/authMiddleware");
+
+/*
+|--------------------------------------------------------------------------
+| Employee Dependent Routes
+|--------------------------------------------------------------------------
+*/
+router.use("/:employeeId/designations", require("./designation/employeeDesignation.routes"));
+router.use("/:employeeId/address", require("./address/address.routes"));
+/*
+|--------------------------------------------------------------------------
+| Employee Collection Routes
+|--------------------------------------------------------------------------
+*/
+
+router
+    .route("/")
+    .get(
+        protect,
+        //restrictTo("ORG_ADMIN"),
+        checkPermission("EMPLOYEE_VIEW"),
+        injectOrgScope(),
+        EmployeeController.getEmployeeList
+    )
+    .post(
+        protect,
+        checkPermission("EMPLOYEE_CREATE"),
+        checkOrgScope(req => req.body.organization_id),
+        EmployeeController.create
+    );
+
+
+/*
+|--------------------------------------------------------------------------
+| Employee Single Record Routes
+|--------------------------------------------------------------------------
+*/
+
+router
+    .route("/:id")
+    .get(
+        protect,
+        //restrictTo("ORG_ADMIN"),
+        checkPermission("EMPLOYEE_VIEW"),
+        injectOrgScope(),
+        EmployeeController.getEmployeeById
+    )
+    .patch(
+        protect,
+        checkPermission("EMPLOYEE_UPDATE"),
+        EmployeeController.editById
+    )
+    .delete(
+        protect,
+        checkPermission("EMPLOYEE_DELETE"),
+        EmployeeController.deleteById
+    );
+
+router
+    .route("/:id/status")
+    .patch(
+        protect,
+        checkPermission("EMPLOYEE_APPROVE"),
+        EmployeeController.updateStatus
+    );
+
+module.exports = router;

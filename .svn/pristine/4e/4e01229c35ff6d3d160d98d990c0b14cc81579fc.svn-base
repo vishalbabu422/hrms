@@ -1,0 +1,189 @@
+import { useDispatch } from 'react-redux'
+import { logoutUser } from '../../store/slices/authSlice'
+import { useNavigate } from 'react-router-dom'
+
+import { CAvatar, CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
+
+import { cilUser, cilLockLocked, cilAccountLogout } from '@coreui/icons'
+
+import CIcon from '@coreui/icons-react'
+
+const AppHeaderDropdown = () => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    await dispatch(logoutUser())
+    navigate('/login')
+  }
+
+  // Replace later with actual logged-in user data
+  const user = {
+    name: 'Akansha Dhingan',
+    role: 'Super Administrator',
+  }
+
+  const initials = user.name
+    ?.split(' ')
+    .map((item) => item[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
+
+  return (
+    <CDropdown variant="nav-item">
+      {/* HEADER TOGGLE */}
+
+      <CDropdownToggle
+        caret={false}
+        className="d-flex align-items-center border-0 bg-transparent py-0 px-0"
+      >
+        <CAvatar
+          color="primary"
+          textColor="white"
+          size="md"
+          style={{
+            fontWeight: 700,
+            width: '40px',
+            height: '40px',
+            fontSize: '15px',
+          }}
+        >
+          {initials}
+        </CAvatar>
+
+        <div
+          className="ms-2 text-start"
+          style={{
+            lineHeight: '1.2',
+          }}
+        >
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: '14px',
+              color: '#111827',
+            }}
+          >
+            {user.name}
+          </div>
+
+          <div
+            style={{
+              fontSize: '11px',
+              color: '#6b7280',
+            }}
+          >
+            {user.employeeCode} {user.role}
+          </div>
+        </div>
+      </CDropdownToggle>
+
+      {/* DROPDOWN MENU */}
+
+      <CDropdownMenu
+        placement="bottom-end"
+        className="p-0 shadow"
+        style={{
+          minWidth: '320px',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          border: '1px solid #e5e7eb',
+        }}
+      >
+        {/* PROFILE HEADER */}
+
+        <div
+          className="p-3"
+          style={{
+            background: 'linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%)',
+            borderBottom: '1px solid #e5e7eb',
+          }}
+        >
+          <div className="d-flex align-items-center">
+            <CAvatar
+              color="primary"
+              textColor="white"
+              size="xl"
+              style={{
+                fontWeight: 700,
+                fontSize: '18px',
+                width: '52px',
+                height: '52px',
+              }}
+            >
+              {initials}
+            </CAvatar>
+
+            <div className="ms-3">
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: '#111827',
+                }}
+              >
+                {user.name}
+              </div>
+
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: '#4f46e5',
+                }}
+              >
+                {user.role}
+              </div>
+
+              <div
+                style={{
+                  fontSize: '12px',
+                  color: '#6b7280',
+                }}
+              >
+                {user.employeeCode}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PROFILE */}
+
+        <CDropdownItem onClick={() => navigate('/profile')}>
+          <CIcon icon={cilUser} className="me-2" />
+          My Profile
+        </CDropdownItem>
+
+        {/* CHANGE PASSWORD */}
+
+        <CDropdownItem
+          style={{
+            padding: '12px 16px',
+          }}
+          onClick={() => navigate('/change-password')}
+        >
+          <CIcon icon={cilLockLocked} className="me-2" />
+          Change Password
+        </CDropdownItem>
+
+        {/* LOGOUT */}
+
+        <CDropdownItem
+          onClick={handleLogout}
+          style={{
+            padding: '12px 16px',
+            color: '#dc2626',
+            fontWeight: 600,
+            borderTop: '1px solid #f1f5f9',
+          }}
+        >
+          <CIcon icon={cilAccountLogout} className="me-2" />
+          Logout
+        </CDropdownItem>
+      </CDropdownMenu>
+    </CDropdown>
+  )
+}
+
+export default AppHeaderDropdown

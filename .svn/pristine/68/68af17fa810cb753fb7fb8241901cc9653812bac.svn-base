@@ -1,0 +1,1879 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "KMS API Documentation",
+    "version": "1.0",
+    "title": "PMU API",
+    "contact": {
+      "email": "vishalbabu422@gmail.com"
+    }
+  },
+  "schemes": ["http", "https"],
+  "host": "localhost:3100",
+  "basePath": "/api/v1",
+  "securityDefinitions": {
+    "Authorization": {
+      "type": "apiKey",
+      "name": "authorization",
+      "in": "header",
+      "description": "Authentication token"
+    }
+  },
+
+  "paths": {
+    "/admin/empanelment/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Get Empanelment List",
+        "description": "Get all empanelment records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment list fetched successfully"
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/empanelment/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Get Empanelment Code Edit List",
+        "description": "Get all the Empanelment Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the Empanelment Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the Empanelment Code",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GstCodeResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/empanelment/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Create Empanelment",
+        "description": "Create a new Empanelment record in the master table",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "category",
+                "empanelment_no",
+                "date",
+                "shortcode",
+                "rfe",
+                "effective_from"
+              ],
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "example": "VENDOR"
+                },
+                "empanelment_no": {
+                  "type": "string",
+                  "maxLength": 50,
+                  "example": "EMP-2024-001"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-15"
+                },
+                "shortcode": {
+                  "type": "string",
+                  "example": "EMP24"
+                },
+                "rfe": {
+                  "type": "string",
+                  "example": "RFE-IT-SERVICES"
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                }
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "201": {
+            "description": "Empanelment created successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+
+    "/admin/empanelment/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Update Empanelment (Partial)",
+        "description": "Partially update an Empanelment using its ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Empanelment ID",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "example": "Consultant"
+                },
+                "empanelment_no": {
+                  "type": "string",
+                  "maxLength": 50,
+                  "example": "EMP-2024-002"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-05-01"
+                },
+                "shortcode": {
+                  "type": "string",
+                  "example": "NEWCODE"
+                },
+                "rfe": {
+                  "type": "string",
+                  "example": "RFE-99999"
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-05-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-03-31"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": false
+                }
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Empanelment updated successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+
+    "/admin/empanelment/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Delete Empanelment",
+        "description": "Soft delete an Empanelment by ID",
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Empanelment",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Empanelment deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Empanelment deleted successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment already inactive",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+
+    "/admin/gst-code/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Get GST Code List",
+        "description": "Get all the GST Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "description": "Filter any field (Ex. is_active : true)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Ex. (id desc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Ex. (workflow_state_id,status,created_by,modified_by,created,modified,...)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page no. (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit. (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GstCodeResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/gst-code/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Get GST Code Edit List",
+        "description": "Get all the GST Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the GST Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the GST Code",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GstCodeResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/gst-code/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Create GST Code",
+        "description": "Create a new GST Code in the master table",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "code_type",
+                "code",
+                "description",
+                "effective_from"
+              ],
+              "properties": {
+                "code_type": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "HSN"
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "998313"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "IT Consulting Services"
+                },
+                "gst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "sgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "igst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cess_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "other_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                }
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "201": {
+            "description": "GST Code created successfully",
+            "schema": {
+              "$ref": "#/definitions/GstCodeResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/gst-code/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Update GST Code (Partial)",
+        "description": "Partially update a GST Code using its ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the GST Code",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "code_type": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "HSN"
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "998313"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Updated IT Consulting Services"
+                },
+                "gst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "sgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "igst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cess_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "other_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "GST Code updated successfully",
+            "schema": {
+              "$ref": "#/definitions/GstCodeResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "GST Code not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/gst-code/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Delete GST Code",
+        "description": "Soft delete a GST Code by ID",
+        "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the GST Code",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "GST Code deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "GST Code deleted successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "GST Code not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already inactive",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+             
+   "/admin/designation/index": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Designation"],
+    "summary": "Get  Designation List",
+    "description": "Get  designation records",
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "is_active",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Filter by active status"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Sort fields (Ex: id desc)"
+      },
+      {
+        "name": "fields",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Select specific fields"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "example": 10
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Empanelment Designation list fetched successfully"
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+},
+   "/admin/designation/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Get  Designation  Edit List",
+        "description": "Get all the Empnelment Designation !",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the Empanelment Designation ",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the Empanelment Designation ",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmpanelmentResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+   "/admin/designation/create": {
+  "post": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Designation"],
+    "summary": "Create Empanelment Designation",
+    "description": "Create a new Empanelment Designation record",
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+
+    "parameters": [
+      {
+        "in": "body",
+        "name": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "required": [
+            "empanelment_id_fk",
+            "type",
+            "designation",
+            "qualification",
+            "exp_in_years"
+          ],
+          "properties": {
+            "empanelment_id_fk": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "type": {
+              "type": "string",
+              "maxLength": 100,
+              "example": "TECHNICAL"
+            },
+            "designation": {
+              "type": "string",
+              "maxLength": 150,
+              "example": "Senior Developer"
+            },
+            "qualification": {
+              "type": "string",
+              "example": "B.Tech in Computer Science"
+            },
+            "exp_in_years": {
+              "type": "number",
+              "format": "float",
+              "example": 5.5
+            }
+          }
+        }
+      }
+    ],
+
+    "responses": {
+      "201": {
+        "description": "Empanelment Designation created successfully",
+        "schema": {
+          "$ref": "#/definitions/EmpanelmentDesignationResponse"
+        }
+      },
+      "400": {
+        "description": "Validation error",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "409": {
+        "description": "Empanelment Designation already exists",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+},
+"/admin/designation/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+       "tags": ["Designation"],
+       "summary": "Update  Designation",
+       "description": "Update an existing  Designation record",
+       "consumes": ["application/json"],
+      "produces": ["application/json"],
+
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Empanelment Designation ID",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "empanelment_id_fk": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "type": {
+              "type": "string",
+              "maxLength": 100,
+              "example": "TECHNICAL"
+            },
+            "designation": {
+              "type": "string",
+              "maxLength": 150,
+              "example": "Project Manager"
+            },
+            "qualification": {
+              "type": "string",
+              "example": "MBA in Project Management"
+            },
+            "exp_in_years": {
+              "type": "number",
+              "format": "float",
+              "example": 8
+            },
+            "is_active": {
+              "type": "boolean",
+              "example": true
+            }
+              }
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Empanelment Designation updated successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentDesignationResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment Designation not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Duplicate designation for this empanelment",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+
+    "/admin/designation/delete/{id}": {
+  "delete": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Designation"],
+    "summary": "Delete  Designation",
+    "description": "Soft delete an  Designation  by ID",
+    "produces": ["application/json"],
+
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "description": "ID of the Empanelment Designation",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "Empanelment Designation deleted successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "Empanelment Designation deleted successfully"
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid ID supplied",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "404": {
+        "description": "Empanelment not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "409": {
+        "description": "Empanelment Designation already inactive",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+},
+ "/admin/resourcerate/index": {
+  "get": {
+    "security": [
+      { "Authorization": [] }
+    ],
+    "tags": ["Resource Rate"],
+    "summary": "Get Resource Rate List",
+    "description": "Get all resource rate records",
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "is_active",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Filter by active status"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Sort fields (Ex: id desc)"
+      },
+      {
+        "name": "fields",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Select specific fields"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "type": "integer",
+        "example": 10
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Resource Rate list fetched successfully"
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+},
+
+ "/admin/resourcerate/{id}": {
+  "get": {
+    "security": [
+      { "Authorization": [] }
+    ],
+    "tags": ["Resource Rate"],
+    "summary": "Get Resource Rate By ID",
+    "description": "Get Resource Rate record by ID",
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "name": "is_active",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "default": true
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successful operation",
+        "schema": {
+          "$ref": "#/definitions/ResourceRateResponse"
+        }
+      },
+      "404": {
+        "description": "Resource Rate not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+},
+
+ "/admin/resourcerate/create": {
+  "post": {
+    "security": [
+      { "Authorization": [] }
+    ],
+    "tags": ["Resource Rate"],
+    "summary": "Create Resource Rate",
+    "description": "Create a new Resource Rate record",
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "in": "body",
+        "name": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "required": [
+            "desgn_id_fk",
+            "unit_rate_incl_agency_margin",
+            "unit_rate_excl_agency_margin",
+            "total_amount",
+            "final_amount"
+          ],
+          "properties": {
+            "desgn_id_fk": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "unit_rate_incl_agency_margin": {
+              "type": "number",
+              "format": "float",
+              "example": 50000
+            },
+            "agency_margin_percent": {
+              "type": "number",
+              "format": "float",
+              "example": 10
+            },
+            "agency_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 5000
+            },
+            "unit_rate_excl_agency_margin": {
+              "type": "number",
+              "format": "float",
+              "example": 45000
+            },
+            "nicsi_margin_percent": {
+              "type": "number",
+              "format": "float",
+              "example": 5
+            },
+            "nicsi_margin_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 2250
+            },
+            "total_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 47250
+            },
+            "hsn_sac_code": {
+              "type": "string",
+              "example": "9983"
+            },
+            "cgst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 4252.5
+            },
+            "sgst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 4252.5
+            },
+            "igst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 0
+            },
+            "total_gst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 8505
+            },
+            "final_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 55755
+            }
+          }
+        }
+      }
+    ],
+    "responses": {
+      "201": {
+        "description": "Resource Rate created successfully",
+        "schema": {
+          "$ref": "#/definitions/ResourceRateResponse"
+        }
+      },
+      "409": {
+        "description": "Resource Rate already exists",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+},
+"/admin/resourcerate/edit/{id}": {
+  "patch": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Resource Rate"],
+    "summary": "Update Resource Rate",
+    "description": "Update an existing Resource Rate record",
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "description": "Resource Rate ID",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "in": "body",
+        "name": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "minProperties": 1,
+          "properties": {
+            "desgn_id_fk": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "unit_rate_incl_agency_margin": {
+              "type": "number",
+              "format": "float",
+              "example": 50000
+            },
+            "agency_margin_percent": {
+              "type": "number",
+              "format": "float",
+              "example": 10
+            },
+            "agency_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 5000
+            },
+            "unit_rate_excl_agency_margin": {
+              "type": "number",
+              "format": "float",
+              "example": 45000
+            },
+            "nicsi_margin_percent": {
+              "type": "number",
+              "format": "float",
+              "example": 5
+            },
+            "nicsi_margin_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 2250
+            },
+            "total_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 47250
+            },
+            "hsn_sac_code": {
+              "type": "string",
+              "maxLength": 10,
+              "example": "9983"
+            },
+            "cgst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 4252.5
+            },
+            "sgst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 4252.5
+            },
+            "igst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 0
+            },
+            "total_gst_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 8505
+            },
+            "final_amount": {
+              "type": "number",
+              "format": "float",
+              "example": 55755
+            },
+            "is_active": {
+              "type": "boolean",
+              "example": true
+            }
+          }
+        }
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "Resource Rate updated successfully",
+        "schema": {
+          "$ref": "#/definitions/ResourceRateResponse"
+        }
+      },
+      "400": {
+        "description": "Validation error",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "404": {
+        "description": "Resource Rate not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "409": {
+        "description": "Duplicate Resource Rate for this designation",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+},
+
+ "/admin/resourcerate/delete/{id}": {
+  "delete": {
+    "security": [
+      { "Authorization": [] }
+    ],
+    "tags": ["Resource Rate"],
+    "summary": "Delete Resource Rate",
+    "description": "Soft delete a Resource Rate by ID",
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Resource Rate deleted successfully"
+      },
+      "404": {
+        "description": "Resource Rate not found"
+      },
+      "409": {
+        "description": "Resource Rate already inactive"
+      }
+    }
+  }
+}
+ },
+  
+   
+
+  
+  "definitions": {
+    "EmpanelmentResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "category": {
+          "type": "string",
+          "maxLength": 20
+        },
+
+        "empanelment_no": {
+          "type": "string",
+          "maxLength": 50
+        },
+
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "shortcode": {
+          "type": "string",
+          "maxLength": 255
+        },
+
+        "rfe": {
+          "type": "string",
+          "maxLength": 255
+        },
+
+        "effective_from": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "effective_to": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "category",
+        "empanelment_no",
+        "date",
+        "shortcode",
+        "rfe",
+        "effective_from"
+      ]
+    },
+
+    "GstCodeResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "code_type": {
+          "type": "string",
+          "maxLength": 10
+        },
+
+        "code": {
+          "type": "string",
+          "maxLength": 10
+        },
+
+        "description": {
+          "type": "string"
+        },
+
+        "gst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "cgst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "sgst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "igst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "cess_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "other_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "effective_from": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "effective_to": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["code_type", "code", "description", "effective_from"]
+    },
+
+    "EmpanelmentDesignationResponse": {
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64"
+    },
+
+    "empanelment_id_fk": {
+      "type": "integer",
+      "format": "int64"
+    },
+
+    "type": {
+      "type": "string",
+      "maxLength": 100
+    },
+
+    "designation": {
+      "type": "string",
+      "maxLength": 150
+    },
+
+    "qualification": {
+      "type": "string"
+    },
+
+    "exp_in_years": {
+      "type": "number",
+      "format": "float",
+      "description": "Experience in years (example: 5.5)"
+    },
+
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "modified": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "empanelment_id_fk",
+    "type",
+    "designation",
+    "qualification",
+    "exp_in_years"
+  ]
+},
+   "ResourceRateResponse": {
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "format": "int64"
+    },
+
+    "desgn_id_fk": {
+      "type": "integer",
+      "format": "int64"
+    },
+
+    "unit_rate_incl_agency_margin": {
+      "type": "number",
+      "format": "float",
+      "description": "Unit rate including agency margin"
+    },
+
+    "agency_margin_percent": {
+      "type": "number",
+      "format": "float",
+      "description": "Agency margin percentage"
+    },
+
+    "agency_amount": {
+      "type": "number",
+      "format": "float",
+      "description": "Calculated agency margin amount"
+    },
+
+    "unit_rate_excl_agency_margin": {
+      "type": "number",
+      "format": "float",
+      "description": "Unit rate excluding agency margin"
+    },
+
+    "nicsi_margin_percent": {
+      "type": "number",
+      "format": "float",
+      "description": "NICSI margin percentage"
+    },
+
+    "nicsi_margin_amount": {
+      "type": "number",
+      "format": "float",
+      "description": "NICSI margin amount"
+    },
+
+    "total_amount": {
+      "type": "number",
+      "format": "float",
+      "description": "Total amount before GST"
+    },
+
+    "hsn_sac_code": {
+      "type": "string",
+      "maxLength": 10
+    },
+
+    "cgst_amount": {
+      "type": "number",
+      "format": "float"
+    },
+
+    "sgst_amount": {
+      "type": "number",
+      "format": "float"
+    },
+
+    "igst_amount": {
+      "type": "number",
+      "format": "float"
+    },
+
+    "total_gst_amount": {
+      "type": "number",
+      "format": "float"
+    },
+
+    "final_amount": {
+      "type": "number",
+      "format": "float",
+      "description": "Final amount including GST"
+    },
+
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+
+    "modified": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+
+  "required": [
+    "desgn_id_fk",
+    "unit_rate_incl_agency_margin",
+    "unit_rate_excl_agency_margin",
+    "total_amount",
+    "final_amount"
+  ]
+},
+
+
+
+    "InvalidResponse": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

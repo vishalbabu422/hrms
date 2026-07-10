@@ -1,0 +1,69 @@
+import EmpSalaryStructureForm from './form-component'
+import { toast } from 'react-toastify'
+import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+
+const Edit = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
+
+  const [initialData, setInitialData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  /* ================= FETCH FROM LOCAL STORAGE ================= */
+
+  useEffect(() => {
+    try {
+      const data =
+        JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+      const record = data.find((item) => item.id === Number(id))
+
+      if (!record) {
+        toast.error('Record not found')
+        navigate('/emp-salary-structure')
+      } else {
+        setInitialData(record)
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load record')
+      navigate('/emp-salary-structure')
+    } finally {
+      setLoading(false)
+    }
+  }, [id])
+
+  /* ================= UPDATE ================= */
+
+  const handleUpdate = (payload) => {
+    try {
+      let data =
+        JSON.parse(localStorage.getItem('empSalaryStructure')) || []
+
+      data = data.map((item) =>
+        item.id === Number(id) ? { ...item, ...payload } : item
+      )
+
+      localStorage.setItem('empSalaryStructure', JSON.stringify(data))
+
+      toast.success('Updated successfully')
+      navigate('/emp-salary-structure')
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to update')
+    }
+  }
+
+  if (loading) return null
+
+  return (
+    <EmpSalaryStructureForm
+      initialData={initialData}
+      mode="edit"
+      onSubmit={handleUpdate}
+    />
+  )
+}
+
+export default Edit

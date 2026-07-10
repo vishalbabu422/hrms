@@ -1,0 +1,4193 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "PMU API Documentation",
+    "version": "1.0",
+    "title": "PMU API",
+    "contact": {
+      "email": "vishalbabu422@gmail.com"
+    }
+  },
+  "schemes": ["http", "https"],
+  "host": "localhost:3100",
+  "basePath": "/api/v1",
+  "securityDefinitions": {
+    "Authorization": {
+      "type": "apiKey",
+      "name": "authorization",
+      "in": "header",
+      "description": "Enter: Bearer <JWT Token>"
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Login",
+        "description": "Authenticate user and return access token with refresh token cookie",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["email", "password"],
+              "properties": {
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "admin@saas.com"
+                },
+                "password": {
+                  "type": "string",
+                  "example": "Admin@123"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "accessToken": {
+                  "type": "string",
+                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                },
+                "user": {
+                  "$ref": "#/definitions/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh Access Token",
+        "description": "Generate new access token using refresh token (stored in cookie)",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "accessToken": {
+                  "type": "string",
+                  "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired refresh token",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Authentication"],
+        "summary": "Logout User",
+        "description": "Revoke refresh token and clear cookie",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "Logged out successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "example": "Logged out"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/empanelment/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Get Empanelment List",
+        "description": "Get all empanelment records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmpanelmentResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/empanelment/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Get Empanelment Code Edit List",
+        "description": "Get all the Empanelment Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the Empanelment Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the Empanelment Code",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmpanelmentResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/empanelment/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Create Empanelment",
+        "description": "Create a new Empanelment record in the master table",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "category",
+                "empanelment_no",
+                "date",
+                "shortcode",
+                "rfe",
+                "effective_from"
+              ],
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "example": "VENDOR"
+                },
+                "empanelment_no": {
+                  "type": "string",
+                  "maxLength": 50,
+                  "example": "EMP-2024-001"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-15"
+                },
+                "shortcode": {
+                  "type": "string",
+                  "example": "EMP24"
+                },
+                "rfe": {
+                  "type": "string",
+                  "example": "RFE-IT-SERVICES"
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Empanelment created successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/empanelment/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Update Empanelment (Partial)",
+        "description": "Partially update an Empanelment using its ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Empanelment ID",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "maxLength": 20,
+                  "example": "Consultant"
+                },
+                "empanelment_no": {
+                  "type": "string",
+                  "maxLength": 50,
+                  "example": "EMP-2024-002"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-05-01"
+                },
+                "shortcode": {
+                  "type": "string",
+                  "example": "NEWCODE"
+                },
+                "rfe": {
+                  "type": "string",
+                  "example": "RFE-99999"
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-05-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-03-31"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": false
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment updated successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/empanelment/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Delete Empanelment",
+        "description": "Soft delete an Empanelment by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Empanelment",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Empanelment deleted successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment already inactive",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/gst-code/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Get GST Code List",
+        "description": "Get all the GST Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "description": "Filter any field (Ex. is_active : true)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "description": "Ex. (id desc)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "description": "Ex. (workflow_state_id,status,created_by,modified_by,created,modified,...)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Pagination page no. (Ex. 1)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "description": "Pagination limit. (Ex. 10)",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GstCodeResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/gst-code/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Get GST Code Edit List",
+        "description": "Get all the GST Codes!",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the GST Code",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the GST Code",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GstCodeResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/gst-code/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Create GST Code",
+        "description": "Create a new GST Code in the master table",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "code_type",
+                "code",
+                "description",
+                "effective_from"
+              ],
+              "properties": {
+                "code_type": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "HSN"
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "998313"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "IT Consulting Services"
+                },
+                "gst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "sgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "igst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cess_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "other_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "GST Code created successfully",
+            "schema": {
+              "$ref": "#/definitions/GstCodeResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/gst-code/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Update GST Code (Partial)",
+        "description": "Partially update a GST Code using its ID",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the GST Code",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "code_type": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "HSN"
+                },
+                "code": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "998313"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Updated IT Consulting Services"
+                },
+                "gst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "sgst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9.0
+                },
+                "igst_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 18.0
+                },
+                "cess_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "other_rate": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0.0
+                },
+                "effective_from": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2024-04-01"
+                },
+                "effective_to": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-03-31"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GST Code updated successfully",
+            "schema": {
+              "$ref": "#/definitions/GstCodeResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "GST Code not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/gst-code/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["GST Codes"],
+        "summary": "Delete GST Code",
+        "description": "Soft delete a GST Code by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the GST Code",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "GST Code deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "GST Code deleted successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "GST Code not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "GST Code already inactive",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/designation/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Get  Designation List",
+        "description": "Get  designation records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment Designation list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmpanelmentDesignationResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/designation/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Get  Designation  Edit List",
+        "description": "Get all the Empnelment Designation !",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "description": "ID of the Empanelment Designation ",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "is_active",
+            "description": "Activeness of the Empanelment Designation ",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EmpanelmentDesignationResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/designation/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Create Empanelment Designation",
+        "description": "Create a new Empanelment Designation record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "empanelment_id_fk",
+                "type",
+                "designation",
+                "qualification",
+                "exp_in_years"
+              ],
+              "properties": {
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 1
+                },
+                "type": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "example": "TECHNICAL"
+                },
+                "designation": {
+                  "type": "string",
+                  "maxLength": 150,
+                  "example": "Senior Developer"
+                },
+                "qualification": {
+                  "type": "string",
+                  "example": "B.Tech in Computer Science"
+                },
+                "exp_in_years": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 5.5
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Empanelment Designation created successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentDesignationResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment Designation already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/designation/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Update  Designation",
+        "description": "Update an existing  Designation record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Empanelment Designation ID",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 1
+                },
+                "type": {
+                  "type": "string",
+                  "maxLength": 100,
+                  "example": "TECHNICAL"
+                },
+                "designation": {
+                  "type": "string",
+                  "maxLength": 150,
+                  "example": "Project Manager"
+                },
+                "qualification": {
+                  "type": "string",
+                  "example": "MBA in Project Management"
+                },
+                "exp_in_years": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 8
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment Designation updated successfully",
+            "schema": {
+              "$ref": "#/definitions/EmpanelmentDesignationResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment Designation not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Duplicate designation for this empanelment",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/designation/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Designation"],
+        "summary": "Delete  Designation",
+        "description": "Soft delete an  Designation  by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the Empanelment Designation",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Empanelment Designation deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Empanelment Designation deleted successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID supplied",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Empanelment not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Empanelment Designation already inactive",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/resourcerate/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Resource Rate"],
+        "summary": "Get Resource Rate List",
+        "description": "Get all resource rate records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource Rate list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ResourceRateResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/resourcerate/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Resource Rate"],
+        "summary": "Get Resource Rate By ID",
+        "description": "Get Resource Rate record by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/ResourceRateResponse"
+            }
+          },
+          "404": {
+            "description": "Resource Rate not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/resourcerate/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Resource Rate"],
+        "summary": "Create Resource Rate",
+        "description": "Create a new Resource Rate record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "desgn_id_fk",
+                "unit_rate_incl_agency_margin",
+                "unit_rate_excl_agency_margin",
+                "total_amount",
+                "final_amount"
+              ],
+              "properties": {
+                "desgn_id_fk": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 1
+                },
+                "unit_rate_incl_agency_margin": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 50000
+                },
+                "agency_margin_percent": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 10
+                },
+                "agency_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 5000
+                },
+                "unit_rate_excl_agency_margin": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 45000
+                },
+                "nicsi_margin_percent": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 5
+                },
+                "nicsi_margin_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 2250
+                },
+                "total_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 47250
+                },
+                "hsn_sac_code": {
+                  "type": "string",
+                  "example": "9983"
+                },
+                "cgst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 4252.5
+                },
+                "sgst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 4252.5
+                },
+                "igst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0
+                },
+                "total_gst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 8505
+                },
+                "final_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 55755
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Resource Rate created successfully",
+            "schema": {
+              "$ref": "#/definitions/ResourceRateResponse"
+            }
+          },
+          "409": {
+            "description": "Resource Rate already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/resourcerate/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Resource Rate"],
+        "summary": "Update Resource Rate",
+        "description": "Update an existing Resource Rate record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Resource Rate ID",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "desgn_id_fk": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 1
+                },
+                "unit_rate_incl_agency_margin": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 50000
+                },
+                "agency_margin_percent": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 10
+                },
+                "agency_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 5000
+                },
+                "unit_rate_excl_agency_margin": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 45000
+                },
+                "nicsi_margin_percent": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 5
+                },
+                "nicsi_margin_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 2250
+                },
+                "total_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 47250
+                },
+                "hsn_sac_code": {
+                  "type": "string",
+                  "maxLength": 10,
+                  "example": "9983"
+                },
+                "cgst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 4252.5
+                },
+                "sgst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 4252.5
+                },
+                "igst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0
+                },
+                "total_gst_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 8505
+                },
+                "final_amount": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 55755
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource Rate updated successfully",
+            "schema": {
+              "$ref": "#/definitions/ResourceRateResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Resource Rate not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Duplicate Resource Rate for this designation",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/resourcerate/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Resource Rate"],
+        "summary": "Delete Resource Rate",
+        "description": "Soft delete a Resource Rate by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resource Rate deleted successfully"
+          },
+          "404": {
+            "description": "Resource Rate not found"
+          },
+          "409": {
+            "description": "Resource Rate already inactive"
+          }
+        }
+      }
+    },
+    "/admin/workorder/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order"],
+        "summary": "Get Work Order List",
+        "description": "Get all work order records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Search by work order no, project name, issued to name"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WorkOrderResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workorder/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order"],
+        "summary": "Get Work Order By ID",
+        "description": "Get Work Order record by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/WorkOrderResponse"
+            }
+          },
+          "404": {
+            "description": "Work Order not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workorder/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order"],
+        "summary": "Create Work Order",
+        "description": "Create a new Work Order record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "empanelment_id_fk",
+                "work_order_no",
+                "work_order_date",
+                "project_no",
+                "project_name",
+                "issued_to_name",
+                "issued_to_address",
+                "issued_to_contact",
+                "issued_to_phone",
+                "issued_to_email",
+                "contact_name",
+                "contact_number",
+                "contact_email",
+                "total_amt",
+                "total_cgst_amt",
+                "total_sgst_amt",
+                "total_igst_amt",
+                "grand_total",
+                "created_by"
+              ],
+              "properties": {
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "work_order_no": {
+                  "type": "string",
+                  "example": "WO-001"
+                },
+                "work_order_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-02-13"
+                },
+                "project_no": {
+                  "type": "string",
+                  "example": "PRJ-001"
+                },
+                "pi_number": {
+                  "type": "string",
+                  "example": "PI-123"
+                },
+                "project_name": {
+                  "type": "string",
+                  "example": "NICSI Implementation Project"
+                },
+                "issued_to_name": {
+                  "type": "string",
+                  "example": "ABC Pvt Ltd"
+                },
+                "issued_to_address": {
+                  "type": "string",
+                  "example": "New Delhi"
+                },
+                "issued_to_contact": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "issued_to_phone": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "issued_to_email": {
+                  "type": "string",
+                  "example": "abc@example.com"
+                },
+                "contact_name": {
+                  "type": "string",
+                  "example": "Rahul Sharma"
+                },
+                "contact_number": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "example": "rahul@example.com"
+                },
+                "total_amt": {
+                  "type": "number",
+                  "example": 50000
+                },
+                "total_cgst_amt": {
+                  "type": "number",
+                  "example": 4500
+                },
+                "total_sgst_amt": {
+                  "type": "number",
+                  "example": 4500
+                },
+                "total_igst_amt": {
+                  "type": "number",
+                  "example": 0
+                },
+                "grand_total": {
+                  "type": "number",
+                  "example": 59000
+                },
+                "created_by": {
+                  "type": "integer",
+                  "example": 1
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Work Order created successfully",
+            "schema": {
+              "$ref": "#/definitions/WorkOrderResponse"
+            }
+          },
+          "409": {
+            "description": "Work Order number already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/workorder/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order"],
+        "summary": "Update Work Order",
+        "description": "Update an existing Work Order record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Work Order ID",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "format": "int64",
+                  "example": 1
+                },
+                "work_order_no": {
+                  "type": "string",
+                  "maxLength": 255,
+                  "example": "WO/2026/001"
+                },
+                "work_order_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2026-02-13"
+                },
+                "project_no": {
+                  "type": "string",
+                  "example": "PRJ-001"
+                },
+                "pi_number": {
+                  "type": "string",
+                  "example": "PI-2026-01"
+                },
+                "project_name": {
+                  "type": "string",
+                  "example": "Smart City Implementation"
+                },
+                "issued_to_name": {
+                  "type": "string",
+                  "example": "ABC Pvt Ltd"
+                },
+                "issued_to_address": {
+                  "type": "string",
+                  "example": "Delhi, India"
+                },
+                "issued_to_contact": {
+                  "type": "string",
+                  "example": "Rohit Sharma"
+                },
+                "issued_to_phone": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "issued_to_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "contact@abc.com"
+                },
+                "contact_name": {
+                  "type": "string",
+                  "example": "Amit Kumar"
+                },
+                "contact_number": {
+                  "type": "string",
+                  "example": "9123456789"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "amit@example.com"
+                },
+                "total_amt": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 100000
+                },
+                "total_cgst_amt": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9000
+                },
+                "total_sgst_amt": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 9000
+                },
+                "total_igst_amt": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 0
+                },
+                "grand_total": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 118000
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "modified": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2026-02-13T10:30:00Z"
+                },
+                "created_by": {
+                  "type": "integer",
+                  "example": 1
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order updated successfully",
+            "schema": {
+              "$ref": "#/definitions/WorkOrderResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Work Order not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "409": {
+            "description": "Duplicate Work Order number",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/workorder/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order"],
+        "summary": "Delete Work Order",
+        "description": "Soft delete a Work Order by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order deleted successfully"
+          },
+          "404": {
+            "description": "Work Order not found"
+          },
+          "409": {
+            "description": "Work Order already inactive"
+          }
+        }
+      }
+    },
+    "/admin/workorder-desgn/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order Designation"],
+        "summary": "Get Work Order Desgination List",
+        "description": "Get all work order designation records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Search by work order no"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order Designation list fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/WorkOrderDesignationListResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/company/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Company Master"],
+        "summary": "Get Company List",
+        "description": "Get all company records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Search by company name, company code, email, city"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CompanyResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/company/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Company Master"],
+        "summary": "Get Company By ID",
+        "description": "Get Company record by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/CompanyResponse"
+            }
+          },
+          "404": {
+            "description": "Company not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/company/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Company Master"],
+        "summary": "Create Company",
+        "description": "Create a new Company record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["company_name"],
+              "properties": {
+                "organization_id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "company_name": {
+                  "type": "string",
+                  "example": "ABC Private Limited"
+                },
+                "company_code": {
+                  "type": "string",
+                  "example": "ABC001"
+                },
+                "company_type": {
+                  "type": "string",
+                  "enum": [
+                    "PRIVATE_LIMITED",
+                    "PUBLIC_LIMITED",
+                    "LLP",
+                    "PROPRIETORSHIP",
+                    "PARTNERSHIP",
+                    "GOVERNMENT",
+                    "NGO",
+                    "OTHER"
+                  ],
+                  "example": "PRIVATE_LIMITED"
+                },
+                "incorporation_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2020-01-15"
+                },
+                "official_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "info@abc.com"
+                },
+                "official_phone": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "website": {
+                  "type": "string",
+                  "example": "https://abc.com"
+                },
+                "address_line1": {
+                  "type": "string",
+                  "example": "Plot No 10, Sector 5"
+                },
+                "address_line2": {
+                  "type": "string",
+                  "example": "Near Metro Station"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "New Delhi"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "Delhi"
+                },
+                "country": {
+                  "type": "string",
+                  "example": "India"
+                },
+                "pincode": {
+                  "type": "string",
+                  "example": "110001"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Company created successfully",
+            "schema": {
+              "$ref": "#/definitions/CompanyResponse"
+            }
+          },
+          "409": {
+            "description": "Company code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/company/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Company Master"],
+        "summary": "Update Company",
+        "description": "Update an existing Company record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "organization_id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "company_name": {
+                  "type": "string",
+                  "example": "ABC Pvt Ltd Updated"
+                },
+                "company_code": {
+                  "type": "string",
+                  "example": "ABC002"
+                },
+                "company_type": {
+                  "type": "string",
+                  "enum": [
+                    "PRIVATE_LIMITED",
+                    "PUBLIC_LIMITED",
+                    "LLP",
+                    "PROPRIETORSHIP",
+                    "PARTNERSHIP",
+                    "GOVERNMENT",
+                    "NGO",
+                    "OTHER"
+                  ],
+                  "example": "PRIVATE_LIMITED"
+                },
+                "incorporation_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2020-01-15"
+                },
+                "official_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "info@abc.com"
+                },
+                "official_phone": {
+                  "type": "string",
+                  "example": "+91-9876543210"
+                },
+                "website": {
+                  "type": "string",
+                  "example": "https://www.abc.com"
+                },
+                "address_line1": {
+                  "type": "string",
+                  "example": "123 Business Park"
+                },
+                "address_line2": {
+                  "type": "string",
+                  "example": "Sector 5"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "Mumbai"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "Maharashtra"
+                },
+                "country": {
+                  "type": "string",
+                  "example": "India"
+                },
+                "pincode": {
+                  "type": "string",
+                  "example": "400001"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company updated successfully",
+            "schema": {
+              "$ref": "#/definitions/CompanyResponse"
+            }
+          },
+          "404": {
+            "description": "Company not found"
+          },
+          "409": {
+            "description": "Duplicate Company code"
+          }
+        }
+      }
+    },
+    "/admin/company/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Company Master"],
+        "summary": "Delete Company",
+        "description": "Soft delete a Company by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Company deleted successfully"
+          },
+          "404": {
+            "description": "Company not found"
+          },
+          "409": {
+            "description": "Company already inactive"
+          }
+        }
+      }
+    },
+    "/admin/organization/index": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organization"],
+        "summary": "Get Organization List",
+        "description": "Get all organization records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Search by organization name, organization code, email, phone"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OrganizationResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/organization/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organization"],
+        "summary": "Get Organization By ID",
+        "description": "Get Organization record by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/OrganizationResponse"
+            }
+          },
+          "404": {
+            "description": "Organization not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/organization/create": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organization"],
+        "summary": "Create Organization",
+        "description": "Create a new Organization record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["org_name", "org_code"],
+              "properties": {
+                "org_name": {
+                  "type": "string",
+                  "example": "National Informatics Centre"
+                },
+                "org_code": {
+                  "type": "string",
+                  "example": "NIC001"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "info@nic.in"
+                },
+                "contact_phone": {
+                  "type": "string",
+                  "example": "011-24360000"
+                },
+                "address": {
+                  "type": "string",
+                  "example": "CGO Complex, Lodhi Road, New Delhi"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Organization created successfully",
+            "schema": {
+              "$ref": "#/definitions/OrganizationResponse"
+            }
+          },
+          "409": {
+            "description": "Organization code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+    "/admin/organization/edit/{id}": {
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organization"],
+        "summary": "Update Organization",
+        "description": "Update an existing Organization record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "org_name": {
+                  "type": "string",
+                  "example": "NIC Updated"
+                },
+                "org_code": {
+                  "type": "string",
+                  "example": "NIC002"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "updated@nic.in"
+                },
+                "contact_phone": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "address": {
+                  "type": "string",
+                  "example": "New Address Delhi"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization updated successfully",
+            "schema": {
+              "$ref": "#/definitions/OrganizationResponse"
+            }
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "409": {
+            "description": "Duplicate Organization code"
+          }
+        }
+      }
+    },
+    "/admin/organization/delete/{id}": {
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Organization"],
+        "summary": "Delete Organization",
+        "description": "Soft delete an Organization by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Organization deleted successfully"
+          },
+          "404": {
+            "description": "Organization not found"
+          },
+          "409": {
+            "description": "Organization already inactive"
+          }
+        }
+      }
+    },
+
+    "/admin/vendor/index": {
+      "get": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Vendor Master"],
+        "summary": "Get Vendor List",
+        "description": "Get all vendor records",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "description": "Filter by active status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Search by vendor name, vendor code, contact email, contact phone"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Sort fields (Ex: id desc)"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Select specific fields"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor list fetched successfully",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VendorResponse"
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/vendor/{id}": {
+      "get": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Vendor Master"],
+        "summary": "Get Vendor By ID",
+        "description": "Get Vendor record by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "default": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/VendorResponse"
+            }
+          },
+          "404": {
+            "description": "Vendor not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/vendor/create": {
+      "post": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Vendor Master"],
+        "summary": "Create Vendor",
+        "description": "Create a new Vendor record",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["empanelment_id_fk", "vendor_name"],
+              "properties": {
+                "organization_id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "vendor_name": {
+                  "type": "string",
+                  "example": "ABC Consulting Pvt Ltd"
+                },
+                "vendor_code": {
+                  "type": "string",
+                  "example": "VEND001"
+                },
+                "vendor_type": {
+                  "type": "string",
+                  "enum": [
+                    "INDIVIDUAL",
+                    "PROPRIETORSHIP",
+                    "PARTNERSHIP",
+                    "LLP",
+                    "PRIVATE_LIMITED",
+                    "PUBLIC_LIMITED",
+                    "GOVERNMENT",
+                    "NGO",
+                    "OTHER"
+                  ],
+                  "example": "PRIVATE_LIMITED"
+                },
+                "contact_person": {
+                  "type": "string",
+                  "example": "Rahul Sharma"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "contact@abc.com"
+                },
+                "contact_phone": {
+                  "type": "string",
+                  "example": "9876543210"
+                },
+                "website": {
+                  "type": "string",
+                  "example": "https://abc.com"
+                },
+                "address_line1": {
+                  "type": "string",
+                  "example": "Sector 10"
+                },
+                "address_line2": {
+                  "type": "string",
+                  "example": "Industrial Area"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "Delhi"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "Delhi"
+                },
+                "country": {
+                  "type": "string",
+                  "example": "India"
+                },
+                "pincode": {
+                  "type": "string",
+                  "example": "110001"
+                },
+                "bank_name": {
+                  "type": "string",
+                  "example": "State Bank of India"
+                },
+                "account_number": {
+                  "type": "string",
+                  "example": "123456789012"
+                },
+                "ifsc_code": {
+                  "type": "string",
+                  "example": "SBIN0001234"
+                },
+                "branch_name": {
+                  "type": "string",
+                  "example": "Connaught Place"
+                },
+                "onboarding_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2025-01-01"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Vendor created successfully",
+            "schema": {
+              "$ref": "#/definitions/VendorResponse"
+            }
+          },
+          "409": {
+            "description": "Vendor code already exists",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
+
+    "/admin/vendor/edit/{id}": {
+      "patch": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Vendor Master"],
+        "summary": "Update Vendor",
+        "description": "Update an existing Vendor record (Partial update supported)",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "organization_id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "empanelment_id_fk": {
+                  "type": "integer",
+                  "example": 5
+                },
+                "vendor_name": {
+                  "type": "string",
+                  "example": "XYZ Solutions Pvt Ltd"
+                },
+                "vendor_code": {
+                  "type": "string",
+                  "example": "VEND002"
+                },
+                "vendor_type": {
+                  "type": "string",
+                  "enum": [
+                    "INDIVIDUAL",
+                    "PROPRIETORSHIP",
+                    "PARTNERSHIP",
+                    "LLP",
+                    "PRIVATE_LIMITED",
+                    "PUBLIC_LIMITED",
+                    "GOVERNMENT",
+                    "NGO",
+                    "OTHER"
+                  ],
+                  "example": "PRIVATE_LIMITED"
+                },
+                "contact_person": {
+                  "type": "string",
+                  "example": "Rahul Sharma"
+                },
+                "contact_email": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "rahul.sharma@xyz.com"
+                },
+                "contact_phone": {
+                  "type": "string",
+                  "example": "+91-9876543210"
+                },
+                "website": {
+                  "type": "string",
+                  "example": "https://www.xyzsolutions.com"
+                },
+                "address_line1": {
+                  "type": "string",
+                  "example": "45 Industrial Area"
+                },
+                "address_line2": {
+                  "type": "string",
+                  "example": "Phase 2"
+                },
+                "city": {
+                  "type": "string",
+                  "example": "Delhi"
+                },
+                "state": {
+                  "type": "string",
+                  "example": "Delhi"
+                },
+                "country": {
+                  "type": "string",
+                  "example": "India"
+                },
+                "pincode": {
+                  "type": "string",
+                  "example": "110020"
+                },
+                "bank_name": {
+                  "type": "string",
+                  "example": "State Bank of India"
+                },
+                "account_number": {
+                  "type": "string",
+                  "example": "123456789012"
+                },
+                "ifsc_code": {
+                  "type": "string",
+                  "example": "SBIN0001234"
+                },
+                "branch_name": {
+                  "type": "string",
+                  "example": "Nehru Place Branch"
+                },
+                "onboarding_date": {
+                  "type": "string",
+                  "format": "date",
+                  "example": "2023-06-15"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "example": true
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor updated successfully",
+            "schema": {
+              "$ref": "#/definitions/VendorResponse"
+            }
+          },
+          "404": {
+            "description": "Vendor not found"
+          },
+          "409": {
+            "description": "Duplicate Vendor code"
+          }
+        }
+      }
+    },
+
+    "/admin/vendor/delete/{id}": {
+      "delete": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Vendor Master"],
+        "summary": "Delete Vendor",
+        "description": "Soft delete a Vendor by ID",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor deleted successfully"
+          },
+          "404": {
+            "description": "Vendor not found"
+          },
+          "409": {
+            "description": "Vendor already inactive"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "UserResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 1
+        },
+        "name": {
+          "type": "string",
+          "example": "System Admin"
+        },
+        "email": {
+          "type": "string",
+          "example": "admin@saas.com"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "example": "SAAS_ADMIN"
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Organization deleted successfully"
+        },
+        "404": {
+          "description": "Organization not found"
+        },
+        "409": {
+          "description": "Organization already inactive"
+        }
+      }
+    },
+    "EmpanelmentResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "category": {
+          "type": "string",
+          "maxLength": 20
+        },
+
+        "empanelment_no": {
+          "type": "string",
+          "maxLength": 50
+        },
+
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "shortcode": {
+          "type": "string",
+          "maxLength": 255
+        },
+
+        "rfe": {
+          "type": "string",
+          "maxLength": 255
+        },
+
+        "effective_from": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "effective_to": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "category",
+        "empanelment_no",
+        "date",
+        "shortcode",
+        "rfe",
+        "effective_from"
+      ]
+    },
+
+    "GstCodeResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "code_type": {
+          "type": "string",
+          "maxLength": 10
+        },
+
+        "code": {
+          "type": "string",
+          "maxLength": 10
+        },
+
+        "description": {
+          "type": "string"
+        },
+
+        "gst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "cgst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "sgst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "igst_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "cess_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "other_rate": {
+          "type": "number",
+          "format": "double",
+          "default": 0.0
+        },
+
+        "effective_from": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "effective_to": {
+          "type": "string",
+          "format": "date"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["code_type", "code", "description", "effective_from"]
+    },
+
+    "EmpanelmentDesignationResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "empanelment_id_fk": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "type": {
+          "type": "string",
+          "maxLength": 100
+        },
+
+        "designation": {
+          "type": "string",
+          "maxLength": 150
+        },
+
+        "qualification": {
+          "type": "string"
+        },
+
+        "exp_in_years": {
+          "type": "number",
+          "format": "float",
+          "description": "Experience in years (example: 5.5)"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "empanelment_id_fk",
+        "type",
+        "designation",
+        "qualification",
+        "exp_in_years"
+      ]
+    },
+    "ResourceRateResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "desgn_id_fk": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "unit_rate_incl_agency_margin": {
+          "type": "number",
+          "format": "float",
+          "description": "Unit rate including agency margin"
+        },
+
+        "agency_margin_percent": {
+          "type": "number",
+          "format": "float",
+          "description": "Agency margin percentage"
+        },
+
+        "agency_amount": {
+          "type": "number",
+          "format": "float",
+          "description": "Calculated agency margin amount"
+        },
+
+        "unit_rate_excl_agency_margin": {
+          "type": "number",
+          "format": "float",
+          "description": "Unit rate excluding agency margin"
+        },
+
+        "nicsi_margin_percent": {
+          "type": "number",
+          "format": "float",
+          "description": "NICSI margin percentage"
+        },
+
+        "nicsi_margin_amount": {
+          "type": "number",
+          "format": "float",
+          "description": "NICSI margin amount"
+        },
+
+        "total_amount": {
+          "type": "number",
+          "format": "float",
+          "description": "Total amount before GST"
+        },
+
+        "hsn_sac_code": {
+          "type": "string",
+          "maxLength": 10
+        },
+
+        "cgst_amount": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "sgst_amount": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "igst_amount": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "total_gst_amount": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "final_amount": {
+          "type": "number",
+          "format": "float",
+          "description": "Final amount including GST"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+
+      "required": [
+        "desgn_id_fk",
+        "unit_rate_incl_agency_margin",
+        "unit_rate_excl_agency_margin",
+        "total_amount",
+        "final_amount"
+      ]
+    },
+    "WorkOrderResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "empanelment_id_fk": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "work_order_no": {
+          "type": "string",
+          "description": "Unique work order number"
+        },
+
+        "work_order_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Work order issue date"
+        },
+
+        "project_no": {
+          "type": "string"
+        },
+
+        "pi_number": {
+          "type": "string"
+        },
+
+        "project_name": {
+          "type": "string"
+        },
+
+        "issued_to_name": {
+          "type": "string"
+        },
+
+        "issued_to_address": {
+          "type": "string"
+        },
+
+        "issued_to_contact": {
+          "type": "string"
+        },
+
+        "issued_to_phone": {
+          "type": "string"
+        },
+
+        "issued_to_email": {
+          "type": "string"
+        },
+
+        "contact_name": {
+          "type": "string"
+        },
+
+        "contact_number": {
+          "type": "string"
+        },
+
+        "contact_email": {
+          "type": "string"
+        },
+
+        "total_amt": {
+          "type": "number",
+          "format": "float",
+          "description": "Total amount before GST"
+        },
+
+        "total_cgst_amt": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "total_sgst_amt": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "total_igst_amt": {
+          "type": "number",
+          "format": "float"
+        },
+
+        "grand_total": {
+          "type": "number",
+          "format": "float",
+          "description": "Final grand total including GST"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "modified": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "created_by": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+
+      "required": [
+        "empanelment_id_fk",
+        "work_order_no",
+        "work_order_date",
+        "project_no",
+        "project_name",
+        "issued_to_name",
+        "issued_to_address",
+        "issued_to_contact",
+        "issued_to_phone",
+        "issued_to_email",
+        "contact_name",
+        "contact_number",
+        "contact_email",
+        "total_amt",
+        "total_cgst_amt",
+        "total_sgst_amt",
+        "total_igst_amt",
+        "grand_total",
+        "created_by"
+      ]
+    },
+    "WorkOrderDesignationResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "work_order_id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "sac_code": {
+          "type": "string",
+          "maxLength": 10
+        },
+        "description": {
+          "type": "string"
+        },
+        "req_person_count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "duration_days": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "monthly_unit_rate": {
+          "type": "number",
+          "format": "double"
+        },
+        "deployment_from": {
+          "type": "string",
+          "format": "date"
+        },
+        "deployment_to": {
+          "type": "string",
+          "format": "date"
+        },
+        "cgst_amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "sgst_amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "igst_amount": {
+          "type": "number",
+          "format": "double"
+        },
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+        "created_by": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "modified_by": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "workOrder": {
+          "type": "object",
+          "properties": {
+            "work_order_no": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": [
+        "work_order_id",
+        "sac_code",
+        "description",
+        "req_person_count",
+        "duration_days",
+        "monthly_unit_rate",
+        "deployment_from",
+        "deployment_to",
+        "cgst_amount",
+        "sgst_amount",
+        "igst_amount",
+        "created_by",
+        "modified_by"
+      ]
+    },
+    "WorkOrderDesignationListResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
+        },
+        "message": {
+          "type": "string",
+          "example": "Get Work Order Designation List!"
+        },
+        "total": {
+          "type": "integer",
+          "example": 25
+        },
+        "page": {
+          "type": "integer",
+          "example": 1
+        },
+        "limit": {
+          "type": "integer",
+          "example": 10
+        },
+        "totalPages": {
+          "type": "integer",
+          "example": 3
+        },
+        "results": {
+          "type": "integer",
+          "example": 10
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "workOrderDesgnList": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/WorkOrderDesignationResponse"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CompanyResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "organization_id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Reference to organization"
+        },
+
+        "company_name": {
+          "type": "string",
+          "description": "Official company name"
+        },
+
+        "company_code": {
+          "type": "string",
+          "description": "Unique company code"
+        },
+
+        "company_type": {
+          "type": "string",
+          "enum": [
+            "PRIVATE_LIMITED",
+            "PUBLIC_LIMITED",
+            "LLP",
+            "PROPRIETORSHIP",
+            "PARTNERSHIP",
+            "GOVERNMENT",
+            "NGO",
+            "OTHER"
+          ],
+          "description": "Type of company"
+        },
+
+        "incorporation_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Company incorporation date"
+        },
+
+        "official_email": {
+          "type": "string",
+          "description": "Official email address"
+        },
+
+        "official_phone": {
+          "type": "string",
+          "description": "Official contact number"
+        },
+
+        "website": {
+          "type": "string",
+          "description": "Company website URL"
+        },
+
+        "address_line1": {
+          "type": "string"
+        },
+
+        "address_line2": {
+          "type": "string"
+        },
+
+        "city": {
+          "type": "string"
+        },
+
+        "state": {
+          "type": "string"
+        },
+
+        "country": {
+          "type": "string",
+          "default": "India"
+        },
+
+        "pincode": {
+          "type": "string"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+
+      "required": ["company_name"]
+    },
+    "OrganizationResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "org_name": {
+          "type": "string",
+          "description": "Official organization name"
+        },
+
+        "org_code": {
+          "type": "string",
+          "description": "Unique organization code"
+        },
+
+        "contact_email": {
+          "type": "string",
+          "format": "email",
+          "description": "Organization contact email"
+        },
+
+        "contact_phone": {
+          "type": "string",
+          "description": "Organization contact number"
+        },
+
+        "address": {
+          "type": "string",
+          "description": "Organization address"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation timestamp"
+        }
+      },
+
+      "required": ["org_name", "org_code"]
+    },
+    "VendorResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+
+        "organization_id": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Reference to organization"
+        },
+
+        "empanelment_id_fk": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Reference to empanelment master"
+        },
+
+        "vendor_name": {
+          "type": "string",
+          "description": "Official vendor name"
+        },
+
+        "vendor_code": {
+          "type": "string",
+          "description": "Unique vendor code"
+        },
+
+        "vendor_type": {
+          "type": "string",
+          "enum": [
+            "INDIVIDUAL",
+            "PROPRIETORSHIP",
+            "PARTNERSHIP",
+            "LLP",
+            "PRIVATE_LIMITED",
+            "PUBLIC_LIMITED",
+            "GOVERNMENT",
+            "NGO",
+            "OTHER"
+          ],
+          "description": "Type of vendor entity"
+        },
+
+        "contact_person": {
+          "type": "string",
+          "description": "Primary contact person name"
+        },
+
+        "contact_email": {
+          "type": "string",
+          "description": "Primary contact email address"
+        },
+
+        "contact_phone": {
+          "type": "string",
+          "description": "Primary contact phone number"
+        },
+
+        "website": {
+          "type": "string",
+          "description": "Vendor website URL"
+        },
+
+        "address_line1": {
+          "type": "string"
+        },
+
+        "address_line2": {
+          "type": "string"
+        },
+
+        "city": {
+          "type": "string"
+        },
+
+        "state": {
+          "type": "string"
+        },
+
+        "country": {
+          "type": "string",
+          "default": "India"
+        },
+
+        "pincode": {
+          "type": "string"
+        },
+
+        "bank_name": {
+          "type": "string",
+          "description": "Bank name of vendor"
+        },
+
+        "account_number": {
+          "type": "string",
+          "description": "Vendor bank account number"
+        },
+
+        "ifsc_code": {
+          "type": "string",
+          "description": "Bank IFSC code"
+        },
+
+        "branch_name": {
+          "type": "string",
+          "description": "Bank branch name"
+        },
+
+        "onboarding_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Vendor onboarding date"
+        },
+
+        "is_active": {
+          "type": "boolean",
+          "default": true
+        },
+
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+
+      "required": ["vendor_name"]
+    },
+
+    "InvalidResponse": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

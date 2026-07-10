@@ -1,0 +1,128 @@
+import React, { useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import api from '../../../api/axios'
+
+const EmployeeProfile = () => {
+  const { employeeId  } = useParams() 
+
+  const [employee, setEmployee] = useState({})
+  const [mainTab, setMainTab] = useState('basic')
+
+  useEffect(() => {
+    console.log('URL Employee ID:', employeeId)
+
+    api
+      .get(`/employee/${employeeId }?models=employeeDesignations,employeeDivisions&modelFilter={}`)
+      .then((empRes) => {
+        const empData = empRes.data?.data || empRes.data
+
+        console.log('EMP DATA:', empData)
+
+        const designationId = empData.employeeDesignations?.[0]?.designation_id
+
+        const divisionId = empData.employeeDivisions?.[0]?.division_id
+
+        console.log('designationId:', designationId)
+        console.log('divisionId:', divisionId)
+
+        
+        setEmployee({
+          salutation: empData.salutation || '',
+          firstName: empData.first_name || '',
+          middleName: empData.middle_name || '',
+          lastName: empData.last_name || '',
+
+          employeeType: empData.employee_type || '',
+          category: empData.employee_category || '',
+
+          modeOfWorking: empData.mode_of_working || '',
+          stateOfWorking: empData.state_of_working || '',
+
+          email: empData.email || '',
+          contact: empData.contact_no || '',
+
+          dob: empData.date_of_birth || '',
+          joiningDate: empData.date_of_joining || '',
+
+          designation: '-',
+          division: '-',
+        })
+
+        // designation
+        api
+          .get(`/designation/${designationId}`)
+          .then((res) => {
+            console.log('DESIGNATION SUCCESS:', res.data)
+          })
+          .catch((err) => {
+            console.error('DESIGNATION ERROR:', err.response?.data || err)
+          })
+        // division
+        if (divisionId) {
+          api.get(`/division/${divisionId}`).then((res) => {
+            setEmployee((prev) => ({
+              ...prev,
+              division: res.data?.data?.division_name || '-',
+            }))
+          })
+        }
+      })
+      .catch((err) => {
+        console.error('Error:', err)
+      })
+  }, [employeeId])
+
+  // ================= UI =================
+  return (
+    <>
+      {mainTab === 'basic' && (
+        <div className="row g-4">
+          {/* LEFT COLUMN */}
+          <div className="col-md-6">
+            <Field label="Salutation" value={employee.salutation} />
+            {/* <Field label="First Name" value={employee.firstName} /> */}
+            <Field label="Middle Name" value={employee.middleName} />
+            <Field label="Employee Type" value={employee.employeeType} />
+            <Field label="Division" value={employee.division} />
+            <Field label="State of Working" value={employee.stateOfWorking} />
+            <Field label="Email Address" value={employee.email} />
+            <Field label="Date of Birth" value={employee.dob} />
+            <Field label="Mother's Name" value={employee.motherName} />
+            <Field label="Gender" value={employee.gender} />
+            <Field label="Probation End Date" value={employee.probationEnd} />
+            <Field label="Relieving Date" value={employee.relievingDate} />
+            <Field label="Notice Period (Days)" value={employee.noticePeriod} />
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="col-md-6">
+            <Field label="First Name" value={employee.firstName} />
+            <Field label="Last Name" value={employee.lastName} />
+            <Field label="Designation" value={employee.designation} />
+            <Field label="Mode of Working" value={employee.modeOfWorking} />
+            <Field label="Employee Category" value={employee.category} />
+            <Field label="Contact No" value={employee.contact} />
+            <Field label="Father's Name" value={employee.fatherName} />
+            <Field label="Marital Status" value={employee.maritalStatus} />
+            <Field label="Date Of Joining" value={employee.joiningDate} />
+            <Field label="Confirmation Date" value={employee.confirmationDate} />
+            <Field label="Resignation Date" value={employee.resignationDate} />
+            <Field label="Gazetted" value={employee.gazetted ? 'Yes' : 'No'} />
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ================= REUSABLE FIELD =================
+const Field = ({ label, value }) => {
+  return (
+    <div className="mb-4">
+      <small className="text-muted">{label}</small>
+      <div className="fw-semibold border-bottom pb-2">{value || '-'}</div>
+    </div>
+  )
+}
+
+export default EmployeeProfile

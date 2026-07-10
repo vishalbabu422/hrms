@@ -1,0 +1,481 @@
+import { useState } from 'react'
+
+import {
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CContainer,
+  CFormLabel,
+  CFormSelect,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+  CSpinner,
+} from '@coreui/react'
+
+const SalaryAddonView = () => {
+  /* ================= STATES ================= */
+
+  const [month, setMonth] = useState('')
+
+  const [year, setYear] = useState('')
+
+  const [loading, setLoading] =
+    useState(false)
+
+  const [viewData, setViewData] =
+    useState(null)
+
+  /* ================= MONTHS ================= */
+
+  const months = [
+    {
+      label: 'January',
+      value: 1,
+    },
+
+    {
+      label: 'February',
+      value: 2,
+    },
+
+    {
+      label: 'March',
+      value: 3,
+    },
+
+    {
+      label: 'April',
+      value: 4,
+    },
+
+    {
+      label: 'May',
+      value: 5,
+    },
+
+    {
+      label: 'June',
+      value: 6,
+    },
+
+    {
+      label: 'July',
+      value: 7,
+    },
+
+    {
+      label: 'August',
+      value: 8,
+    },
+
+    {
+      label: 'September',
+      value: 9,
+    },
+
+    {
+      label: 'October',
+      value: 10,
+    },
+
+    {
+      label: 'November',
+      value: 11,
+    },
+
+    {
+      label: 'December',
+      value: 12,
+    },
+  ]
+
+  /* ================= YEARS ================= */
+
+  const years = [
+    2024, 2025, 2026, 2027,
+  ]
+
+  /* ================= VIEW ================= */
+
+  const handleView = async () => {
+    try {
+      setLoading(true)
+
+      // DUMMY DELAY
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 800),
+      )
+
+      // DUMMY DATA
+
+      const dummyData = {
+        addon_name:
+          'Performance Bonus',
+
+        workorder:
+          'WO-2026-1458',
+
+        amount: 10000,
+
+        month,
+
+        year,
+
+        employees: [
+          {
+            id: 1,
+            name:
+              'Akansha Dhingan',
+
+            employee_code:
+              'EMP001',
+
+            amount: 10000,
+
+            status: true,
+          },
+
+          {
+            id: 2,
+            name:
+              'Vishal Kumar',
+
+            employee_code:
+              'EMP002',
+
+            amount: 10000,
+
+            status: true,
+          },
+
+          {
+            id: 3,
+            name:
+              'Rahul Sharma',
+
+            employee_code:
+              'EMP003',
+
+            amount: 8500,
+
+            status: true,
+          },
+
+          {
+            id: 4,
+            name:
+              'Priya Singh',
+
+            employee_code:
+              'EMP004',
+
+            amount: 12000,
+
+            status: false,
+          },
+
+          {
+            id: 5,
+            name:
+              'Aman Verma',
+
+            employee_code:
+              'EMP005',
+
+            amount: 9500,
+
+            status: true,
+          },
+        ],
+      }
+
+      setViewData(dummyData)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <CContainer fluid>
+      {/* PAGE TITLE */}
+
+      <div className="mb-4">
+        <h4 className="fw-bold mb-1">
+          View Salary Addon Details
+        </h4>
+
+        <div
+          style={{
+            color: '#64748b',
+            fontSize: '14px',
+          }}
+        >
+          View employee-wise addon
+          details month and year wise
+        </div>
+      </div>
+
+      {/* FILTER CARD */}
+
+      <CCard className="rounded-4 mb-4 border shadow-sm">
+        <CCardBody>
+          <CRow>
+            {/* MONTH */}
+
+            <CCol md={4}>
+              <CFormLabel>
+                Month
+              </CFormLabel>
+
+              <CFormSelect
+                value={month}
+                onChange={(e) =>
+                  setMonth(
+                    e.target.value,
+                  )
+                }
+              >
+                <option value="">
+                  Select Month
+                </option>
+
+                {months.map((item) => (
+                  <option
+                    key={item.value}
+                    value={item.value}
+                  >
+                    {item.label}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {/* YEAR */}
+
+            <CCol md={4}>
+              <CFormLabel>
+                Year
+              </CFormLabel>
+
+              <CFormSelect
+                value={year}
+                onChange={(e) =>
+                  setYear(
+                    e.target.value,
+                  )
+                }
+              >
+                <option value="">
+                  Select Year
+                </option>
+
+                {years.map((item) => (
+                  <option
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </option>
+                ))}
+              </CFormSelect>
+            </CCol>
+
+            {/* BUTTON */}
+
+            <CCol
+              md={4}
+              className="d-flex align-items-end"
+            >
+              <CButton
+                color="primary"
+                onClick={handleView}
+                disabled={
+                  !month || !year
+                }
+              >
+                {loading ? (
+                  <CSpinner
+                    size="sm"
+                    color="light"
+                  />
+                ) : (
+                  'View Details'
+                )}
+              </CButton>
+            </CCol>
+          </CRow>
+        </CCardBody>
+      </CCard>
+
+      {/* DATA */}
+
+      {viewData && (
+        <>
+          {/* SUMMARY CARD */}
+
+          <CCard className="rounded-4 mb-4 border shadow-sm">
+            <CCardBody>
+              <h5 className="fw-bold mb-4">
+                Summary
+              </h5>
+
+              <CRow>
+                <CCol md={3}>
+                  <div className="mb-3">
+                    <div className="text-muted small">
+                      Addon Name
+                    </div>
+
+                    <div className="fw-semibold">
+                      {
+                        viewData.addon_name
+                      }
+                    </div>
+                  </div>
+                </CCol>
+
+                <CCol md={3}>
+                  <div className="mb-3">
+                    <div className="text-muted small">
+                      Workorder
+                    </div>
+
+                    <div className="fw-semibold">
+                      {
+                        viewData.workorder
+                      }
+                    </div>
+                  </div>
+                </CCol>
+
+                <CCol md={3}>
+                  <div className="mb-3">
+                    <div className="text-muted small">
+                      Amount
+                    </div>
+
+                    <div className="fw-semibold">
+                      ₹
+                      {
+                        viewData.amount
+                      }
+                    </div>
+                  </div>
+                </CCol>
+
+                <CCol md={3}>
+                  <div className="mb-3">
+                    <div className="text-muted small">
+                      Employees
+                    </div>
+
+                    <div className="fw-semibold">
+                      {
+                        viewData
+                          .employees
+                          ?.length
+                      }
+                    </div>
+                  </div>
+                </CCol>
+              </CRow>
+            </CCardBody>
+          </CCard>
+
+          {/* EMPLOYEE TABLE */}
+
+          <CCard className="rounded-4 border shadow-sm">
+            <CCardBody>
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="fw-bold mb-0">
+                  Employee Details
+                </h5>
+
+                <div className="text-muted small">
+                  {
+                    viewData
+                      .employees
+                      ?.length
+                  }{' '}
+                  Employees Found
+                </div>
+              </div>
+
+              <CTable
+                hover
+                responsive
+                align="middle"
+              >
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>
+                      Employee
+                    </CTableHeaderCell>
+
+                    <CTableHeaderCell>
+                      Employee Code
+                    </CTableHeaderCell>
+
+                    <CTableHeaderCell>
+                      Amount
+                    </CTableHeaderCell>
+
+                    <CTableHeaderCell>
+                      Status
+                    </CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+
+                <CTableBody>
+                  {viewData.employees?.map(
+                    (item) => (
+                      <CTableRow
+                        key={item.id}
+                      >
+                        <CTableDataCell>
+                          {
+                            item.name
+                          }
+                        </CTableDataCell>
+
+                        <CTableDataCell>
+                          {
+                            item.employee_code
+                          }
+                        </CTableDataCell>
+
+                        <CTableDataCell>
+                          ₹
+                          {
+                            item.amount
+                          }
+                        </CTableDataCell>
+
+                        <CTableDataCell>
+                          {item.status
+                            ? 'Active'
+                            : 'Inactive'}
+                        </CTableDataCell>
+                      </CTableRow>
+                    ),
+                  )}
+                </CTableBody>
+              </CTable>
+            </CCardBody>
+          </CCard>
+        </>
+      )}
+    </CContainer>
+  )
+}
+
+export default SalaryAddonView
