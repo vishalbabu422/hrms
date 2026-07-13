@@ -19,10 +19,21 @@ import { calculateDuration } from '../../utils/workOrderCalculations'
 const emptyReplica = {
   title: '',
   description: '',
-  amount: '',
-  from_date: '',
-  to_date: '',
-  duration_days: '',
+  deployment_from: '',
+  deployment_to: '',
+  totalAmount: 0,
+
+  igst_amount: 0,
+  cgst_amount: 0,
+  sgst_amount: 0,
+
+  igst_percent: 0,
+  cgst_percent: 0,
+  sgst_percent: 0,
+
+  totalDays: 0,
+  months: 0,
+  partialMonthFactor: 0,
 }
 
 const defaultInitialData = {
@@ -41,49 +52,19 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
   const navigate = useNavigate()
   const [errors, setErrors] = useState([])
   const [replicas, setReplicas] = useState([])
-
   const [gstCode, setGstCode] = useState('')
-
-  const [gstDetails, setGstDetails] = useState({
-    igst_rate: 0,
-    cgst_rate: 0,
-    sgst_rate: 0,
-
-    igst_name: 'IGST',
-    cgst_name: 'CGST',
-    sgst_name: 'SGST',
-  })
-
   useEffect(() => {
     if (!workOrderId) return
 
     const fetchMilestones = async () => {
       try {
-        const response = await api.get(
-          `/admin/workorder/${workOrderId}?models=WoMilestones&modelFilter=${encodeURIComponent(
-            JSON.stringify({
-              WoMilestones: {
-                is_active: true
-              },
-            }),
-          )}&is_active=true`
-        )
+        const response = await api.get(`/admin/workorder-desgn/workorder/${workOrderId}`)
 
-        const milestone = response.data?.data?.WoMilestones
-
-        const list = milestone ? (Array.isArray(milestone) ? milestone : [milestone]) : []
+        const list = response.data?.data?.workOrderDesgnList || []
 
         if (list.length > 0) {
           const computed = list.map((item) => {
-            const replica = normalizeReplica({
-              ...item,
-              totalAmount: Number(item.amount || 0),
-
-              deployment_from: item.from_date,
-              deployment_to: item.to_date,
-
-              gst_code_fk: item.gst_code_fk,
-            })
+            const replica = normalizeReplica(item)
 
             const duration = calculateDuration(replica.deployment_from, replica.deployment_to)
 
@@ -92,10 +73,6 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
               ...duration,
             }
           })
-
-          if (list.length > 0) {
-            setGstCode(String(list[0].gst_code_fk || ''))
-          }
           setReplicas(computed)
         } else {
           setReplicas([{ ...emptyReplica }])
@@ -114,7 +91,6 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
     updated[index] = { ...updated[index], [field]: value }
 
     const durationDrivers = ['deployment_from', 'deployment_to']
-    const amountDrivers = ['totalAmount']
 
     if (
       durationDrivers.includes(field) &&
@@ -130,14 +106,6 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
         ...updated[index],
         ...duration,
       }
-    } else if (amountDrivers.includes(field)) {
-      const total = Number(updated[index].totalAmount || 0)
-
-      updated[index].igst_amount = (total * updated[index].igst_percent) / 100
-
-      updated[index].cgst_amount = (total * updated[index].cgst_percent) / 100
-
-      updated[index].sgst_amount = (total * updated[index].sgst_percent) / 100
     } else if (
       durationDrivers.includes(field) &&
       (!updated[index].deployment_from || !updated[index].deployment_to)
@@ -164,52 +132,19 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
   )
 
   const totalIgst = useMemo(
-    () => (totalOfTotalAmount * Number(gstDetails.igst_rate || 0)) / 100,
-    [totalOfTotalAmount, gstDetails],
+    () => replicas.reduce((s, r) => s + Number(r.igst_amount || 0), 0),
+    [replicas],
   )
-
   const totalCgst = useMemo(
-    () => (totalOfTotalAmount * Number(gstDetails.cgst_rate || 0)) / 100,
-    [totalOfTotalAmount, gstDetails],
+    () => replicas.reduce((s, r) => s + Number(r.cgst_amount || 0), 0),
+    [replicas],
   )
-
   const totalSgst = useMemo(
-    () => (totalOfTotalAmount * Number(gstDetails.sgst_rate || 0)) / 100,
-    [totalOfTotalAmount, gstDetails],
+    () => replicas.reduce((s, r) => s + Number(r.sgst_amount || 0), 0),
+    [replicas],
   )
 
-  const grandTotal = useMemo(
-    () => totalOfTotalAmount + totalIgst + totalCgst + totalSgst,
-    [totalOfTotalAmount, totalIgst, totalCgst, totalSgst],
-  )
-
-  useEffect(() => {
-    if (!gstCode) return
-
-    const fetchGST = async () => {
-      try {
-        const response = await api.get(`/admin/gst-code/${gstCode}`)
-
-        const gst = response.data.data
-
-        setGstDetails({
-          igst_rate: Number(gst.igst_rate || 0),
-          cgst_rate: Number(gst.cgst_rate || 0),
-          sgst_rate: Number(gst.sgst_rate || 0),
-
-          igst_name: 'IGST',
-          cgst_name: 'CGST',
-          sgst_name: 'SGST',
-
-          transaction_type: gst.transaction_type,
-        })
-      } catch (err) {
-        console.error(err)
-      }
-    }
-
-    fetchGST()
-  }, [gstCode])
+  const grandTotal = Math.round(totalOfTotalAmount + totalIgst + totalCgst + totalSgst)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -230,31 +165,17 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
 }
 
     try {
-      await api.post('/workorder-milestone', {
-        milestones: replicas.map((item) => ({
-          work_order_id: Number(workOrderId),
+      await api.post('admin/workorder-desgn/create', payload)
 
-          gst_code_fk: Number(gstCode),
-
-          title: item.title,
-
-          description: item.description,
-
-          amount: Number(item.totalAmount),
-
-          from_date: item.deployment_from,
-
-          to_date: item.deployment_to,
-        })),
-
+      await api.patch(`/admin/workorder/edit/${workOrderId}`, {
         grand_total: grandTotal,
       })
 
-      toast.success('Milestones saved successfully.')
+      toast.success(`Milestones saved successfully`)
       navigate('/work-order')
     } catch (error) {
       console.error(error)
-      toast.error(error.response?.data?.message ?? 'Failed to save milestones.')
+      toast.error(error.response?.data?.message || 'Failed to save Milestones')
     }
   }
 
@@ -342,11 +263,7 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
 
                 <CCol md={4}>
                   <CFormLabel>Total Amount</CFormLabel>
-                  <CFormInput
-                    type="number"
-                    value={r.totalAmount ?? ''}
-                    onChange={(e) => updateReplica(i, 'totalAmount', e.target.value)}
-                  />
+                  <CFormInput type="number" value={r.totalAmount ?? 0} readOnly />
                 </CCol>
               </CRow>
             </CCardBody>
@@ -364,25 +281,25 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
 
               <CCol md={6}>
                 <GstSelect
-                  name="gst_code_fk"
+                  name="sac_code"
                   value={gstCode}
                   onChange={(e) => setGstCode(e.target.value)}
+                  required
                 />
               </CCol>
 
-              {errors.gst_code_fk && <div className="text-danger mt-1">{errors.gst_code_fk}</div>}
+              {errors.sac_code && <div className="text-danger mt-1">{errors.sac_code}</div>}
 
-              <CCol md={4}>
-                <CFormLabel>IGST ({Number(gstDetails.igst_rate || 0)}%)</CFormLabel>
+              <CCol md={3}>
+                <CFormLabel>IGST</CFormLabel>
                 <CFormInput value={totalIgst.toFixed(2) ?? 0} readOnly />
               </CCol>
-              <CCol md={4}>
-                <CFormLabel>CGST ({Number(gstDetails.cgst_rate || 0)}%)</CFormLabel>
-
+              <CCol md={3}>
+                <CFormLabel>CGST</CFormLabel>
                 <CFormInput value={totalCgst.toFixed(2) ?? 0} readOnly />
               </CCol>
-              <CCol md={4}>
-                <CFormLabel>SGST ({Number(gstDetails.sgst_rate || 0)}%)</CFormLabel>
+              <CCol md={3}>
+                <CFormLabel>SGST</CFormLabel>
                 <CFormInput value={totalSgst.toFixed(2) ?? 0} readOnly />
               </CCol>
             </CRow>

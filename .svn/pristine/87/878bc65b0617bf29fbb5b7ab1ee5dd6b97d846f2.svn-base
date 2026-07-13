@@ -69,12 +69,8 @@ const Index = () => {
         params.search = search
       }
 
-      const response = await api.get('/admin/workorder/index', {
-        params: {
-          ...params,
-          is_active: true,
-        },
-      })
+      const response = await api.get('/admin/workorder/index', { params })
+      console.log(response)
       setWorkOrder(response.data?.data?.workOrderList || [])
       setTotalPages(response.data?.totalPages || 1)
     } catch (error) {
@@ -235,125 +231,117 @@ const Index = () => {
                     </CTableDataCell>
                   </CTableRow>
                 ) : workOrder.length > 0 ? (
-                  workOrder.map((item) => {
-                    const isMilestone = item.type === 'MILESTONES_PROJECT_BASIS'
+                  workOrder.map((item) => (
+                    <CTableRow key={item.id}>
+                      <CTableDataCell>
+                        {item.type === 'MANPOWER' && (
+                          <span className="badge bg-primary">Manpower</span>
+                        )}
 
-                    const hasDesignation =
-                      Array.isArray(item.WoDesgnMappings) && item.WoDesgnMappings.length > 0
-                    return (
-                      <CTableRow key={item.id}>
-                        <CTableDataCell>
-                          {item.type === 'MANPOWER' && (
-                            <span className="badge bg-primary">Manpower</span>
-                          )}
+                        {item.type === 'MANPOWER_PROJECT_BASIS' && (
+                          <span className="badge bg-success">Manpower (Project Basis)</span>
+                        )}
 
-                          {item.type === 'MANPOWER_PROJECT_BASIS' && (
-                            <span className="badge bg-success">Manpower (Project Basis)</span>
-                          )}
+                        {item.type === 'MILESTONES_PROJECT_BASIS' && (
+                          <span className="badge bg-warning text-dark">Milestone</span>
+                        )}
 
-                          {item.type === 'MILESTONES_PROJECT_BASIS' && (
-                            <span className="badge bg-warning text-dark">Milestone</span>
-                          )}
+                        {!item.type && <span className="badge bg-secondary">Not Set</span>}
+                      </CTableDataCell>
+                      <CTableDataCell>{item.work_order_no}</CTableDataCell>
+                      <CTableDataCell>{item.work_order_date}</CTableDataCell>
+                      <CTableDataCell>{item.project_no}</CTableDataCell>
+                      <CTableDataCell>{item.grand_total}</CTableDataCell>
+                      <CTableDataCell>{item.project_name}</CTableDataCell>
+                      <CTableDataCell>
+                        {item.is_active ? (
+                          <CIcon icon={cilCheckCircle} className="text-success" />
+                        ) : (
+                          <CIcon icon={cilXCircle} className="text-danger" />
+                        )}
+                      </CTableDataCell>
 
-                          {!item.type && <span className="badge bg-secondary">Not Set</span>}
-                        </CTableDataCell>
-                        <CTableDataCell>{item.work_order_no}</CTableDataCell>
-                        <CTableDataCell>{item.work_order_date}</CTableDataCell>
-                        <CTableDataCell>{item.project_no}</CTableDataCell>
-                        <CTableDataCell>{item.grand_total}</CTableDataCell>
-                        <CTableDataCell>{item.project_name}</CTableDataCell>
-                        <CTableDataCell>
-                          {item.is_active ? (
-                            <CIcon icon={cilCheckCircle} className="text-success" />
-                          ) : (
-                            <CIcon icon={cilXCircle} className="text-danger" />
-                          )}
-                        </CTableDataCell>
-
-                        <CTableDataCell>
-                          <div
-                            className="d-flex justify-content-center align-items-center gap-2 flex-wrap"
-                            style={{ minWidth: '220px' }}
+                      <CTableDataCell>
+                        <div
+                          className="d-flex justify-content-center align-items-center gap-2 flex-wrap"
+                          style={{ minWidth: '220px' }}
+                        >
+                          {/* DESIGNATION / MANPOWER */}
+                          <CTooltip
+                            content={
+                              item.type === 'MILESTONES_PROJECT_BASIS'
+                                ? 'Add Manpower'
+                                : 'Add Designation'
+                            }
+                            placement="top"
                           >
-                            {/* DESIGNATION / MANPOWER */}
-                            <CTooltip
-                              content={
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() =>
                                 item.type === 'MILESTONES_PROJECT_BASIS'
-                                  ? 'Add Milestone'
-                                  : 'Add Designation'
+                                  ? navigate(`/work-order/${item.id}/milestones`)
+                                  : navigate(`/work-order/designations/${item.id}`)
                               }
-                              placement="top"
                             >
-                              <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
-                                onClick={() =>
-                                  item.type === 'MILESTONES_PROJECT_BASIS'
-                                    ? navigate(`/work-order/${item.id}/milestones`)
-                                    : navigate(`/work-order/designations/${item.id}`)
-                                }
-                              >
-                                <ActionButton color="primary" icon={cilPlus} />
-                              </div>
-                            </CTooltip>
+                              <ActionButton color="primary" icon={cilPlus} />
+                            </div>
+                          </CTooltip>
 
-                            {/* EMP DEPLOYMENT */}
-                            {!isMilestone && hasDesignation && (
-                              <CTooltip content="Deploy Employee" placement="top">
+                          {/* EMP DEPLOYMENT */}
+                          <CTooltip content="Add Emp.Deployment" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/work-order/emp-deployment/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilUserFollow} />
+                            </div>
+                          </CTooltip>
+
+                          {/* PREVIEW */}
+                          <CTooltip content="Preview" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/work-order/preview/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilDescription} />
+                            </div>
+                          </CTooltip>
+
+                          {/* EDIT */}
+                          <CTooltip content="Edit" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/work-order/edit/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilPencil} />
+                            </div>
+                          </CTooltip>
+
+                          {/* DELETE */}
+                          <div
+                            style={{
+                              width: '32px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {item.is_active ? (
+                              <CTooltip content="Delete" placement="top">
                                 <div
                                   style={{ display: 'inline-block', cursor: 'pointer' }}
-                                  onClick={() => navigate(`/work-order/emp-deployment/${item.id}`)}
+                                  onClick={() => confirmDelete(item.id)}
                                 >
-                                  <ActionButton color="primary" icon={cilUserFollow} />
+                                  <ActionButton color="danger" icon={cilTrash} />
                                 </div>
                               </CTooltip>
+                            ) : (
+                              <span style={{ visibility: 'hidden' }}>X</span>
                             )}
-
-                            {/* PREVIEW */}
-                            <CTooltip content="Preview" placement="top">
-                              <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
-                                onClick={() => navigate(`/work-order/preview/${item.id}`)}
-                              >
-                                <ActionButton color="primary" icon={cilDescription} />
-                              </div>
-                            </CTooltip>
-
-                            {/* EDIT */}
-                            <CTooltip content="Edit" placement="top">
-                              <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
-                                onClick={() => navigate(`/work-order/edit/${item.id}`)}
-                              >
-                                <ActionButton color="primary" icon={cilPencil} />
-                              </div>
-                            </CTooltip>
-
-                            {/* DELETE */}
-                            <div
-                              style={{
-                                width: '32px',
-                                display: 'flex',
-                                justifyContent: 'center',
-                              }}
-                            >
-                              {item.is_active ? (
-                                <CTooltip content="Delete" placement="top">
-                                  <div
-                                    style={{ display: 'inline-block', cursor: 'pointer' }}
-                                    onClick={() => confirmDelete(item.id)}
-                                  >
-                                    <ActionButton color="danger" icon={cilTrash} />
-                                  </div>
-                                </CTooltip>
-                              ) : (
-                                <span style={{ visibility: 'hidden' }}>X</span>
-                              )}
-                            </div>
                           </div>
-                        </CTableDataCell>
-                      </CTableRow>
-                    )
-                  })
+                        </div>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))
                 ) : (
                   <TableEmptyState colSpan={7} />
                 )}
