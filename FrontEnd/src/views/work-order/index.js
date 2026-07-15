@@ -270,24 +270,33 @@ const Index = () => {
                           )}
                         </CTableDataCell>
 
-                        <CTableDataCell>
+                        {/* <CTableDataCell>
                           <div
                             className="d-flex justify-content-center align-items-center gap-2 flex-wrap"
                             style={{ minWidth: '220px' }}
+                          > */}
+
+                        <CTableDataCell>
+                          <div
+                            className="d-flex justify-content-end align-items-center gap-2"
+                            style={{
+                              width: '100%',
+                              minWidth: '220px',
+                              whiteSpace: 'nowrap',
+                            }}
                           >
-                            {/* DESIGNATION / MANPOWER */}
+                            {/* ADD DESIGNATION / MILESTONE */}
                             <CTooltip
-                              content={
-                                item.type === 'MILESTONES_PROJECT_BASIS'
-                                  ? 'Add Milestone'
-                                  : 'Add Designation'
-                              }
+                              content={isMilestone ? 'Add Milestone' : 'Add Designation'}
                               placement="top"
                             >
                               <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
+                                style={{
+                                  display: 'inline-block',
+                                  cursor: 'pointer',
+                                }}
                                 onClick={() =>
-                                  item.type === 'MILESTONES_PROJECT_BASIS'
+                                  isMilestone
                                     ? navigate(`/work-order/${item.id}/milestones`)
                                     : navigate(`/work-order/designations/${item.id}`)
                                 }
@@ -296,11 +305,48 @@ const Index = () => {
                               </div>
                             </CTooltip>
 
-                            {/* EMP DEPLOYMENT */}
+                            {/* DEPLOY EMPLOYEE */}
+                            {/* {!isMilestone &&
+      (hasDesignation ? (
+        <CTooltip content="Deploy Employee" placement="top">
+          <div
+            style={{
+              display: 'inline-block',
+              cursor: 'pointer',
+            }}
+            onClick={() =>
+              navigate(`/work-order/emp-deployment/${item.id}`)
+            }
+          >
+            <ActionButton
+              color="primary"
+              icon={cilUserFollow}
+            />
+          </div>
+        </CTooltip>
+      ) : (
+        <div
+          style={{
+            width: '32px',
+            display: 'flex',
+            justifyContent: 'center',
+            visibility: 'hidden',
+          }}
+        >
+          <ActionButton
+            color="primary"
+            icon={cilUserFollow}
+          />
+        </div>
+      ))} */}
+
                             {!isMilestone && hasDesignation && (
                               <CTooltip content="Deploy Employee" placement="top">
                                 <div
-                                  style={{ display: 'inline-block', cursor: 'pointer' }}
+                                  style={{
+                                    display: 'inline-block',
+                                    cursor: 'pointer',
+                                  }}
                                   onClick={() => navigate(`/work-order/emp-deployment/${item.id}`)}
                                 >
                                   <ActionButton color="primary" icon={cilUserFollow} />
@@ -311,7 +357,10 @@ const Index = () => {
                             {/* PREVIEW */}
                             <CTooltip content="Preview" placement="top">
                               <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
+                                style={{
+                                  display: 'inline-block',
+                                  cursor: 'pointer',
+                                }}
                                 onClick={() => navigate(`/work-order/preview/${item.id}`)}
                               >
                                 <ActionButton color="primary" icon={cilDescription} />
@@ -321,7 +370,10 @@ const Index = () => {
                             {/* EDIT */}
                             <CTooltip content="Edit" placement="top">
                               <div
-                                style={{ display: 'inline-block', cursor: 'pointer' }}
+                                style={{
+                                  display: 'inline-block',
+                                  cursor: 'pointer',
+                                }}
                                 onClick={() => navigate(`/work-order/edit/${item.id}`)}
                               >
                                 <ActionButton color="primary" icon={cilPencil} />
@@ -339,14 +391,24 @@ const Index = () => {
                               {item.is_active ? (
                                 <CTooltip content="Delete" placement="top">
                                   <div
-                                    style={{ display: 'inline-block', cursor: 'pointer' }}
+                                    style={{
+                                      display: 'inline-block',
+                                      cursor: 'pointer',
+                                    }}
                                     onClick={() => confirmDelete(item.id)}
                                   >
                                     <ActionButton color="danger" icon={cilTrash} />
                                   </div>
                                 </CTooltip>
                               ) : (
-                                <span style={{ visibility: 'hidden' }}>X</span>
+                                <div
+                                  style={{
+                                    width: '32px',
+                                    visibility: 'hidden',
+                                  }}
+                                >
+                                  <ActionButton color="danger" icon={cilTrash} />
+                                </div>
                               )}
                             </div>
                           </div>
