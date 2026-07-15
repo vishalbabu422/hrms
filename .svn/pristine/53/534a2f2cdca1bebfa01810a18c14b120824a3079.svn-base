@@ -1,4 +1,0 @@
-.salary-breakdown-modal .modal-dialog {
-  max-width: 85vw !important;
-  width: 85vw !important;
-}

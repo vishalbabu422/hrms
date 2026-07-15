@@ -1,7 +1,0 @@
-const router = require("express").Router();
-
-router.use("/employee", require("./employee.routes"));
-router.use("/designation", require("./designation/designation.routes"));
-router.use("/division", require("./division/division.routes"));
-
-module.exports = router;

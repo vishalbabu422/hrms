@@ -1,9 +1,0 @@
-// services/healthService.js
-import api from '../api/axios'
-
-/**
- * Get employee health details
- */
-export const getEmployeeHealth = (employeeId) => {
-  return api.get(`/employee/${employeeId}/health`)
-}

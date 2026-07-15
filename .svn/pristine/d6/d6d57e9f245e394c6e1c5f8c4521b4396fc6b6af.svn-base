@@ -1,6 +1,0 @@
-// services/vehicleService.js
-import api from '../api/axios'
-
-export const getEmployeeVehicles = (employeeId) => {
-  return api.get(`/employee/${employeeId}/vehicles`)
-}
