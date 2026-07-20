@@ -41,7 +41,8 @@ const Index = () => {
   const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
 
   const [page, setPage] = useState(1)
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
   const [search, setSearch] = useState('')
@@ -65,35 +66,37 @@ const Index = () => {
       }
 
       const response = await api.get('/division', { params })
-      
+
       // Get all divisions
       const allDivisions = response.data?.data ?? []
-      
+
       // Create a map for quick lookup
       const divisionMap = {}
-      allDivisions.forEach(div => {
+      allDivisions.forEach((div) => {
         divisionMap[div.id] = div
       })
-      
+
       // Process divisions to add parent division name
-      const processedDivisions = allDivisions.map(item => {
+      const processedDivisions = allDivisions.map((item) => {
         let parentDivisionName = '-'
-        
+
         // Try different possible field names for parent division ID
-        const parentId = item.parent_division_id || item.parentDivisionId || item.parent_division?.id
-        
+        const parentId =
+          item.parent_division_id || item.parentDivisionId || item.parent_division?.id
+
         if (parentId && divisionMap[parentId]) {
           parentDivisionName = divisionMap[parentId].division_name
         }
-        
+
         return {
           ...item,
-          parentDivisionName
+          parentDivisionName,
         }
       })
-      
+
       setdivision(processedDivisions)
       setTotalPages(response.data?.totalPages ?? 1)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to fetch division list')
@@ -110,7 +113,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchDivision()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -142,13 +145,12 @@ const Index = () => {
   }
 
   return (
-    <CContainer fluid >
+    <CContainer fluid>
       <PageHeader
         title="Divisions"
         onSearchChange={setSearch}
         onAddClick={() => navigate('/division/add')}
         addLabel="Add Division"
-     
       />
 
       <CCard className="shadow border-0 rounded-4">
@@ -241,7 +243,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

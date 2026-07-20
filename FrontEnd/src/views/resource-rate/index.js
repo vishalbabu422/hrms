@@ -41,7 +41,8 @@ const Index = () => {
 
   const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
   const [page, setPage] = useState(1)
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
   const [search, setSearch] = useState('')
@@ -64,10 +65,14 @@ const Index = () => {
         params.search = search
       }
 
-      const response = await api.get('/admin/resourcerate/index?is_active=true&models=designation%2CgstCode', { params })
+      const response = await api.get(
+        '/admin/resourcerate/index?is_active=true&models=designation%2CgstCode',
+        { params },
+      )
 
       setResourceRate(response.data.data.resourceRateList)
       setTotalPages(response.data.totalPages)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
     } finally {
@@ -83,7 +88,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchResourceRate()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -330,7 +335,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

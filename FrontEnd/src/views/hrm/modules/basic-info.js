@@ -11,8 +11,9 @@ import {
   CFormSelect,
   CFormCheck,
 } from '@coreui/react'
-import { toast } from 'react-toastify'
 import api from '../../../api/axios'
+import { toast } from 'react-toastify'
+
 
 import OrganizationSelect from '../../components/organization-select'
 import { getDivisions, getDesignations } from '../../../services/employeeBasic'

@@ -38,9 +38,9 @@ const Index = () => {
   const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
 
   const [page, setPage] = useState(1)
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
-
   const [search, setSearch] = useState('')
   const [gstCodes, setGstCodes] = useState([])
   const [loading, setLoading] = useState(false)
@@ -65,6 +65,7 @@ const Index = () => {
 
       setGstCodes(response.data?.data?.GstCodeList ?? [])
       setTotalPages(response.data?.totalPages ?? 1)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to fetch GST Codes')
@@ -81,7 +82,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchGstCodes()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -333,7 +334,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

@@ -46,7 +46,8 @@ const Index = () => {
   const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
 
   const [page, setPage] = useState(1)
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
   const [search, setSearch] = useState('')
@@ -74,6 +75,7 @@ const Index = () => {
 
       setHrm(response.data?.data ?? [])
       setTotalPages(response.data?.totalPages ?? 1)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to fetch employee list')
@@ -90,7 +92,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchHrm()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -275,7 +277,17 @@ const Index = () => {
             </CTableBody>
           </CTable>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

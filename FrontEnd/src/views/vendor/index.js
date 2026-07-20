@@ -38,7 +38,8 @@ const Index = () => {
   const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
 
   const [page, setPage] = useState(1)
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
   const [search, setSearch] = useState('')
@@ -63,6 +64,7 @@ const Index = () => {
 
       setVendor(response.data?.data?.vendorList ?? [])
       setTotalPages(response.data?.totalPages ?? 1)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to fetch Vendors')
@@ -79,7 +81,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchVendors()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -247,63 +249,54 @@ const Index = () => {
                         )}
                       </CTableDataCell>
 
-                    <CTableDataCell>
-  <div
-    className="d-flex justify-content-center align-items-center gap-2"
-    style={{ minWidth: '120px' }}
-  >
-    {/* VIEW */}
-    <CTooltip content="View" placement="top">
-      <div
-        style={{ display: 'inline-block', cursor: 'pointer' }}
-        onClick={() => navigate(`/vendor/preview/${item.id}`)}
-      >
-        <ActionButton
-          color="primary"
-          icon={cilDescription}
-        />
-      </div>
-    </CTooltip>
+                      <CTableDataCell>
+                        <div
+                          className="d-flex justify-content-center align-items-center gap-2"
+                          style={{ minWidth: '120px' }}
+                        >
+                          {/* VIEW */}
+                          <CTooltip content="View" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/vendor/preview/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilDescription} />
+                            </div>
+                          </CTooltip>
 
-    {/* EDIT */}
-    <CTooltip content="Edit" placement="top">
-      <div
-        style={{ display: 'inline-block', cursor: 'pointer' }}
-        onClick={() => navigate(`/vendor/edit/${item.id}`)}
-      >
-        <ActionButton
-          color="primary"
-          icon={cilPencil}
-        />
-      </div>
-    </CTooltip>
+                          {/* EDIT */}
+                          <CTooltip content="Edit" placement="top">
+                            <div
+                              style={{ display: 'inline-block', cursor: 'pointer' }}
+                              onClick={() => navigate(`/vendor/edit/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilPencil} />
+                            </div>
+                          </CTooltip>
 
-    {/* DELETE */}
-    <div
-      style={{
-        width: '32px',
-        display: 'flex',
-        justifyContent: 'center',
-      }}
-    >
-      {item.is_active ? (
-        <CTooltip content="Delete" placement="top">
-          <div
-            style={{ display: 'inline-block', cursor: 'pointer' }}
-            onClick={() => confirmDelete(item.id)}
-          >
-            <ActionButton
-              color="danger"
-              icon={cilTrash}
-            />
-          </div>
-        </CTooltip>
-      ) : (
-        <span style={{ visibility: 'hidden' }}>X</span>
-      )}
-    </div>
-  </div>
-</CTableDataCell>
+                          {/* DELETE */}
+                          <div
+                            style={{
+                              width: '32px',
+                              display: 'flex',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {item.is_active ? (
+                              <CTooltip content="Delete" placement="top">
+                                <div
+                                  style={{ display: 'inline-block', cursor: 'pointer' }}
+                                  onClick={() => confirmDelete(item.id)}
+                                >
+                                  <ActionButton color="danger" icon={cilTrash} />
+                                </div>
+                              </CTooltip>
+                            ) : (
+                              <span style={{ visibility: 'hidden' }}>X</span>
+                            )}
+                          </div>
+                        </div>
+                      </CTableDataCell>
                     </CTableRow>
                   ))
                 ) : (
@@ -313,7 +306,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

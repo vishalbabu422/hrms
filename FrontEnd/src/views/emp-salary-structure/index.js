@@ -34,7 +34,8 @@ const Index = () => {
 
   const [sort, setSort] = useState({ key: 'id', order: 'desc' })
   const [page, setPage] = useState(1)
-  const [limit] = useState(10)
+  const [limit, setLimit] = useState(LIMIT)
+  const [totalRecords, setTotalRecords] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [search, setSearch] = useState('')
   const [list, setList] = useState([])
@@ -59,11 +60,13 @@ const Index = () => {
       const response = await api.get(`/employee-salary-structure?models=salaryStructure,employee`, {
         params,
       })
+      
 
       const data = response?.data?.data || []
 
       setList(data)
       setTotalPages(response?.data?.meta?.total_pages || 1)
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to load data')
@@ -78,7 +81,7 @@ const Index = () => {
 
   useEffect(() => {
     fetchData()
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= DELETE ================= */
 
@@ -176,56 +179,38 @@ const Index = () => {
                         )}
                       </CTableDataCell>
 
-                    <CTableDataCell>
-  <div
-    className="d-flex justify-content-center align-items-center gap-2"
-    style={{ minWidth: '100px' }}
-  >
-    {/* EDIT */}
-    <CTooltip
-      content="Edit"
-      placement="top"
-    >
-      <div
-        style={{
-          display: 'inline-block',
-          cursor: 'pointer',
-        }}
-        onClick={() =>
-          navigate(
-            `/emp-salary-structure/edit/${item.id}`,
-          )
-        }
-      >
-        <ActionButton
-          color="primary"
-          icon={cilPencil}
-        />
-      </div>
-    </CTooltip>
+                      <CTableDataCell>
+                        <div
+                          className="d-flex justify-content-center align-items-center gap-2"
+                          style={{ minWidth: '100px' }}
+                        >
+                          {/* EDIT */}
+                          <CTooltip content="Edit" placement="top">
+                            <div
+                              style={{
+                                display: 'inline-block',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => navigate(`/emp-salary-structure/edit/${item.id}`)}
+                            >
+                              <ActionButton color="primary" icon={cilPencil} />
+                            </div>
+                          </CTooltip>
 
-    {/* DELETE */}
-    <CTooltip
-      content="Delete"
-      placement="top"
-    >
-      <div
-        style={{
-          display: 'inline-block',
-          cursor: 'pointer',
-        }}
-        onClick={() =>
-          confirmDelete(item.id)
-        }
-      >
-        <ActionButton
-          color="danger"
-          icon={cilTrash}
-        />
-      </div>
-    </CTooltip>
-  </div>
-</CTableDataCell>
+                          {/* DELETE */}
+                          <CTooltip content="Delete" placement="top">
+                            <div
+                              style={{
+                                display: 'inline-block',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => confirmDelete(item.id)}
+                            >
+                              <ActionButton color="danger" icon={cilTrash} />
+                            </div>
+                          </CTooltip>
+                        </div>
+                      </CTableDataCell>
                     </CTableRow>
                   ))
                 ) : (
@@ -235,7 +220,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>

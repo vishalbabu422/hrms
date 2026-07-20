@@ -1,4 +1,4 @@
-import { CPagination, CPaginationItem } from '@coreui/react'
+import { CPagination, CPaginationItem, CFormSelect } from '@coreui/react'
 
 const AppPagination = ({
   page,
@@ -6,9 +6,15 @@ const AppPagination = ({
   onPageChange,
   className = 'justify-content-end',
   ariaLabel = 'Pagination Navigation',
-  maxVisiblePages = 5, // 👈 new prop
+  maxVisiblePages = 5,
+
+  //  ADDED
+  totalRecords = 0,
+  pageSize = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 50,
+  pageSizeOptions = [2, 5, 10, 25, 50, 100],
+  onPageSizeChange,
 }) => {
-  if (!totalPages || totalPages <= 1) return null
+  if (!totalPages || totalPages < 1) return null
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > totalPages || newPage === page) return
@@ -33,61 +39,99 @@ const AppPagination = ({
     pages.push(i)
   }
 
+  //  ADDED
+  const startRecord = totalRecords === 0 ? 0 : (page - 1) * pageSize + 1
+
+  const endRecord = Math.min(page * pageSize, totalRecords)
+
   return (
-    <CPagination className={className} aria-label={ariaLabel}>
-      {/* Previous */}
-      <CPaginationItem
-        disabled={page === 1}
-        onClick={() => handlePageChange(page - 1)}
+    <div className="d-flex align-items-center w-100">
+      {/* Left */}
+      <div
+        className="d-flex align-items-center"
+        style={{
+          width: 'fit-content',
+          gap: '12px',
+          flexShrink: 0,
+          whiteSpace: 'nowrap',
+        }}
       >
-        &laquo;
-      </CPaginationItem>
+        <span>Result per page</span>
 
-      {/* First page + ellipsis */}
-      {startPage > 1 && (
-        <>
-          <CPaginationItem onClick={() => handlePageChange(1)}>
-            1
-          </CPaginationItem>
-          {startPage > 2 && (
-            <CPaginationItem disabled>...</CPaginationItem>
-          )}
-        </>
-      )}
-
-      {/* Visible pages */}
-      {pages.map((pageNumber) => (
-        <CPaginationItem
-          key={pageNumber}
-          active={page === pageNumber}
-          onClick={() => handlePageChange(pageNumber)}
+        <CFormSelect
+          size="sm"
+          value={pageSize}
+          style={{ width: '60px' }}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
         >
-          {pageNumber}
-        </CPaginationItem>
-      ))}
+          {pageSizeOptions.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </CFormSelect>
+      </div>
 
-      {/* Last page + ellipsis */}
-      {endPage < totalPages && (
-        <>
-          {endPage < totalPages - 1 && (
-            <CPaginationItem disabled>...</CPaginationItem>
-          )}
-          <CPaginationItem
-            onClick={() => handlePageChange(totalPages)}
-          >
-            {totalPages}
-          </CPaginationItem>
-        </>
-      )}
-
-      {/* Next */}
-      <CPaginationItem
-        disabled={page === totalPages}
-        onClick={() => handlePageChange(page + 1)}
+      {/* Center */}
+      <div
+        style={{
+          flex: 1,
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+        }}
       >
-        &raquo;
-      </CPaginationItem>
-    </CPagination>
+        {startRecord}-{endRecord} of {totalRecords.toLocaleString()}
+      </div>
+
+      {/* Right */}
+      <div className="d-flex justify-content-end" style={{ minWidth: '260px' }}>
+        <CPagination className={className} aria-label={ariaLabel}>
+          {/* Previous */}
+          <CPaginationItem disabled={page === 1} onClick={() => handlePageChange(page - 1)}>
+            &laquo;
+          </CPaginationItem>
+
+          {/* First page + ellipsis */}
+          {startPage > 1 && (
+            <>
+              <CPaginationItem onClick={() => handlePageChange(1)}>1</CPaginationItem>
+
+              {startPage > 2 && <CPaginationItem disabled>...</CPaginationItem>}
+            </>
+          )}
+
+          {/* Visible pages */}
+          {pages.map((pageNumber) => (
+            <CPaginationItem
+              key={pageNumber}
+              active={page === pageNumber}
+              onClick={() => handlePageChange(pageNumber)}
+            >
+              {pageNumber}
+            </CPaginationItem>
+          ))}
+
+          {/* Last page + ellipsis */}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && <CPaginationItem disabled>...</CPaginationItem>}
+
+              <CPaginationItem onClick={() => handlePageChange(totalPages)}>
+                {totalPages}
+              </CPaginationItem>
+            </>
+          )}
+
+          {/* Next */}
+          <CPaginationItem
+            disabled={page === totalPages}
+            onClick={() => handlePageChange(page + 1)}
+          >
+            &raquo;
+          </CPaginationItem>
+        </CPagination>
+      </div>
+    </div>
   )
 }
 

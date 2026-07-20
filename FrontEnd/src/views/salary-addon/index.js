@@ -51,7 +51,9 @@ const Index = () => {
 
   const [page, setPage] = useState(1)
 
-  const [limit] = useState(LIMIT)
+  const [limit, setLimit] = useState(LIMIT)
+
+  const [totalRecords, setTotalRecords] = useState(0)
 
   const [totalPages, setTotalPages] = useState(1)
 
@@ -82,6 +84,8 @@ const Index = () => {
       setList(response.data?.data?.salaryAddonList ?? [])
 
       setTotalPages(response.data?.totalPages ?? 1)
+
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
 
@@ -101,7 +105,7 @@ const Index = () => {
     if (search.length === 0 || search.length >= 3) {
       fetchData()
     }
-  }, [search, sort, page])
+  }, [search, sort, page, limit])
 
   /* ================= SORT ================= */
 
@@ -275,7 +279,17 @@ const Index = () => {
             </CTable>
           </SimpleBar>
 
-          <AppPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <AppPagination
+            page={page}
+            totalPages={totalPages}
+            totalRecords={totalRecords}
+            pageSize={limit}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setLimit(size)
+              setPage(1)
+            }}
+          />
         </CCardBody>
       </CCard>
     </CContainer>
