@@ -249,7 +249,7 @@ const SalaryDispatchModal = ({
 
       resetForm()
 
-      toast.success('Salary dispatched successfully')
+      // toast.success('Salary dispatched successfully')
     } catch (error) {
       console.error(error)
 

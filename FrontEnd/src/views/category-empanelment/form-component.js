@@ -15,6 +15,7 @@ import { useEffect, useState } from 'react'
 import CompanySelect from '../components/company-select'
 import OrganizationSelect from '../components/organization-select'
 import { validateEmpanelment } from '../../validations/empanelmentValidation'
+import api from '../../api/axios'
 
 const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
   const [formData, setFormData] = useState(initialData)
@@ -35,6 +36,36 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
       ...prev,
       [name]: value === '' ? null : name === 'is_active' ? value === 'true' : value,
     }))
+  }
+
+  const handleDownload = async () => {
+    try {
+      const response = await api.get(`/admin/empanelment/${formData.id}/downloads`, {
+        responseType: 'blob',
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+
+      // Get filename from response header if available
+      const disposition = response.headers['content-disposition']
+      let filename = getFileName(formData.doc_path)
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/)
+        if (match) filename = match[1]
+      }
+
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -300,10 +331,11 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
                     <small className="text-muted">Current File:</small>
                     <br />
                     <a
-                      href={`${import.meta.env.VITE_FILE_BASE_URL}${formData.doc_path}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleDownload()
+                      }}
                     >
                       {getFileName(formData.doc_path)}
                     </a>

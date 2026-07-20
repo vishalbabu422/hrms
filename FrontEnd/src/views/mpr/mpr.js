@@ -156,6 +156,43 @@ const MPR = () => {
     }
   }
 
+  // Added
+
+  const handleDownload = async (mprId, filePath) => {
+    try {
+      const response = await api.get(
+        `/workorder/${workOrder}/employee-work-order-mpr/${mprId}/download`,
+        {
+          responseType: 'blob',
+        },
+      )
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+
+      // filename from header
+      const disposition = response.headers['content-disposition']
+      let filename = filePath?.split('/').pop() || 'mpr.pdf'
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/)
+        if (match) filename = match[1]
+      }
+
+      link.href = url
+      link.download = filename
+
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Download failed')
+    }
+  }
+
   /* ================= DELETE ================= */
 
   const confirmDelete = (id) => {
@@ -230,7 +267,8 @@ const MPR = () => {
                     const leaveGranted = emp?.employeeWorkOrderLeaves?.[0]?.leave_granted
                     const leaveTaken = emp?.employeeWorkOrderLeaves?.[0]?.leave_taken
                     const designation =
-                      emp?.EmployeeWorkOrderDeployment?.[0]?.WoDesgnMapping?.Designation?.designation
+                      emp?.EmployeeWorkOrderDeployment?.[0]?.WoDesgnMapping?.Designation
+                        ?.designation
                     const mprId = emp?.employeeWorkOrderMprs?.[0]?.id
                     const mprFileUrl = emp?.employeeWorkOrderMprs?.[0]?.mpr_file_path
 
@@ -253,9 +291,22 @@ const MPR = () => {
                         <td>
                           {mprFileUrl ? (
                             <>
-                              <a href={`${FILE_BASE_URL}${mprFileUrl}`} download target="_blank">
+                              {/* <a href={`${FILE_BASE_URL}${mprFileUrl}`} download target="_blank">
                                 <CIcon icon={cilCloudDownload} size="lg" />
-                              </a>
+                              </a> */}
+
+                             
+
+                              <CButton
+                                color="primary"
+                                variant="ghost"
+                                className="p-0"
+                                onClick={() => handleDownload(mprId, mprFileUrl)}
+                              >
+                                <CIcon icon={cilCloudDownload} size="lg" />
+                              </CButton>
+
+
 
                               <CButton
                                 size="lg"

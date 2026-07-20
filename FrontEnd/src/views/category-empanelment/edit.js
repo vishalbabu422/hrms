@@ -27,6 +27,7 @@ const edit = () => {
   }, [id])
 
   const mapApiToForm = (data) => ({
+    id,
     organization_id: data.organization_id ?? '',
     company_id: data.company_id ?? '',
 

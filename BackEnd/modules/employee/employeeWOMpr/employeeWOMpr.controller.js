@@ -3,6 +3,8 @@ const service = require("./employeeWOMpr.service");
 const sequelize = require("../../../utils/database");
 const AppError = require("../../../utils/appError");
 const EmployeeMprUtils = require("../../../utils/employeeMprUtils");
+const path = require("path");
+const fs = require("fs");
 
 const generateMprPdf = require("../../../utils/generateMprPdf");
 
@@ -175,7 +177,6 @@ const deleteEmployeeWOMpr = catchAsync(async (req, res) => {
     });
 });
 
-
 const createEmployeeWOMpr = catchAsync(async (req, res) => {
     const { id: wo_id } = req.params;
     const { employee_ids, month, year, created_by } = req.body;
@@ -335,10 +336,53 @@ const designation = EmployeeMprUtils.getDesignation(emp);
         data: result,
     });
 });
+const downloadEmployeeWOMpr = catchAsync(async (req, res) => {
+    const { id: wo_id, mprId } = req.params;
+
+    const mpr = await service.getEmployeeWOMpr({
+        where: {
+            id: mprId,
+            wo_id
+        }
+    });
+
+    if (!mpr.length) {
+        return res.status(404).json({
+            status: "fail",
+            message: "MPR record not found"
+        });
+    }
+
+    const record = mpr[0];
+
+    if (!record.mpr_file_path) {
+        return res.status(404).json({
+            status: "fail",
+            message: "No document found"
+        });
+    }
+
+    const filePath = path.join(
+        process.cwd(),
+        record.mpr_file_path.replace(/^\/+/, "")
+    );
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({
+            status: "fail",
+            message: "File not found"
+        });
+    }
+
+    return res.download(filePath, record.mpr_file_name);
+});
 
 module.exports = {
     getEmployeeWOMpr,
     createEmployeeWOMpr,
     deleteEmployeeWOMpr,
-    uploadEmployeeWOMpr
+    uploadEmployeeWOMpr,
+    downloadEmployeeWOMpr,
+    
+    
 };

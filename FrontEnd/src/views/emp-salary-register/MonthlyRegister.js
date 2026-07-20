@@ -482,6 +482,42 @@ const SalaryRegister = () => {
     }
   }
 
+  /* ================= ADDED ================= */
+
+  const handleDownload = async (registerId, filePath) => {
+    try {
+      const response = await api.get(
+        `employee-salary-register-monthly/download-slip/${registerId}`,
+        {
+          responseType: 'blob',
+        },
+      )
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+
+      const disposition = response.headers['content-disposition']
+      let filename = filePath?.split('/').pop() || 'Payslip.pdf'
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/)
+        if (match) filename = match[1]
+      }
+
+      link.href = url
+      link.download = filename
+
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      toast.error('Download failed')
+    }
+  }
+
   const filteredWorkOrders = workOrders.filter((item) =>
     item.work_order_no?.toLowerCase().includes(workOrderSearch.toLowerCase()),
   )
@@ -1042,7 +1078,7 @@ const SalaryRegister = () => {
                               View
                             </CButton>
 
-                            <a
+                            {/* <a
                               href={`${FILE_BASE_URL}${register?.mon_salaryslip_filepath}`}
                               target="_blank"
                               download
@@ -1059,8 +1095,25 @@ const SalaryRegister = () => {
                                 <CIcon icon={cilCloudDownload} className="me-1" />
                                 Download
                               </CButton>
-                            </a>
+                            </a> */}
+
+                            <CButton
+                              size="sm"
+                              style={{
+                                background: '#5c7c99',
+                                border: 'none',
+                                color: '#fff',
+                              }}
+                              onClick={() =>
+                                handleDownload(register.id, register?.mon_salaryslip_filepath)
+                              }
+                            >
+                              <CIcon icon={cilCloudDownload} className="me-1" />
+                              Download
+                            </CButton>
                           </>
+
+                          
                         ) : (
                           <span className="text-muted">Pending</span>
                         )}

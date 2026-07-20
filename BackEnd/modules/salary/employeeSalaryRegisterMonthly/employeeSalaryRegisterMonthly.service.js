@@ -487,7 +487,7 @@ const snapshotData = [
   };
 };
 exports.generateSalarySlip = async (register_id, transaction) => {
-  // 1️⃣ register
+  // register
   const register = await EmployeeSalaryRegister.findByPk(register_id, {
     transaction,
   });
@@ -505,7 +505,7 @@ exports.generateSalarySlip = async (register_id, transaction) => {
     };
   }
 
-  // 2️⃣ employee
+  // employee
   const employee = await Employee.findByPk(register.employee_id);
 
   const leaveData = await EmployeeWorkOrderLeave.findOne({
@@ -516,7 +516,7 @@ exports.generateSalarySlip = async (register_id, transaction) => {
 
   },
 });
-  // 3️⃣ snapshots
+  // snapshots
   const snapshots = await EmployeeSalaryRegisterSnapshot.findAll({
     where: {
       employee_salary_register_id: register.id,
@@ -537,7 +537,7 @@ exports.generateSalarySlip = async (register_id, transaction) => {
     amount: Number(item.final_amount),
   }));
 
-  // 4️⃣ prepare data
+  // prepare data
   const pdfData = {
     employee_id: register.employee_id,
 
@@ -575,14 +575,10 @@ leave_deduction:
    addons,
   };
 
-  console.log("register.month =", register.month);
-console.log("register.year =", register.year);
-console.log("employee_id =", register.employee_id);
-console.log("leaveData =", leaveData);
-  // 5️⃣ generate pdf
+  //  generate pdf
   const pdf = await SalarySlipPdf.generate(pdfData);
 
-  // 6️⃣ update DB
+  //  update DB
   await register.update(
     {
       mon_salaryslip_generated: true,
@@ -597,4 +593,14 @@ console.log("leaveData =", leaveData);
     filename: pdf.filename,
     filepath: pdf.filepath,
   };
+};
+exports.downloadSalarySlip = async (register_id) => {
+  return await EmployeeSalaryRegister.findByPk(register_id, {
+    attributes: [
+      "id",
+      "mon_salaryslip_generated",
+      "mon_salaryslip_filename",
+      "mon_salaryslip_filepath",
+    ],
+  });
 };

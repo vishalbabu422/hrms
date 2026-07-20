@@ -2512,6 +2512,48 @@
         }
       }
     },
+    "/admin/empanelment/{id}/downloads": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Empanelment"],
+    "summary": "Download Empanelment Document",
+    "description": "Download the uploaded document of an Empanelment by its ID.",
+    "produces": [
+      "application/pdf"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "description": "Empanelment ID",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Document downloaded successfully",
+        "schema": {
+          "type": "file"
+        }
+      },
+      "404": {
+        "description": "Empanelment or document not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+},
     "/admin/gst-code/index": {
       "get": {
         "security": [
@@ -10793,6 +10835,51 @@
         }
       }
     },
+    "/workorder/{id}/employee-work-order-mpr/{mprId}/download": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee WO MPR"],
+    "summary": "Download Employee Work Order MPR",
+    "description": "Download the uploaded/generated MPR PDF.",
+    "produces": [
+      "application/pdf"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "name": "mprId",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "example": 10
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "MPR downloaded successfully",
+        "schema": {
+          "type": "file"
+        }
+      },
+      "404": {
+        "description": "MPR record or file not found"
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+    },
 
     "/salary-component": {
       "get": {
@@ -11538,6 +11625,47 @@
           }
         }
       }
+    },
+    "/employee-salary-register-monthly/download-slip/{register_id}": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee Salary Monthly"],
+    "summary": "Download Salary Slip PDF",
+    "description": "Download generated salary slip PDF by register ID.",
+    "produces": [
+      "application/pdf"
+    ],
+    "parameters": [
+      {
+        "name": "register_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Salary slip downloaded successfully",
+        "schema": {
+          "type": "file"
+        }
+      },
+      "404": {
+        "description": "Salary register or salary slip not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
     },
     "/employee-salary-structure/{id}/emp/{emp_id}": {
       "get": {

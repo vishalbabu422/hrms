@@ -21,8 +21,8 @@ router
 router
   .route("/upload")
   .post(
-    upload.single("file"), 
     checkPermission("MPR.CREATE"),
+    upload.single("file"), 
     controller.uploadEmployeeWOMpr);
 
 router
@@ -31,4 +31,10 @@ router
     checkPermission("MPR.DELETE"),
     controller.deleteEmployeeWOMpr);
 
+    router
+  .route("/:mprId/download")
+  .get(
+    checkPermission("MPR.READ"),
+    controller.downloadEmployeeWOMpr
+  );
 module.exports = router;

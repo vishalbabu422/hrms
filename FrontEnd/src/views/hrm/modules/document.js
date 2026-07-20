@@ -1,4 +1,5 @@
 import React, { useRef, forwardRef, useImperativeHandle, useState, useEffect } from 'react'
+import api from '../../../api/axios'
 import { toast } from 'react-toastify'
 import useDocumentUpload from '../../../hooks/useDocumentUpload'
 import useEmployeeDocuments from '../../../hooks/fetchDocuments'
@@ -57,7 +58,6 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
 
   const availableDocs = SUPPORTED_DOCS.filter((doc) => !usedTypes.includes(doc.value))
 
-
   const handleFileChange = (e) => {
     const file = e.target.files[0]
 
@@ -76,31 +76,29 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
     //   return
     // }
 
-
     if (selectedDocType === 'PHOTO') {
-  const allowedPhotoTypes = ['image/jpeg', 'image/png']
+      const allowedPhotoTypes = ['image/jpeg', 'image/png']
 
-  if (!allowedPhotoTypes.includes(file.type)) {
-    setFileError('Only JPG, JPEG and PNG files are allowed for Photo')
-    e.target.value = ''
-    setSelectedFile(null)
-    return
-  }
-} else {
-  const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ]
+      if (!allowedPhotoTypes.includes(file.type)) {
+        setFileError('Only JPG, JPEG and PNG files are allowed for Photo')
+        e.target.value = ''
+        setSelectedFile(null)
+        return
+      }
+    } else {
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      ]
 
-  if (!allowedTypes.includes(file.type)) {
-    setFileError('Only PDF and Word files are allowed')
-    e.target.value = ''
-    setSelectedFile(null)
-    return
-  }
-}
-
+      if (!allowedTypes.includes(file.type)) {
+        setFileError('Only PDF and Word files are allowed')
+        e.target.value = ''
+        setSelectedFile(null)
+        return
+      }
+    }
 
     setFileError('')
     setSelectedFile(file)
@@ -130,6 +128,7 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
   }
 
   // ================= REMOVE =================
+
   const handleRemove = async (doc, index) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this document?')
 
@@ -144,6 +143,39 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
     } catch (error) {
       console.error(error)
       toast.error('Failed to delete document')
+    }
+  }
+
+  // ================= Added =================
+
+  const handleDownload = async (docId, filePath) => {
+    try {
+      const response = await api.get(`/employee/${employeeId}/documents/${docId}/download`, {
+        responseType: 'blob',
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+
+      const disposition = response.headers['content-disposition']
+      let filename = filePath?.split('/').pop() || 'document'
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/)
+        if (match) filename = match[1]
+      }
+
+      link.href = url
+      link.download = filename
+
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error(error)
+      toast.error('Download failed')
     }
   }
 
@@ -258,14 +290,22 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
                         ) : (
                           <>
                             {doc.name}
-                            <a
+                            {/* <a
                               href={doc.file_url}
                               target="_blank"
                               rel="noreferrer"
                               className="ms-2"
                             >
                               <CIcon icon={cilCloudDownload} size="lg" />
-                            </a>
+                            </a> */}
+
+                            <button
+                              type="button"
+                              className="btn btn-link p-0 ms-2"
+                              onClick={() => handleDownload(doc.id, doc.file_url)}
+                            >
+                              <CIcon icon={cilCloudDownload} size="lg" />
+                            </button>
                           </>
                         )}
                       </td>

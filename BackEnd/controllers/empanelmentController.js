@@ -1,11 +1,13 @@
 const catchAsync = require("../utils/catchAsync");
 const APIFeatures = require("../utils/apiFeature");
+const path = require("path");
+const fs = require("fs");
 
 // Models
 const { CompanyMaster, EmpanelmentMaster } = require("../models");
 const { Op } = require("sequelize");
-
 // Get Empanelment List (Index)
+
 const index = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(req.query)
     .filter()
@@ -13,7 +15,7 @@ const index = catchAsync(async (req, res, next) => {
     .limitFields()
     .join()
     .paginate();
-
+  
   const page = req.query.page * 1 || 1;
   const limit = req.query.limit * 1 || 10;
 
@@ -85,8 +87,6 @@ const dataById = catchAsync(async (req, res, next) => {
     data: empanelment,
   });
 });
-
-
 
 const create = catchAsync(async (req, res, next) => {
   const payload = req.body;
@@ -215,10 +215,48 @@ const deleteById = catchAsync(async (req, res, next) => {
   });
 });
 
+const download = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const empanelment = await EmpanelmentMaster.findByPk(id, {
+    attributes: ["id", "doc_path"],
+  });
+
+  if (!empanelment) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Empanelment not found",
+    });
+  }
+
+  if (!empanelment.doc_path) {
+    return res.status(404).json({
+      status: "fail",
+      message: "No document uploaded for this empanelment",
+    });
+  }
+
+  // Convert "/uploads/empanelment/file.pdf"
+  // to absolute server path
+  const filePath = path.join(process.cwd(), empanelment.doc_path.replace(/^\/+/, ""));
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      status: "fail",
+      message: "File not found",
+    });
+  }
+
+  return res.download(
+    filePath,
+    path.basename(filePath)
+  );
+});
 module.exports = {
   index,
   dataById,
   create,
   edit,
   deleteById,
+  download,
 };

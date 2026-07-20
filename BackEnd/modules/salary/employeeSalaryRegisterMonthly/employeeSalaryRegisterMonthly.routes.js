@@ -24,6 +24,12 @@ router.post(
   checkPermission("EMP_SALARY.CREATE"),
   Controller.generateSalarySlip
 );
+router.get(
+  "/download-slip/:register_id",
+  restrictTo(...ROLES),
+  checkPermission("EMP_SALARY.READ"),
+  Controller.downloadSalarySlip
+);
 
 module.exports = router;
 

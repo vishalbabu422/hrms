@@ -1,6 +1,8 @@
 const catchAsync = require("../../../utils/catchAsync");
 const Service = require("./employeeSalaryRegisterMonthly.service");
 const sequelize = require("../../../utils/database");
+const path = require("path");
+const fs = require("fs");
 
 const generateMonthlySalary = catchAsync(async (req, res) => {
     
@@ -41,8 +43,50 @@ const generateSalarySlip = catchAsync(async (req, res) => {
   });
 });
 
+const downloadSalarySlip = catchAsync(async (req, res) => {
+
+  const { register_id } = req.params;
+
+  const register = await Service.downloadSalarySlip(register_id);
+
+  if (!register) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Salary register not found",
+    });
+  }
+
+  if (
+    !register.mon_salaryslip_generated ||
+    !register.mon_salaryslip_filepath
+  ) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Salary slip not generated",
+    });
+  }
+
+  const filePath = path.join(
+    process.cwd(),
+    register.mon_salaryslip_filepath.replace(/^\/+/, "")
+  );
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Salary slip file not found",
+    });
+  }
+
+  return res.download(
+    filePath,
+    register.mon_salaryslip_filename
+  );
+});
+
 module.exports = {
   generateMonthlySalary,
   dispatchSalary,
   generateSalarySlip,
+  downloadSalarySlip,
 };

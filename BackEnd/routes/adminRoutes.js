@@ -92,6 +92,11 @@ router.route("/empanelment/delete/:id").delete(
   checkPermission("EMPANELMENT.DELETE"),
   EmpanelmentController.deleteById,
 );
+router.route("/empanelment/:id/downloads").get(
+  injectOrgScope(),
+  checkPermission("EMPANELMENT.READ"),
+  EmpanelmentController.download
+);
 
 // GST Code Routes
 router.route("/gst-code/index").get(

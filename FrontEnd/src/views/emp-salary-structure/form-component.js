@@ -171,15 +171,7 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) return
 
-    // const finalData = Object.entries(selectedEmployees)
-    //   .filter(([_, v]) => v.checked)
-    //   .map(([id, v]) => ({
-    //     employee_id: Number(id),
-    //     salary_structure_id: Number(salaryStructureId),
-    //     ctc: v.value,
-    //     effective_from: v.effective_from,
-    //     created_by: user?.id,
-    //   }))
+
 
     const finalData = Object.entries(selectedEmployees)
       .filter(([_, v]) => v.checked)
