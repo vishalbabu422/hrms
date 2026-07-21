@@ -273,8 +273,6 @@ const Index = () => {
                           )}
                         </CTableDataCell>
 
-                 
-
                         <CTableDataCell>
                           <div
                             className="d-flex justify-content-end align-items-center gap-2"
@@ -360,7 +358,13 @@ const Index = () => {
                                   display: 'inline-block',
                                   cursor: 'pointer',
                                 }}
-                                onClick={() => navigate(`/work-order/preview/${item.id}`)}
+                                onClick={() =>
+                                  navigate(`/work-order/preview/${item.id}`, {
+                                    state: {
+                                      type: item.type,
+                                    },
+                                  })
+                                }
                               >
                                 <ActionButton color="primary" icon={cilDescription} />
                               </div>

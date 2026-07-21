@@ -23,7 +23,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPencil } from '@coreui/icons'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
@@ -37,16 +37,27 @@ const WorkOrderPreview = () => {
   const [workOrder, setWorkOrder] = useState([])
   const [amount, setAmount] = useState([])
   const [loading, setLoading] = useState(false)
+  const { state } = useLocation()
+  const type = state?.type
+  const isMilestone = type === 'MILESTONES_PROJECT_BASIS'
 
   useEffect(() => {
     const fetchWorkOrder = async () => {
       try {
         setLoading(true)
 
-        const response = await api.get(
-          `/admin/workorder/${id}?models=WoDesgnMappings.EmployeeWorkOrderDeployments.Employee%2CWoDesgnMappings.GstCodeMaster%2CWoDesgnMappings.Designation&modelFilter=%7B%7D`,
-        )
+        let url = `/admin/workorder/${id}`
 
+        if (type === 'MILESTONES_PROJECT_BASIS') {
+          url +=
+            '?models=WoMilestones.gstCode&modelFilter=%7B%22WoMilestones%22%3A%7B%22is_active%22%3Atrue%2C%22required%22%3Afalse%7D%7D&is_active=true'
+        } else {
+          url +=
+            '?models=WoDesgnMappings.EmployeeWorkOrderDeployments.Employee%2CWoDesgnMappings.GstCodeMaster%2CWoDesgnMappings.Designation&modelFilter=%7B%7D'
+        }
+
+        const response = await api.get(url)
+        console.log(response)
         setWorkOrder(response.data?.data || [])
       } catch (error) {
         console.error(error)
@@ -67,11 +78,21 @@ const WorkOrderPreview = () => {
       const merged = {
         ...d,
         ...duration,
+
+        // Normalize GST percentages
+        cgst_percent: Number(d.cgst_percent ?? d.GstCodeMaster?.cgst_rate ?? 0),
+
+        sgst_percent: Number(d.sgst_percent ?? d.GstCodeMaster?.sgst_rate ?? 0),
+
+        igst_percent: Number(d.igst_percent ?? d.GstCodeMaster?.igst_rate ?? 0),
       }
 
-      // Amounts
+      // Same calculation as Add Designation
       const amounts = calculateAmounts(merged, {
         totalAmount: true,
+        cgst: true,
+        sgst: true,
+        igst: true,
       })
 
       return {
@@ -80,7 +101,10 @@ const WorkOrderPreview = () => {
       }
     }) || []
 
-  const totalAmount = computedDeployments.reduce((sum, d) => sum + Number(d.totalAmount || 0), 0)
+  const totalAmount = computedDeployments.reduce(
+    (sum, d) => sum + Math.round(d.totalAmount || 0),
+    0,
+  )
 
   const totalIgst = computedDeployments.reduce((sum, d) => sum + Number(d.igst_amount || 0), 0)
 
@@ -88,39 +112,43 @@ const WorkOrderPreview = () => {
 
   const totalSgst = computedDeployments.reduce((sum, d) => sum + Number(d.sgst_amount || 0), 0)
 
-  const grandTotal = totalAmount + totalIgst + totalCgst + totalSgst
+  const grandTotal = Math.round(totalAmount + totalIgst + totalCgst + totalSgst)
 
-  const workorder = {
-    id,
-    work_order_no: 'WO-2026-001',
-    project_name: 'Hospital IT Upgrade Project',
-    date: '18-02-2026',
-    project_no: 'PRJ-1001',
-    pi_no: 'PI-7788',
+  // ================= MILESTONE CALCULATIONS =================
 
-    issued_to_name: 'Tech Solutions Pvt Ltd',
-    issued_to_address: 'Plot No. 45, Sector 18, Gurugram, Haryana - 122015',
-    issued_to_email: 'info@techsolutions.com',
-    issued_to_phone: '+91-9876543210',
+  const milestones = workOrder?.WoMilestones || []
 
-    contact_person_name: 'Rahul Sharma',
-    contact_person_email: 'rahul.sharma@techsolutions.com',
-    contact_person_phone: '+91-9999999999',
+  const milestoneTotalAmount = milestones.reduce(
+    (sum, milestone) => sum + Number(milestone.amount || 0),
+    0,
+  )
 
-    // Deployment Details
-    hsn_code: '998314',
-    description: 'IT Support Services',
-    from: '01-01-2026',
-    to: '31-12-2026',
-    duration: '365 Days',
-    persons: '5',
-    unit_rate: '50000',
-    total_amount: '250000',
-    igst: '18%',
-    cgst: '0%',
-    sgst: '0%',
-    grand_total: '295000',
-  }
+  const milestoneGst = milestones[0]?.gstCode
+
+  const milestoneIgstRate = Number(milestoneGst?.igst_rate || 0)
+  const milestoneCgstRate = Number(milestoneGst?.cgst_rate || 0)
+  const milestoneSgstRate = Number(milestoneGst?.sgst_rate || 0)
+
+  const milestoneIgstAmount = (milestoneTotalAmount * milestoneIgstRate) / 100
+
+  const milestoneCgstAmount = (milestoneTotalAmount * milestoneCgstRate) / 100
+
+  const milestoneSgstAmount = (milestoneTotalAmount * milestoneSgstRate) / 100
+
+  const milestoneGrandTotal =
+    milestoneTotalAmount + milestoneIgstAmount + milestoneCgstAmount + milestoneSgstAmount
+
+  // ================= FINAL VALUES =================
+
+  const finalTotalAmount = isMilestone ? milestoneTotalAmount : totalAmount
+
+  const finalIgst = isMilestone ? milestoneIgstAmount : totalIgst
+
+  const finalCgst = isMilestone ? milestoneCgstAmount : totalCgst
+
+  const finalSgst = isMilestone ? milestoneSgstAmount : totalSgst
+
+  const finalGrandTotal = isMilestone ? milestoneGrandTotal : grandTotal
 
   const handleExportPDF = () => {
     const doc = new jsPDF()
@@ -138,49 +166,6 @@ const WorkOrderPreview = () => {
     })
     saveAs(fileData, 'workorder-details.xlsx')
   }
-
-  const deploymentEmployees = [
-    {
-      id: 1,
-      name: 'Riddhi',
-      email: 'rk@gmail.com',
-      contact: '9999999999',
-      joining: '2026-02-11',
-      relieving: '2026-02-27',
-    },
-    {
-      id: 2,
-      name: 'Vinay',
-      email: 'vinay@gmail.com',
-      contact: '8888888888',
-      joining: '2026-02-12',
-      relieving: '2026-03-01',
-    },
-    {
-      id: 3,
-      name: 'Ravi',
-      email: 'ravi@gmail.com',
-      contact: '7777777777',
-      joining: '2026-02-15',
-      relieving: '2026-03-10',
-    },
-    {
-      id: 4,
-      name: 'Amit',
-      email: 'amit@gmail.com',
-      contact: '6666666666',
-      joining: '2026-02-18',
-      relieving: '2026-03-12',
-    },
-    {
-      id: 5,
-      name: 'Neha',
-      email: 'neha@gmail.com',
-      contact: '5555555555',
-      joining: '2026-02-20',
-      relieving: '2026-03-15',
-    },
-  ]
 
   return (
     <CContainer fluid className="py-4 pb-5">
@@ -230,7 +215,34 @@ const WorkOrderPreview = () => {
               </div>
 
               {/* ================= DEPLOYMENT CARD ================= */}
-              {computedDeployments && (
+              {isMilestone ? (
+                <CCard className="mb-4 shadow-sm border-0 rounded-3">
+                  <CCardBody>
+                    {milestones.map((milestone, index) => (
+                      <div className="mb-4 pb-3 border-bottom" key={milestone.id}>
+                        <h6 className="fw-bold mb-3">Milestone #{index + 1}</h6>
+
+                        <CRow className="g-3">
+                          <ViewField label="Title" value={milestone.title} />
+
+                          <ViewField label="Description" value={milestone.description} />
+
+                          <ViewField label="From" value={milestone.from_date} />
+
+                          <ViewField label="To" value={milestone.to_date} />
+
+                          <ViewField label="GST Code" value={milestone.gstCode?.code} />
+
+                          <ViewField
+                            label="Amount"
+                            value={`₹ ${Number(milestone.amount || 0).toFixed(2)}`}
+                          />
+                        </CRow>
+                      </div>
+                    ))}
+                  </CCardBody>
+                </CCard>
+              ) : (
                 <CCard className="mb-4 shadow-sm border-0 rounded-3">
                   <CCardBody>
                     {/* DEPLOYMENT 1 */}
@@ -273,7 +285,7 @@ const WorkOrderPreview = () => {
                                     {desgns?.EmployeeWorkOrderDeployments?.length > 0 ? (
                                       desgns?.EmployeeWorkOrderDeployments?.map((emp, index) => (
                                         <CTableRow key={index}>
-                                          <CTableDataCell>{`${emp?.Employee.first_nam} ${emp?.Employee.middle_na} ${emp?.Employee.last_name}`}</CTableDataCell>
+                                          <CTableDataCell>{`${emp?.Employee.first_name} ${emp?.Employee.middle_name ?? ''} ${emp?.Employee.last_name ?? ''}`}</CTableDataCell>
                                           <CTableDataCell>{emp?.Employee.email}</CTableDataCell>
                                           <CTableDataCell>
                                             {emp?.Employee.contact_no}
@@ -303,15 +315,19 @@ const WorkOrderPreview = () => {
                   </CCardBody>
                 </CCard>
               )}
+
               {/* ================= TAX SUMMARY CARD ================= */}
               <CCard className="mb-4 shadow-sm border-0 rounded-3">
                 <CCardBody>
                   <h5 className="fw-bold mb-3 ">Total</h5>
                   <CRow className="g-2">
-                    <ViewField label="Total Amount" value={totalAmount.toFixed(2)} />
-                    <ViewField label="IGST" value={totalIgst.toFixed(2)} />
-                    <ViewField label="CGST" value={totalCgst.toFixed(2)} />
-                    <ViewField label="SGST" value={totalSgst.toFixed(2)} />
+                    <ViewField label="Total Amount" value={finalTotalAmount.toFixed(2)} />
+
+                    <ViewField label="IGST" value={finalIgst.toFixed(2)} />
+
+                    <ViewField label="CGST" value={finalCgst.toFixed(2)} />
+
+                    <ViewField label="SGST" value={finalSgst.toFixed(2)} />
                   </CRow>
 
                   <CRow></CRow>
@@ -322,7 +338,7 @@ const WorkOrderPreview = () => {
               <CCard className="shadow-sm border-0 rounded-3 bg-light">
                 <CCardBody>
                   <h5 className="fw-bold text-dark">Grand Total</h5>
-                  <h5 className="fw-bold text-success mt-2">₹ {grandTotal.toFixed(2)}</h5>
+                  <h5 className="fw-bold text-success mt-2">₹ {finalGrandTotal.toFixed(2)}</h5>
                 </CCardBody>
               </CCard>
             </CCardBody>
