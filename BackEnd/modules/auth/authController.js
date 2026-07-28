@@ -8,7 +8,8 @@ const {
   Employee,
   EmployeeRefreshToken,
   RoleMaster,
-  EmployeeRole
+  EmployeeRole,
+  Permission
 } = require("../../models");
 
 const AppError = require("../../utils/appError");
@@ -27,7 +28,18 @@ exports.login = catchAsync(async (req, res, next) => {
         include: [
           {
             model: RoleMaster,
-            as: "RoleMaster"
+            as: "RoleMaster",
+             include: [
+          {
+            model: Permission,
+            attributes: ["permission_key"],
+            through: { attributes: [] },
+            where: {
+              action: "Show Module",
+            },
+            required: false,
+          },
+        ],
           }
         ]
       }
@@ -53,6 +65,16 @@ exports.login = catchAsync(async (req, res, next) => {
     token_hash: hash,
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
+
+  const permissionSet = new Set();
+
+user.EmployeeRoles.forEach((employeeRole) => {
+  employeeRole.RoleMaster?.Permissions?.forEach((permission) => {
+    permissionSet.add(permission.permission_key);
+  });
+});
+
+const permissions = [...permissionSet];
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const ait = encryptCookie(currentTimestamp.toString());
@@ -82,7 +104,8 @@ exports.login = catchAsync(async (req, res, next) => {
       isSuperAdmin: user.EmployeeRoles.some(
         (er) => er.RoleMaster.is_super_admin,
       ),
-      role: user.EmployeeRoles.map((er) => er.RoleMaster.role_code)
+      role: user.EmployeeRoles.map((er) => er.RoleMaster.role_code),
+      permissions,
     },
     ait: ait,
   });

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { CCloseButton, CSidebar, CSidebarBrand, CSidebarHeader } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -12,6 +12,45 @@ const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.ui.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.ui.sidebarShow)
+  const user = useSelector((state) => state.auth.user)
+
+  const filteredNavigation = useMemo(() => {
+    const permissions = user?.permissions ?? []
+
+    // First determine which normal menu items are accessible
+    const accessibleItems = navigation.filter((item) => {
+      // Titles are handled afterwards
+      if (!item.to && !item.href) {
+        return false
+      }
+
+      // No permission defined = visible
+      if (!item.permission) {
+        return true
+      }
+
+      return permissions.includes(item.permission)
+    })
+
+    // Sections that contain at least one accessible menu
+    const accessibleSections = new Set(
+      accessibleItems.filter((item) => item.section).map((item) => item.section),
+    )
+
+    return navigation.filter((item) => {
+      // Section title
+      if (!item.to && !item.href) {
+        return item.section && accessibleSections.has(item.section)
+      }
+
+      // Menu without permission restriction
+      if (!item.permission) {
+        return true
+      }
+
+      return permissions.includes(item.permission)
+    })
+  }, [user?.permissions])
 
   useEffect(() => {
     const style = document.createElement('style')
@@ -54,7 +93,7 @@ const AppSidebar = () => {
           onClick={() => dispatch(set({ sidebarShow: false }))}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} collapsed={unfoldable} />
+      <AppSidebarNav items={filteredNavigation} collapsed={unfoldable} />
     </CSidebar>
   )
 }
