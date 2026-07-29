@@ -7,6 +7,11 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const UserDashboard = React.lazy(() => import('./views/userdashboard/userdashboard'))
 
 //----------------------------------------------------------//
+const MyDetails = React.lazy(() => import('./views/my-details'))
+
+//----------------------------------------------------------//
+
+
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -196,6 +201,15 @@ const routes = [
     name: 'User Dashboard',
     element: UserDashboard,
   },
+
+
+  //My Details//
+
+{
+  path: '/mydetails',
+  name: 'My Details',
+  element: MyDetails,
+},
 
   // Work Order
   { path: '/work-order', name: 'Work Order', element: WorkOrderIndex },

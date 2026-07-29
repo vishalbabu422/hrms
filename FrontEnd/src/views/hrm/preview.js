@@ -68,10 +68,24 @@ import {
   cilSchool,
 } from '@coreui/icons'
 import { useParams } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import api from '../../api/axios'
+import { useNavigate } from 'react-router-dom'
+
+import { cilPencil } from '@coreui/icons'
 
 const EmployeeProfile = () => {
-  const { employeeId } = useParams()
+  // const { employeeId } = useParams()
+  const { employeeId: routeEmployeeId } = useParams()
+
+  const navigate = useNavigate()
+
+  const auth = useSelector((state) => state.auth)
+
+  // Change this according to your auth response
+  const loggedInEmployeeId = auth?.user?.employee_id || auth?.employee_id || auth?.user?.id
+
+  const employeeId = routeEmployeeId || loggedInEmployeeId
   const [mainTab, setMainTab] = useState('basic')
   const [sideTab, setSideTab] = useState('basic')
   const [employee, setEmployee] = useState({})
@@ -159,7 +173,7 @@ const EmployeeProfile = () => {
       <CCard className="shadow-sm border-0">
         <CCardBody>
           {/* ================= HEADER ================= */}
-          <CRow className="align-items-center mb-4 ">
+          {/* <CRow className="align-items-center mb-4 ">
             <CCol md={8} className="d-flex align-items-center gap-3">
               <CImage
                 src={employee.profileImage ? employee.profileImage : profileImage}
@@ -175,7 +189,38 @@ const EmployeeProfile = () => {
                 <div className="text-muted">{employee.email}</div>
               </div>
             </CCol>
-          </CRow>
+          </CRow> */}
+
+<CRow className="align-items-center mb-4">
+  <CCol md={8} className="d-flex align-items-center gap-3">
+    <CImage
+      src={employee.profileImage ? employee.profileImage : profileImage}
+      width={100}
+      height={100}
+      style={{ borderRadius: '12px', objectFit: 'cover' }}
+      onError={(e) => {
+        e.target.src = profileImage
+      }}
+    />
+
+    <div>
+      <h4 className="mb-1 fw-bold">{employee.firstName}</h4>
+      <div className="text-muted">{employee.email}</div>
+    </div>
+  </CCol>
+
+  <CCol md={4} className="text-end">
+    <CButton
+      color="primary"
+      variant="outline"
+      onClick={() => navigate(`/hrm/${employeeId}`)}
+    >
+      <CIcon icon={cilPencil} className="me-2" />
+      Edit
+    </CButton>
+  </CCol>
+</CRow>
+
 
           <CRow>
             {/* ================= SIDE NAV ================= */}
