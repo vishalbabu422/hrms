@@ -1,12 +1,3 @@
-/* .stepper-underline {
-  display: flex;
-  gap: 34px;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 24px;
-  overflow-x: auto;
-  flex-wrap: nowrap;
-  scrollbar-width: none;
-} */
 
 .stepper-underline {
   display: flex;
@@ -211,15 +202,11 @@
   }
 }
 
-
 .permission-header {
   background-color: #d8e2f1;
   color: #000000;
   height: 32px;
 }
-
-
-
 
 
 @media (max-width: 768px) {
