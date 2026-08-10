@@ -164,11 +164,42 @@ exports.logout = catchAsync(async (req, res) => {
 exports.getMe = catchAsync(async (req, res, next) => {
   const user = await Employee.findByPk(req.user.id, {
     attributes: { exclude: ["password"] },
+     include: [
+    {
+      model: RoleMaster,
+      attributes: ["role_code", "is_super_admin"],
+      include: [
+        {
+          model: Permission,
+          attributes: ["permission_key"],
+          through: { attributes: [] },
+          where: {
+            action: "Show Module",
+          },
+          required: false,
+        },
+      ],
+    },
+  ],
   });
 
   if (!user) {
     return next(new AppError("User not found", 404));
   }
+
+  const roles = user.RoleMasters || [];
+
+const permissionSet = new Set();
+
+roles.forEach((role) => {
+  role.Permissions?.forEach((permission) => {
+    permissionSet.add(permission.permission_key);
+  });
+});
+
+const permissions = [...permissionSet];
+const roleCodes = roles.map((role) => role.role_code);
+const isSuperAdmin = roles.some((role) => role.is_super_admin);
 
   res.status(200).json({
     status: "success",
@@ -185,7 +216,9 @@ exports.getMe = catchAsync(async (req, res, next) => {
       employee_code: user.employee_code,
       is_active: user.is_active,
       must_change_password: user.must_change_password,
-      isSuperAdmin: req.isSuperAdmin,
+      isSuperAdmin,
+      role: roleCodes,
+      permissions,
     },
   });
 });
