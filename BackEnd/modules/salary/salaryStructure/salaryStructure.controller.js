@@ -79,8 +79,9 @@ const createSalaryStructure = catchAsync(async (req, res) => {
       throw new AppError("organization_id is required", 400);
     }
   } else {
-    req.body.org_id = req.user.org_id;
+    req.body.org_id = req.user.organization_id;
   }
+ 
   const result = await sequelize.transaction(async (t) => {
     return await SalaryStructureService.createSalaryStructure(req.body, t);
   });

@@ -25,7 +25,9 @@ const SalaryStructureForm = ({ initialData, mode, onSubmit }) => {
 
   const fetchSalaryComponent = async () => {
     try {
-      const res = await api.get('salary-component?is_active=true&sort=id&fields=id%2Ccode')
+      const res = await api.get(
+        'salary-component?is_active=true&sort=id&fields=id%2Ccode%2Cvalue_type%2Camount%2Cpercentage',
+      )
       setSalaryComponents(res.data?.data || [])
     } catch (error) {
       console.error(error)
@@ -77,14 +79,18 @@ const SalaryStructureForm = ({ initialData, mode, onSubmit }) => {
 
   /* ================= COMPONENT LOGIC ================= */
 
-  const handleComponentToggle = (id) => {
+  const handleComponentToggle = (item) => {
     setSelectedComponents((prev) => {
       const updated = { ...prev }
 
-      if (updated[id]?.checked) {
-        delete updated[id]
+      if (updated[item.id]?.checked) {
+        delete updated[item.id]
       } else {
-        updated[id] = { checked: true }
+        updated[item.id] = {
+          checked: true,
+          type: item.value_type,
+          value: item.value_type === 'PERCENTAGE' ? item.percentage : item.amount,
+        }
       }
 
       return updated
@@ -206,7 +212,7 @@ const SalaryStructureForm = ({ initialData, mode, onSubmit }) => {
                           <input
                             type="checkbox"
                             checked={!!selected.checked}
-                            onChange={() => handleComponentToggle(item.id)}
+                            onChange={() => handleComponentToggle(item)}
                             className="form-check-input me-2"
                           />
                           <label className="mb-0">{item.code}</label>
