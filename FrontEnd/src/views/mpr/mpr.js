@@ -291,12 +291,6 @@ const MPR = () => {
                         <td>
                           {mprFileUrl ? (
                             <>
-                              {/* <a href={`${FILE_BASE_URL}${mprFileUrl}`} download target="_blank">
-                                <CIcon icon={cilCloudDownload} size="lg" />
-                              </a> */}
-
-                             
-
                               <CButton
                                 color="primary"
                                 variant="ghost"
@@ -305,8 +299,6 @@ const MPR = () => {
                               >
                                 <CIcon icon={cilCloudDownload} size="lg" />
                               </CButton>
-
-
 
                               <CButton
                                 size="lg"
