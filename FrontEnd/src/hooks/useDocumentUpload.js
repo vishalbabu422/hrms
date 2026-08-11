@@ -1,4 +1,4 @@
-import { uploadEmployeeDocument,updateEmployeeDocument } from '../services/employeeDocuments'
+import { uploadEmployeeDocument, updateEmployeeDocument } from '../services/employeeDocuments'
 import { useState } from 'react'
 
 const useDocumentUpload = (employeeId) => {
@@ -53,7 +53,6 @@ const useDocumentUpload = (employeeId) => {
       if (remarks) formData.append('remarks', remarks)
 
       const res = await updateEmployeeDocument(employeeId, docId, formData)
-
       return res.data.data
     } catch (err) {
       setError(err)
