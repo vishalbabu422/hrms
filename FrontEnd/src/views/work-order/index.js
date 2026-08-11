@@ -201,7 +201,12 @@ const Index = () => {
                     sort={sort}
                     onSort={handleSort}
                   />
-                  <SortableHeaderCell label="Date" sortKey="date" sort={sort} onSort={handleSort} />
+                  <SortableHeaderCell 
+                  label="Date"
+                  sortKey="work_order_date" 
+                  sort={sort} onSort={handleSort} />
+
+                 
                   <SortableHeaderCell
                     label="Project No"
                     sortKey="project_no"
