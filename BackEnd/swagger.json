@@ -2279,7 +2279,6 @@
               }
             }
           }
-          
         ],
         "responses": {
           "201": {
@@ -2307,54 +2306,50 @@
       }
     },
     "/admin/empanelment/{id}/upload": {
-  "post": {
-    "security": [
-      {
-        "Authorization": []
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Upload Empanelment Document",
+        "description": "Upload PDF document for an existing Empanelment",
+        "consumes": ["multipart/form-data"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1,
+            "description": "Empanelment ID"
+          },
+          {
+            "name": "document",
+            "in": "formData",
+            "required": true,
+            "type": "file",
+            "description": "Upload PDF document"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document uploaded successfully"
+          },
+          "400": {
+            "description": "Invalid file or validation error"
+          },
+          "404": {
+            "description": "Empanelment not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
       }
-    ],
-    "tags": ["Empanelment"],
-    "summary": "Upload Empanelment Document",
-    "description": "Upload PDF document for an existing Empanelment",
-    "consumes": [
-      "multipart/form-data"
-    ],
-    "produces": [
-      "application/json"
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1,
-        "description": "Empanelment ID"
-      },
-      {
-        "name": "document",
-        "in": "formData",
-        "required": true,
-        "type": "file",
-        "description": "Upload PDF document"
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Document uploaded successfully"
-      },
-      "400": {
-        "description": "Invalid file or validation error"
-      },
-      "404": {
-        "description": "Empanelment not found"
-      },
-      "500": {
-        "description": "Internal server error"
-      }
-    }
-  }
-},
+    },
     "/admin/empanelment/edit/{id}": {
       "patch": {
         "security": [
@@ -2513,47 +2508,45 @@
       }
     },
     "/admin/empanelment/{id}/downloads": {
-  "get": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Empanelment"],
-    "summary": "Download Empanelment Document",
-    "description": "Download the uploaded document of an Empanelment by its ID.",
-    "produces": [
-      "application/pdf"
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "description": "Empanelment ID",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Document downloaded successfully",
-        "schema": {
-          "type": "file"
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Empanelment"],
+        "summary": "Download Empanelment Document",
+        "description": "Download the uploaded document of an Empanelment by its ID.",
+        "produces": ["application/pdf"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Empanelment ID",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Document downloaded successfully",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "404": {
+            "description": "Empanelment or document not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         }
-      },
-      "404": {
-        "description": "Empanelment or document not found",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      },
-      "500": {
-        "description": "Internal server error"
       }
-    }
-  }
-},
+    },
     "/admin/gst-code/index": {
       "get": {
         "security": [
@@ -5213,6 +5206,19 @@
             "required": false,
             "type": "boolean",
             "description": "Filter by active status"
+          },
+          {
+            "name": "models",
+            "in": "query",
+            "type": "string",
+            "example": "Employee"
+          },
+          {
+            "name": "modelFilter",
+            "in": "query",
+            "type": "object",
+            "description": "JSON string for filtering joined models",
+            "example": "{\"Employee\":{\"is_deleted\":false}}"
           },
           {
             "name": "search",
@@ -10313,231 +10319,215 @@
         }
       },
       "post": {
-"security": [
-{
-"Authorization": []
-}
-],
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
 
-"tags": ["Employee WO Leave"],
+        "tags": ["Employee WO Leave"],
 
-"summary": "Bulk Create Employee WO Leave",
+        "summary": "Bulk Create Employee WO Leave",
 
-"consumes": ["application/json"],
+        "consumes": ["application/json"],
 
-"produces": ["application/json"],
+        "produces": ["application/json"],
 
-"parameters": [
-{
-"name": "id",
-"in": "path",
-"required": true,
-"type": "integer",
-"example": 1
-},
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
 
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
 
-{
-  "in": "body",
-  "name": "body",
-  "required": true,
+            "schema": {
+              "type": "object",
 
-  "schema": {
-    "type": "object",
+              "required": ["employees", "month", "year", "created_by"],
 
-    "required": [
-      "employees",
-      "month",
-      "year",
-      "created_by"
-    ],
+              "properties": {
+                "employees": {
+                  "type": "array",
 
-    "properties": {
+                  "items": {
+                    "type": "object",
 
-      "employees": {
-        "type": "array",
+                    "required": [
+                      "employee_id",
+                      "leave_taken",
+                      "holiday_worked",
+                      "leave_granted"
+                    ],
 
-        "items": {
-          "type": "object",
+                    "properties": {
+                      "employee_id": {
+                        "type": "integer",
+                        "example": 1
+                      },
 
-          "required": [
-            "employee_id",
-            "leave_taken",
-            "holiday_worked",
-            "leave_granted"
-          ],
+                      "leave_taken": {
+                        "type": "integer",
+                        "example": 2
+                      },
 
-          "properties": {
+                      "holiday_worked": {
+                        "type": "integer",
+                        "example": 1
+                      },
 
-            "employee_id": {
-              "type": "integer",
-              "example": 1
-            },
+                      "leave_granted": {
+                        "type": "integer",
+                        "example": 3
+                      }
+                    }
+                  }
+                },
 
-            "leave_taken": {
-              "type": "integer",
-              "example": 2
-            },
+                "month": {
+                  "type": "integer",
+                  "example": "1"
+                },
 
-            "holiday_worked": {
-              "type": "integer",
-              "example": 1
-            },
+                "year": {
+                  "type": "string",
+                  "example": "2026"
+                },
 
-            "leave_granted": {
-              "type": "integer",
-              "example": 3
+                "created_by": {
+                  "type": "integer",
+                  "example": 1
+                }
+              }
             }
           }
-        }
-      },
+        ],
 
-      "month": {
-        "type": "integer",
-        "example": "1"
-      },
+        "responses": {
+          "201": {
+            "description": "Created successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
 
-      "year": {
-        "type": "string",
-        "example": "2026"
-      },
+                "message": {
+                  "type": "string",
+                  "example": "Employee WO Leave created successfully"
+                },
 
-      "created_by": {
-        "type": "integer",
-        "example": 1
-      }
-    }
-  }
-}
-
-
-],
-
-"responses": {
-"201": {
-"description": "Created successfully",
-"schema": {
-"type": "object",
-"properties": {
-
-
-      "status": {
-        "type": "string",
-        "example": "success"
-      },
-
-      "message": {
-        "type": "string",
-        "example": "Employee WO Leave created successfully"
-      },
-
-      "data": {
-        "type": "array",
-        "items": {
-          "$ref": "#/definitions/EmployeeWOLeave"
-        }
-      }
-    }
-  }
-},
-
-"400": {
-  "description": "Duplicate record"
-},
-
-"404": {
-  "description": "Employee or Work Order not found"
-}
-
-
-}
-},
-  "patch": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Employee WO Leave"],
-    "summary": "Bulk Update Employee WO Leave",
-    "description": "Bulk update employee work order leave records",
-    "consumes": ["application/json"],
-    "produces": ["application/json"],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      },
-      {
-        "in": "body",
-        "name": "body",
-        "required": true,
-        "schema": {
-          "type": "object",
-          "properties": {
-            "employees": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "type": "integer",
-                    "example": 10
-                  },
-                  "employee_id": {
-                    "type": "integer",
-                    "example": 1
-                  },
-                  "leave_taken": {
-                    "type": "integer",
-                    "example": 2
-                  },
-                  "holiday_worked": {
-                    "type": "integer",
-                    "example": 1
-                  },
-                  "leave_granted": {
-                    "type": "integer",
-                    "example": 3
-                  },
-                  "month": {
-                    "type": "integer",
-                    "example": "1"
-                  },
-                  "year": {
-                    "type": "string",
-                    "example": "2026"
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/EmployeeWOLeave"
                   }
                 }
               }
-            },
-            "updated_by": {
-              "type": "integer",
-              "example": 1
             }
+          },
+
+          "400": {
+            "description": "Duplicate record"
+          },
+
+          "404": {
+            "description": "Employee or Work Order not found"
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Employee WO Leave"],
+        "summary": "Bulk Update Employee WO Leave",
+        "description": "Bulk update employee work order leave records",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "employees": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 10
+                      },
+                      "employee_id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "leave_taken": {
+                        "type": "integer",
+                        "example": 2
+                      },
+                      "holiday_worked": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "leave_granted": {
+                        "type": "integer",
+                        "example": 3
+                      },
+                      "month": {
+                        "type": "integer",
+                        "example": "1"
+                      },
+                      "year": {
+                        "type": "string",
+                        "example": "2026"
+                      }
+                    }
+                  }
+                },
+                "updated_by": {
+                  "type": "integer",
+                  "example": 1
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated successfully"
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "404": {
+            "description": "Record not found"
           }
         }
       }
-    ],
-    "responses": {
-      "200": {
-        "description": "Updated successfully"
-      },
-      "400": {
-        "description": "Invalid input"
-      },
-      "404": {
-        "description": "Record not found"
-      }
-    }
-  }
-
-
     },
-    
+
     "/workorder/{id}/employee-work-order-mpr": {
       "get": {
         "security": [
@@ -10632,9 +10622,9 @@
                 },
                 "month": {
                   "type": "integer",
-                  "enum": [1,2,3,4,5,6,7,8,9,10,11,12],
+                  "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                   "example": 6,
-            "description": "Month number (1=Jan, 12=Dec)"
+                  "description": "Month number (1=Jan, 12=Dec)"
                 },
                 "year": {
                   "type": "string",
@@ -10727,7 +10717,7 @@
             "in": "formData",
             "required": true,
             "type": "integer",
-            "enum": [1,2,3,4,5,6,7,8,9,10,11,12],
+            "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             "example": 6,
             "description": "Month number (1=Jan, 12=Dec)"
           },
@@ -10836,49 +10826,47 @@
       }
     },
     "/workorder/{id}/employee-work-order-mpr/{mprId}/download": {
-  "get": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Employee WO MPR"],
-    "summary": "Download Employee Work Order MPR",
-    "description": "Download the uploaded/generated MPR PDF.",
-    "produces": [
-      "application/pdf"
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      },
-      {
-        "name": "mprId",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 10
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "MPR downloaded successfully",
-        "schema": {
-          "type": "file"
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Employee WO MPR"],
+        "summary": "Download Employee Work Order MPR",
+        "description": "Download the uploaded/generated MPR PDF.",
+        "produces": ["application/pdf"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "name": "mprId",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "MPR downloaded successfully",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "404": {
+            "description": "MPR record or file not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         }
-      },
-      "404": {
-        "description": "MPR record or file not found"
-      },
-      "500": {
-        "description": "Internal server error"
       }
-    }
-  }
     },
 
     "/salary-component": {
@@ -11627,45 +11615,43 @@
       }
     },
     "/employee-salary-register-monthly/download-slip/{register_id}": {
-  "get": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Employee Salary Monthly"],
-    "summary": "Download Salary Slip PDF",
-    "description": "Download generated salary slip PDF by register ID.",
-    "produces": [
-      "application/pdf"
-    ],
-    "parameters": [
-      {
-        "name": "register_id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Salary slip downloaded successfully",
-        "schema": {
-          "type": "file"
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Employee Salary Monthly"],
+        "summary": "Download Salary Slip PDF",
+        "description": "Download generated salary slip PDF by register ID.",
+        "produces": ["application/pdf"],
+        "parameters": [
+          {
+            "name": "register_id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Salary slip downloaded successfully",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "404": {
+            "description": "Salary register or salary slip not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         }
-      },
-      "404": {
-        "description": "Salary register or salary slip not found",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      },
-      "500": {
-        "description": "Internal server error"
       }
-    }
-  }
     },
     "/employee-salary-structure/{id}/emp/{emp_id}": {
       "get": {
@@ -12522,222 +12508,206 @@
       }
     },
     "/employee-salary-register-financial/generate": {
-  "post": {
-    "security": [{ "Authorization": [] }],
-    "tags": ["Employee Salary Financial"],
+      "post": {
+        "security": [{ "Authorization": [] }],
+        "tags": ["Employee Salary Financial"],
 
-    "summary": "Generate Financial Salary",
+        "summary": "Generate Financial Salary",
 
-    "description":
-      "Returns yearly salary details from salary register if available otherwise calculates from salary structure.",
+        "description": "Returns yearly salary details from salary register if available otherwise calculates from salary structure.",
 
-    "parameters": [
-      {
-        "in": "body",
-        "name": "body",
-        "required": true,
-        "schema": {
-          "$ref":
-            "#/definitions/GenerateFinancialSalaryRequest"
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenerateFinancialSalaryRequest"
+            }
+          }
+        ],
+
+        "responses": {
+          "200": {
+            "description": "Financial salary generated successfully",
+
+            "schema": {
+              "$ref": "#/definitions/GenerateFinancialSalaryResponse"
+            }
+          },
+
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+
+          "404": {
+            "description": "Data not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
         }
       }
-    ],
-
-    "responses": {
-      "200": {
-        "description":
-          "Financial salary generated successfully",
-
-        "schema": {
-          "$ref":
-            "#/definitions/GenerateFinancialSalaryResponse"
-        }
-      },
-
-      "400": {
-        "description": "Bad Request",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      },
-
-      "404": {
-        "description": "Data not found",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      }
-    }
-  }
     },
-   
-"/workorder-milestone/{id}": {
-  "get": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Work Order Milestone"],
-    "summary": "Get Work Order Milestone By ID",
-    "description": "Fetch work order milestone details by ID.",
-    "produces": ["application/json"],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Work order milestone fetched successfully",
-        "schema": {
-          "$ref": "#/definitions/WorkOrderMilestoneResponse"
+
+    "/workorder-milestone/{id}": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order Milestone"],
+        "summary": "Get Work Order Milestone By ID",
+        "description": "Fetch work order milestone details by ID.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work order milestone fetched successfully",
+            "schema": {
+              "$ref": "#/definitions/WorkOrderMilestoneResponse"
+            }
+          },
+          "404": {
+            "description": "Work Order Milestone not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         }
       },
-      "404": {
-        "description": "Work Order Milestone not found",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
+      "patch": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order Milestone"],
+        "summary": "Update Work Order Milestone",
+        "description": "Update an existing work order milestone.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateWorkOrderMilestone"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order Milestone updated successfully"
+          },
+          "404": {
+            "description": "Work Order Milestone not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
         }
       },
-      "500": {
-        "description": "Internal server error"
+      "delete": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order Milestone"],
+        "summary": "Delete Work Order Milestone",
+        "description": "Soft delete a work order milestone.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "integer",
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Work Order Milestone deleted successfully"
+          },
+          "404": {
+            "description": "Work Order Milestone not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/workorder-milestone": {
+      "post": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Work Order Milestone"],
+        "summary": "Add Work Order Milestones",
+        "description": "Create multiple work order milestones and update grand total in work order.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateWorkOrderMilestone"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Work Order Milestones created successfully"
+          },
+          "400": {
+            "description": "Invalid request",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "404": {
+            "description": "Work Order not found",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
       }
     }
   },
-  "patch": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Work Order Milestone"],
-    "summary": "Update Work Order Milestone",
-    "description": "Update an existing work order milestone.",
-    "consumes": [
-      "application/json"
-    ],
-    "produces": [
-      "application/json"
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      },
-      {
-        "in": "body",
-        "name": "body",
-        "required": true,
-        "schema": {
-          "$ref": "#/definitions/UpdateWorkOrderMilestone"
-        }
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Work Order Milestone updated successfully"
-      },
-      "404": {
-        "description": "Work Order Milestone not found"
-      },
-      "500": {
-        "description": "Internal server error"
-      }
-    }
-  },
-   "delete": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": ["Work Order Milestone"],
-    "summary": "Delete Work Order Milestone",
-    "description": "Soft delete a work order milestone.",
-    "produces": [
-      "application/json"
-    ],
-    "parameters": [
-      {
-        "name": "id",
-        "in": "path",
-        "required": true,
-        "type": "integer",
-        "example": 1
-      }
-    ],
-    "responses": {
-      "200": {
-        "description": "Work Order Milestone deleted successfully"
-      },
-      "404": {
-        "description": "Work Order Milestone not found"
-      },
-      "500": {
-        "description": "Internal server error"
-      }
-    }
-  }
-},
-"/workorder-milestone": {
-  "post": {
-    "security": [
-      {
-        "Authorization": []
-      }
-    ],
-    "tags": [
-      "Work Order Milestone"
-    ],
-    "summary": "Add Work Order Milestones",
-    "description": "Create multiple work order milestones and update grand total in work order.",
-    "consumes": [
-      "application/json"
-    ],
-    "produces": [
-      "application/json"
-    ],
-    "parameters": [
-      {
-        "in": "body",
-        "name": "body",
-        "required": true,
-        "schema": {
-          "$ref": "#/definitions/CreateWorkOrderMilestone"
-        }
-      }
-    ],
-    "responses": {
-      "201": {
-        "description": "Work Order Milestones created successfully"
-      },
-      "400": {
-        "description": "Invalid request",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      },
-      "404": {
-        "description": "Work Order not found",
-        "schema": {
-          "$ref": "#/definitions/InvalidResponse"
-        }
-      },
-      "500": {
-        "description": "Internal server error"
-      }
-    }
-  }
-}
-},
 
   "definitions": {
     "Document": {
@@ -16289,225 +16259,158 @@
       }
     },
     "GenerateFinancialSalaryRequest": {
-  "type": "object",
-  "required": ["employee_id", "year"],
-
-  "properties": {
-    "employee_id": {
-      "type": "integer",
-      "example": 101
-    },
-
-    "year": {
-      "type": "integer",
-      "example": 2025
-    }
-  }
-    },
-    "GenerateFinancialSalaryResponse": {
-  "type": "object",
-
-  "properties": {
-
-    "status": {
-      "type": "string",
-      "example": "success"
-    },
-
-    "data": {
       "type": "object",
+      "required": ["employee_id", "year"],
 
       "properties": {
-
-        "is_existing": {
-          "type": "boolean"
-        },
-         "dispatch": {
-      "type": "boolean",
-      "example": true
-    },
-
         "employee_id": {
-          "type": "integer"
-        },
-
-        "employee_name": {
-          "type": "string"
+          "type": "integer",
+          "example": 101
         },
 
         "year": {
-          "type": "integer"
+          "type": "integer",
+          "example": 2025
+        }
+      }
+    },
+    "GenerateFinancialSalaryResponse": {
+      "type": "object",
+
+      "properties": {
+        "status": {
+          "type": "string",
+          "example": "success"
         },
 
-        "total_gross_earnings": {
-          "type": "number"
-        },
+        "data": {
+          "type": "object",
 
-        "total_deductions": {
-          "type": "number"
-        },
+          "properties": {
+            "is_existing": {
+              "type": "boolean"
+            },
+            "dispatch": {
+              "type": "boolean",
+              "example": true
+            },
 
-        "total_net_salary": {
-          "type": "number"
-        },
+            "employee_id": {
+              "type": "integer"
+            },
 
-        "components": {
-          "type": "array",
+            "employee_name": {
+              "type": "string"
+            },
 
-          "items": {
-            "type": "object",
+            "year": {
+              "type": "integer"
+            },
 
-            "properties": {
+            "total_gross_earnings": {
+              "type": "number"
+            },
 
-              "component_id": {
-                "type": "integer"
-              },
+            "total_deductions": {
+              "type": "number"
+            },
 
-              "name": {
-                "type": "string"
-              },
+            "total_net_salary": {
+              "type": "number"
+            },
 
-              "type": {
-                "type": "string"
-              },
+            "components": {
+              "type": "array",
 
-              "monthly_amount": {
-                "type": "number"
-              },
+              "items": {
+                "type": "object",
 
-              "yearly_amount": {
-                "type": "number"
+                "properties": {
+                  "component_id": {
+                    "type": "integer"
+                  },
+
+                  "name": {
+                    "type": "string"
+                  },
+
+                  "type": {
+                    "type": "string"
+                  },
+
+                  "monthly_amount": {
+                    "type": "number"
+                  },
+
+                  "yearly_amount": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "addons": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "addon_id": {
+                    "type": "integer"
+                  },
+                  "salary_addon_master_id": {
+                    "type": "integer"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["EARNING", "DEDUCTION"]
+                  },
+                  "amount": {
+                    "type": "number"
+                  },
+                  "source_type": {
+                    "type": "string",
+                    "example": "ADDON"
+                  }
+                }
               }
             }
           }
-        },
-        "addons": {
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "addon_id": {
-        "type": "integer"
-      },
-      "salary_addon_master_id": {
-        "type": "integer"
-      },
-      "name": {
-        "type": "string"
-      },
-      "code": {
-        "type": "string"
-      },
-      "type": {
-        "type": "string",
-        "enum": [
-          "EARNING",
-          "DEDUCTION"
-        ]
-      },
-      "amount": {
-        "type": "number"
-      },
-      "source_type": {
-        "type": "string",
-        "example": "ADDON"
+        }
       }
-    }
-  }
-}
-      }
-    }
-  }
     },
     "WorkOrderMilestoneByWorkOrderResponse": {
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": {
-        "type": "integer",
-        "example": 1
-      },
-      "work_order_id": {
-        "type": "integer",
-        "example": 5
-      },
-      "gst_code_fk": {
-        "type": "integer",
-        "example": 2
-      },
-      "title": {
-        "type": "string",
-        "example": "First Milestone"
-      },
-      "description": {
-        "type": "string",
-        "example": "Requirement & Design completed"
-      },
-      "amount": {
-        "type": "number",
-        "format": "double",
-        "example": 50000
-      },
-      "from_date": {
-        "type": "string",
-        "format": "date",
-        "example": "2026-07-01"
-      },
-      "to_date": {
-        "type": "string",
-        "format": "date",
-        "example": "2026-07-31"
-      },
-      "is_active": {
-        "type": "boolean",
-        "example": true
-      },
-      "workOrder": {
-        "$ref": "#/definitions/WorkOrderResponse"
-      },
-      "GstCodeMaster": {
-        "$ref": "#/definitions/GstCodeMasterResponse"
-      }
-    }
-  }
-},
-"CreateWorkOrderMilestone": {
-  "type": "object",
-  "required": [
-    "milestones",
-    "grand_total"
-  ],
-  "properties": {
-    "milestones": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": [
-          "work_order_id",
-          "gst_code_fk",
-          "title",
-          "amount"
-        ],
         "properties": {
-          "work_order_id": {
-            "type": "integer",
-            "example": 2
-          },
-          "gst_code_fk": {
+          "id": {
             "type": "integer",
             "example": 1
           },
+          "work_order_id": {
+            "type": "integer",
+            "example": 5
+          },
+          "gst_code_fk": {
+            "type": "integer",
+            "example": 2
+          },
           "title": {
             "type": "string",
-            "example": "Phase 1"
+            "example": "First Milestone"
           },
           "description": {
             "type": "string",
-            "example": "Requirement Analysis"
+            "example": "Requirement & Design completed"
           },
           "amount": {
             "type": "number",
+            "format": "double",
             "example": 50000
           },
           "from_date": {
@@ -16519,70 +16422,123 @@
             "type": "string",
             "format": "date",
             "example": "2026-07-31"
+          },
+          "is_active": {
+            "type": "boolean",
+            "example": true
+          },
+          "workOrder": {
+            "$ref": "#/definitions/WorkOrderResponse"
+          },
+          "GstCodeMaster": {
+            "$ref": "#/definitions/GstCodeMasterResponse"
           }
         }
       }
     },
-    "grand_total": {
-      "type": "number",
-      "example": 64986398
-    }
-  },
-  "example": {
-    "milestones": [
-      {
-        "work_order_id": 2,
-        "gst_code_fk": 1,
-        "title": "Phase 1",
-        "description": "Requirement Analysis",
-        "amount": 50000,
-        "from_date": "2026-07-01",
-        "to_date": "2026-07-31"
+    "CreateWorkOrderMilestone": {
+      "type": "object",
+      "required": ["milestones", "grand_total"],
+      "properties": {
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["work_order_id", "gst_code_fk", "title", "amount"],
+            "properties": {
+              "work_order_id": {
+                "type": "integer",
+                "example": 2
+              },
+              "gst_code_fk": {
+                "type": "integer",
+                "example": 1
+              },
+              "title": {
+                "type": "string",
+                "example": "Phase 1"
+              },
+              "description": {
+                "type": "string",
+                "example": "Requirement Analysis"
+              },
+              "amount": {
+                "type": "number",
+                "example": 50000
+              },
+              "from_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2026-07-01"
+              },
+              "to_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2026-07-31"
+              }
+            }
+          }
+        },
+        "grand_total": {
+          "type": "number",
+          "example": 64986398
+        }
       },
-      {
-        "work_order_id": 2,
-        "gst_code_fk": 1,
-        "title": "Phase 2",
-        "description": "Development",
-        "amount": 75000,
-        "from_date": "2026-08-01",
-        "to_date": "2026-08-31"
+      "example": {
+        "milestones": [
+          {
+            "work_order_id": 2,
+            "gst_code_fk": 1,
+            "title": "Phase 1",
+            "description": "Requirement Analysis",
+            "amount": 50000,
+            "from_date": "2026-07-01",
+            "to_date": "2026-07-31"
+          },
+          {
+            "work_order_id": 2,
+            "gst_code_fk": 1,
+            "title": "Phase 2",
+            "description": "Development",
+            "amount": 75000,
+            "from_date": "2026-08-01",
+            "to_date": "2026-08-31"
+          }
+        ],
+        "grand_total": 64986398
       }
-    ],
-    "grand_total": 64986398
-  }
-},
-"UpdateWorkOrderMilestone": {
-  "type": "object",
-  "properties": {
-    "gst_code_fk": {
-      "type": "integer",
-      "example": 2
     },
-    "title": {
-      "type": "string",
-      "example": "Phase 1 Updated"
+    "UpdateWorkOrderMilestone": {
+      "type": "object",
+      "properties": {
+        "gst_code_fk": {
+          "type": "integer",
+          "example": 2
+        },
+        "title": {
+          "type": "string",
+          "example": "Phase 1 Updated"
+        },
+        "description": {
+          "type": "string",
+          "example": "Requirement & Design Completed"
+        },
+        "amount": {
+          "type": "number",
+          "example": 75000
+        },
+        "from_date": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-07-01"
+        },
+        "to_date": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-08-05"
+        }
+      }
     },
-    "description": {
-      "type": "string",
-      "example": "Requirement & Design Completed"
-    },
-    "amount": {
-      "type": "number",
-      "example": 75000
-    },
-    "from_date": {
-      "type": "string",
-      "format": "date",
-      "example": "2026-07-01"
-    },
-    "to_date": {
-      "type": "string",
-      "format": "date",
-      "example": "2026-08-05"
-    }
-  }
-},
 
     "InvalidResponse": {
       "type": "object",
