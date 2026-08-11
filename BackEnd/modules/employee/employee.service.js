@@ -1,7 +1,12 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
-const { Employee, Organization } = require("../../models");
+const {
+  Employee,
+  Organization,
+  RoleMaster,
+  EmployeeRole,
+} = require("../../models");
 const sequelize = require("../../utils/database");
 
 exports.getEmployeeList = async (queryOptions) => {
@@ -85,10 +90,10 @@ exports.createEmployee = async (payload) => {
       { transaction: t },
     );
 
-    // 5️⃣ Remove password hash from response
+    // Remove password hash from response
     employee.password_hash = undefined;
 
-    // 6️⃣ Return employee + temp password (for HR to share or email)
+    // Return employee + temp password (for HR to share or email)
     return {
       employee,
       temporaryPassword: defaultPassword,
