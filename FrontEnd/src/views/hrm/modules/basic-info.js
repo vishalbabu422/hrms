@@ -14,7 +14,6 @@ import {
 import api from '../../../api/axios'
 import { toast } from 'react-toastify'
 
-
 import OrganizationSelect from '../../components/organization-select'
 import { getDivisions, getDesignations } from '../../../services/employeeBasic'
 import { validateBasicInfo } from '../../../validations/basicInfoValidation'
@@ -26,7 +25,9 @@ import DivisionSelect from '../../components/division-select'
 const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
+
   const user = useSelector((state) => state.auth.user)
+  const isOrgAdmin = user?.role?.includes('ORG_ADMIN')
 
   const [employeeDetails, setEmployeeDetails] = useState({
     organization_id: '',
@@ -70,6 +71,33 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
 
   const [designations, setDesignations] = useState([])
   const [divisions, setDivisions] = useState([])
+
+  const normalizeExtraDetails = (data = {}) => ({
+    dob: data.dob || data.date_of_birth || '',
+    birth_place: data.birth_place || '',
+    gender: data.gender || '',
+    marital_status: data.marital_status || '',
+    marriage_date: data.marriage_date || '',
+    father_name: data.father_name || '',
+    mother_name: data.mother_name || '',
+    religion: data.religion || '',
+    nationality: data.nationality || '',
+    alternate_email: data.alternate_email || '',
+    emergency_contact_no: data.emergency_contact_no || '',
+    blood_group: data.blood_group || '',
+  })
+
+  const mapExtraDetailsToApi = (obj) => {
+    const { dob, ...rest } = obj
+    const payload = { ...rest }
+
+    if (dob !== undefined && dob !== null && dob !== '') {
+      payload.date_of_birth = dob
+      payload.dob = dob
+    }
+
+    return payload
+  }
 
   // Handle input
   const handleChange = (e) => {
@@ -166,7 +194,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
 
         setEmployeeExtraDetails((prev) => ({
           ...prev,
-          ...data,
+          ...normalizeExtraDetails(data),
         }))
       } catch (err) {
         console.error(err)
@@ -228,7 +256,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           Object.fromEntries(
             Object.entries(obj)
               .map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v])
-              .filter(([_, v]) => v !== ''),
+              .filter(([_, v]) => v !== '' && v !== null && v !== undefined),
           )
 
         const trim = (obj) =>
@@ -237,7 +265,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           )
 
         const employeePayload = isEdit ? trim(employeeDetails) : clean(employeeDetails)
-        const detailsPayload = isEdit ? trim(employeeExtraDetails) : clean(employeeExtraDetails)
+        const detailsPayload = mapExtraDetailsToApi(clean(employeeExtraDetails))
 
         // ========================
         // 1. EMPLOYEE SAVE
@@ -245,24 +273,29 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
         if (!isEdit) {
           const res = await api.post('/employee', employeePayload)
           id = res.data?.data?.id || res.data?.id
-          toast.success('Basic info saved')
         } else {
           await api.patch(`/employee/${employeeId}`, employeePayload)
-          toast.success('Basic info updated')
         }
 
         // ========================
         // 2. EMPLOYEE DETAILS SAVE
         // ========================
-        try {
-          if (isEdit) {
+        if (isEdit) {
+          try {
             await api.patch(`/employee/${id}/details`, detailsPayload)
-          } else {
-            await api.post(`/employee/${id}/details`, detailsPayload)
+          } catch (err) {
+            const notFoundError =
+              err.response?.status === 404 ||
+              err.response?.data?.message?.toLowerCase().includes('not found')
+
+            if (notFoundError) {
+              await api.post(`/employee/${id}/details`, detailsPayload)
+            } else {
+              throw err
+            }
           }
-        } catch (err) {
-          console.error('Details save failed', err)
-          toast.error('Employee details failed to save')
+        } else {
+          await api.post(`/employee/${id}/details`, detailsPayload)
         }
 
         // ========================
@@ -284,6 +317,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           })
         }
 
+        toast.success(isEdit ? 'Basic info updated' : 'Basic info saved')
         return { employeeId: id }
       } catch (error) {
         console.error(error)
@@ -316,7 +350,6 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
               onChange={handleChange}
               label="Organization"
               colSize={12}
-              disabled={isEdit}
             />
 
             {/* Salutation */}
@@ -326,6 +359,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 name="salutation"
                 value={employeeDetails.salutation || ''}
                 onChange={handleChange}
+                disabled={!isOrgAdmin}
               >
                 <option value="">Select</option>
                 <option value="Mr">Mr</option>
@@ -348,6 +382,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 feedback={errors.first_name}
                 placeholder="Enter first name"
                 maxLength={50}
+                disabled={!isOrgAdmin}
               />
             </CCol>
 
@@ -359,6 +394,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 onChange={handleChange}
                 maxLength={50}
                 placeholder="Enter middle name"
+                disabled={!isOrgAdmin}
               />
             </CCol>
 
@@ -372,6 +408,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 invalid={!!errors.last_name}
                 feedback={errors.last_name}
                 placeholder="Enter last name"
+                disabled={!isOrgAdmin}
               />
             </CCol>
 
@@ -386,6 +423,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 onChange={handleChange}
                 placeholder="Enter employee code"
                 maxLength={30}
+                disabled={!isOrgAdmin}
               />
             </CCol>
 
@@ -396,6 +434,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 name="employment_type"
                 value={employeeDetails.employment_type || ''}
                 onChange={handleChange}
+                disabled={!isOrgAdmin}
               >
                 <option value="">Select</option>
                 <option value="Contractual">Contractual</option>
@@ -403,34 +442,12 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
               </CFormSelect>
             </CCol>
 
-            {/* <CCol md={6}>
-              <CFormLabel>
-                Designation <span className="text-danger">*</span>
-              </CFormLabel>
-
-              <CFormSelect
-                name="designation"
-                value={employeeDetails.designation || ''}
-                onChange={handleChange}
-                invalid={!!errors.designation}
-              >
-                <option value="">Select</option>
-                {designations.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.designation_name}
-                  </option>
-                ))}
-              </CFormSelect>
-
-              {errors.designation && <div className="text-danger mt-1">{errors.designation}</div>}
-            </CCol> */}
             <DesignationSelect
               name="designation"
               value={employeeDetails.designation}
               onChange={handleChange}
               options={designations}
-              invalid={!!errors.designation}
-              feedback={errors.designation}
+              required={false}
             />
 
             <DivisionSelect
@@ -438,8 +455,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
               value={employeeDetails.division}
               onChange={handleChange}
               options={divisions}
-              invalid={!!errors.division}
-              feedback={errors.division}
+              required={false}
             />
 
             <CCol md={6}>
@@ -449,6 +465,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 value={employeeDetails.mode_of_working || ''}
                 onChange={handleChange}
                 maxLength={100}
+                disabled={!isOrgAdmin}
               >
                 <option value="">Select</option>
                 <option value="Office">Office</option>
@@ -472,6 +489,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 value={employeeDetails.employee_category || ''}
                 onChange={handleChange}
                 maxLength={100}
+                disabled={!isOrgAdmin}
               >
                 <option value="">Select</option>
                 <option value="Skilled">Skilled</option>
@@ -509,6 +527,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 invalid={!!errors.email}
                 feedback={errors.email}
                 placeholder="Enter email address"
+                disabled={!isOrgAdmin}
               />
             </CCol>
 
@@ -532,6 +551,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 pattern="[0-9]{10,15}"
                 placeholder="Enter contact number"
                 invalid={!!errors.contact_no}
+                disabled={!isOrgAdmin}
               />
 
               {errors.contact_no && <div className="text-danger mt-1">{errors.contact_no}</div>}
@@ -548,7 +568,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 name="dob"
                 value={employeeExtraDetails.dob || ''}
                 onChange={handleChange}
-                invalid={!!errors.dob} // ✅ bind validation
+                invalid={!!errors.dob} //
               />
 
               {errors.dob && <div className="text-danger mt-1">{errors.dob}</div>}
