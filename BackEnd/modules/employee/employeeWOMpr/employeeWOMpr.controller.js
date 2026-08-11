@@ -250,9 +250,6 @@ const designation = EmployeeMprUtils.getDesignation(emp);
                 let fromDate = monthStart;
                 let toDate = monthEnd;
 
-              console.log("line joiningdate------------" +jDate);
-              console.log("line fromDate------------" +monthStart);
-                console.log("line toDate------------" +monthEnd);
 
                 // ✅ joining logic
                 if (jDate && !isNaN(jDate.getTime())) {
@@ -268,8 +265,6 @@ const designation = EmployeeMprUtils.getDesignation(emp);
                     }
                 }
 
-                console.log("line 352------------" +fromDate);
-                console.log("line 353------------" +toDate);
 
                 return {
                     sr: index + 1,
@@ -382,7 +377,7 @@ module.exports = {
     createEmployeeWOMpr,
     deleteEmployeeWOMpr,
     uploadEmployeeWOMpr,
-    downloadEmployeeWOMpr,
+    downloadEmployeeWOMpr
     
     
 };

@@ -94,7 +94,11 @@ const useLeaveMprForm = (mpr = false) => {
           year: year,
         }
 
-        models += ',employeeWorkOrderLeaves'
+        modelFilter.employeeWorkOrderMprs = {
+          month: monthNum,
+          year: year,
+          required: false
+        }
       }
 
       const url = `/employee?models=${encodeURIComponent(
@@ -103,7 +107,7 @@ const useLeaveMprForm = (mpr = false) => {
       const res = await api.get(url)
 
       const list = res.data?.data || []
-
+      console.log(list)
       setAllEmployees(list)
 
       // map employee data from API
@@ -125,8 +129,6 @@ const useLeaveMprForm = (mpr = false) => {
   useEffect(() => {
     fetchEmployees()
   }, [workOrder, month])
-
-
 
   // Reset when workOrder changes
   useEffect(() => {
