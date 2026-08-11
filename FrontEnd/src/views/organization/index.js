@@ -59,6 +59,13 @@ const Index = () => {
         sort: `${sort.key} ${sort.order}`,
         page,
         limit,
+        models: 'Employees.EmployeeRoles',
+        modelFilter: JSON.stringify({
+          EmployeeRoles: {
+            role_id: 2,
+            required: true,
+          },
+        }),
       }
 
       if (search.length >= 3) {
@@ -69,7 +76,7 @@ const Index = () => {
 
       setOrganization(response.data?.data?.organizationList ?? [])
       setTotalPages(response.data?.totalPages ?? 1)
-      setTotalRecords(response.data?.total ?? 0) //added
+      setTotalRecords(response.data?.total ?? 0)
     } catch (error) {
       console.error(error)
       toast.error('Failed to fetch Organization list')
@@ -195,6 +202,8 @@ const Index = () => {
                     onSort={handleSort}
                   />
 
+                  <CTableHeaderCell className="text-center">Admins</CTableHeaderCell>
+
                   <SortableHeaderCell
                     label="Email"
                     sortKey="contact_email"
@@ -230,7 +239,7 @@ const Index = () => {
               <CTableBody>
                 {loading ? (
                   <CTableRow>
-                    <CTableDataCell colSpan={8} className="text-center py-4">
+                    <CTableDataCell colSpan={9} className="text-center py-4">
                       <CSpinner size="sm" />
                     </CTableDataCell>
                   </CTableRow>
@@ -239,6 +248,15 @@ const Index = () => {
                     <CTableRow key={item.id}>
                       <CTableDataCell>{item.org_name}</CTableDataCell>
                       <CTableDataCell>{item.org_code}</CTableDataCell>
+                      <CTableDataCell className="text-center">
+                        {item.Employees?.length
+                          ? item.Employees.map((employee) =>
+                              [employee.first_name, employee.middle_name, employee.last_name]
+                                .filter(Boolean)
+                                .join(' '),
+                            ).join(', ')
+                          : '-'}
+                      </CTableDataCell>
                       <CTableDataCell>{item.contact_email}</CTableDataCell>
                       <CTableDataCell>{item.contact_phone}</CTableDataCell>
                       <CTableDataCell>{item.address}</CTableDataCell>
@@ -301,7 +319,7 @@ const Index = () => {
                     </CTableRow>
                   ))
                 ) : (
-                  <TableEmptyState colSpan={8} />
+                  <TableEmptyState colSpan={9} />
                 )}
               </CTableBody>
             </CTable>

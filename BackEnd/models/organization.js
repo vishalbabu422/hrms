@@ -51,15 +51,17 @@ const Organization = sequelize.define(
     schema: "pmu",
     tableName: "organizations",
     timestamps: false,
-  }
+  },
 );
 
 Organization.associate = (models) => {
-
   Organization.hasMany(models.RoleMaster, {
-    foreignKey: 'organization_id'
+    foreignKey: "organization_id",
   });
 
-}
+  Organization.hasMany(models.Employee, {
+    foreignKey: "organization_id",
+  });
+};
 
 module.exports = Organization;
