@@ -5969,7 +5969,38 @@ INSERT INTO pmu.permissions(
 INSERT INTO pmu.permissions(
     module_id, action, permission_key, created_at)
     VALUES (18, 'Show Module', 'DETAILS.MENU', NOW());    
+	
+	
+-- 12/08/2026
+ 
+ 
+ALTER TABLE pmu.wo_milestones
+ALTER COLUMN gst_code_fk DROP NOT NULL;
 
+-- 5/8/2026 --
+
+CREATE TABLE pmu.app_settings (
+    id SERIAL PRIMARY KEY,
+
+    auth_mode VARCHAR(20) NOT NULL DEFAULT 'LOCAL',
+
+    sso_provider VARCHAR(50),
+	sso_portal_url TEXT,
+    sso_login_url TEXT,
+    sso_logout_url TEXT,
+
+	service_url TEXT,
+    service_key VARCHAR(100),
+	service_name VARCHAR(100),
+
+    enable_sso_validation BOOLEAN DEFAULT TRUE,
+
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	
+	is_active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+INSERT INTO pmu.app_settings(id, auth_mode) VALUES (1, 'LOCAL');
 
 COMMIT;
 

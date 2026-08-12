@@ -63,10 +63,10 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
           `/admin/workorder/${workOrderId}?models=WoMilestones&modelFilter=${encodeURIComponent(
             JSON.stringify({
               WoMilestones: {
-                is_active: true
+                is_active: true,
               },
             }),
-          )}&is_active=true`
+          )}&is_active=true`,
         )
 
         const milestone = response.data?.data?.WoMilestones
@@ -211,30 +211,48 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
     fetchGST()
   }, [gstCode])
 
+  const handleGstChange = (e) => {
+    const value = e.target.value
+
+    setGstCode(value)
+
+    if (!value) {
+      setGstDetails({
+        igst_rate: 0,
+        cgst_rate: 0,
+        sgst_rate: 0,
+
+        igst_name: 'IGST',
+        cgst_name: 'CGST',
+        sgst_name: 'SGST',
+      })
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-  const payload = {
-  milestones: replicas.map((item) => ({
-    work_order_id: Number(workOrderId),
-    gst_code_fk: gstCode,
+    const payload = {
+      milestones: replicas.map((item) => ({
+        work_order_id: Number(workOrderId),
+        gst_code_fk: gstCode,
 
-    title: item.title,
-    description: item.description,
+        title: item.title,
+        description: item.description,
 
-    amount: item.totalAmount,
+        amount: item.totalAmount,
 
-    from_date: item.deployment_from,
-    to_date: item.deployment_to,
-  })),
-}
+        from_date: item.deployment_from,
+        to_date: item.deployment_to,
+      })),
+    }
 
     try {
       await api.post('/workorder-milestone', {
         milestones: replicas.map((item) => ({
           work_order_id: Number(workOrderId),
 
-          gst_code_fk: Number(gstCode),
+          gst_code_fk: gstCode ? Number(gstCode) : null,
 
           title: item.title,
 
@@ -363,11 +381,7 @@ const WorkOrderMilestoneFormComponent = ({ initialData, mode = 'create', onSubmi
               </CCol>
 
               <CCol md={6}>
-                <GstSelect
-                  name="gst_code_fk"
-                  value={gstCode}
-                  onChange={(e) => setGstCode(e.target.value)}
-                />
+                <GstSelect name="gst_code_fk" value={gstCode} onChange={handleGstChange} />
               </CCol>
 
               {errors.gst_code_fk && <div className="text-danger mt-1">{errors.gst_code_fk}</div>}
