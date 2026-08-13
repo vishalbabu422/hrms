@@ -99,7 +99,7 @@
 
 /* Disabled */
 .react-select__control--is-disabled {
-  background: #f8f9fa !important;
+  background: #e7eaee !important;
   cursor: not-allowed;
 }
 
