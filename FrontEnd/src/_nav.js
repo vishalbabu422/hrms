@@ -22,6 +22,7 @@ import {
   cilApplications,
   cilSpeedometer,
   cilAddressBook,
+  cilFingerprint,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -43,8 +44,15 @@ const _nav = [
 
   {
     component: CNavItem,
+    name: 'HRM Login Page',
+    to: '/hrmloginpage',
+    icon: <CIcon icon={ cilFingerprint } customClassName="nav-icon" />,
+  },
+
+  {
+    component: CNavItem,
     name: 'My Details',
-    to: '/mydetails',
+    to: '/home/my-details',
     icon: <CIcon icon={cilAddressBook} customClassName="nav-icon" />,
   },
 

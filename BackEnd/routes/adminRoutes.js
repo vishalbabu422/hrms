@@ -8,6 +8,7 @@ const {
   checkPermission,
   injectOrgScope,
 } = require("../middlewares/authMiddleware");
+const { checkSSOSession } = require("../middlewares/ssoMiddleware");
 
 // controllers
 const GstCodeController = require("../controllers/gstCodeController");
@@ -50,6 +51,7 @@ const {
 
 const { vendorIdParamSchema } = require("../validators/vendor-master-schema");
 // Routes
+router.use(checkSSOSession);
 router.use(protect);
 
 router.route("/empanelment/index").get(
@@ -92,16 +94,18 @@ router.route("/empanelment/delete/:id").delete(
   checkPermission("EMPANELMENT.DELETE"),
   EmpanelmentController.deleteById,
 );
-router.route("/empanelment/:id/downloads").get(
-  injectOrgScope(),
-  checkPermission("EMPANELMENT.READ"),
-  EmpanelmentController.download
-);
+router
+  .route("/empanelment/:id/downloads")
+  .get(
+    injectOrgScope(),
+    checkPermission("EMPANELMENT.READ"),
+    EmpanelmentController.download,
+  );
 
 // GST Code Routes
-router.route("/gst-code/index").get(
-  checkPermission("GST.READ"),
-  GstCodeController.index);
+router
+  .route("/gst-code/index")
+  .get(checkPermission("GST.READ"), GstCodeController.index);
 router.route("/gst-code/:id").get(
   checkPermission("GST.READ"),
   //authController.restrictTo("Manager/Admin", "System Admin"),
@@ -339,17 +343,18 @@ router.route("/company/delete/:id").delete(
   checkPermission("COMPANY.DELETE"),
   CompanyMasterController.deleteById,
 );
-router.route("/organization/index").get(
-  checkPermission("ORGANIZATION.READ"),
-  OrganizationController.index,
-);
+router
+  .route("/organization/index")
+  .get(checkPermission("ORGANIZATION.READ"), OrganizationController.index);
 
 // Get Organization By ID
-router.route("/organization/:id").get(
-  checkPermission("ORGANIZATION.READ"),
-  validate(organizationIdParamSchema, "params"),
-  OrganizationController.dataById,
-);
+router
+  .route("/organization/:id")
+  .get(
+    checkPermission("ORGANIZATION.READ"),
+    validate(organizationIdParamSchema, "params"),
+    OrganizationController.dataById,
+  );
 
 // Create Organization
 router.route("/organization/create").post(
@@ -368,11 +373,13 @@ router.route("/organization/edit/:id").patch(
 );
 
 // Soft Delete Organization
-router.route("/organization/delete/:id").delete(
-  protect,
-  checkPermission("ORGANIZATION.DELETE"),
-  OrganizationController.deleteById,
-);
+router
+  .route("/organization/delete/:id")
+  .delete(
+    protect,
+    checkPermission("ORGANIZATION.DELETE"),
+    OrganizationController.deleteById,
+  );
 
 // Get All Vendors
 router.route("/vendor/index").get(

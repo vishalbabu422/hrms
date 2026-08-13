@@ -1,7 +1,9 @@
 import React, { Suspense, useEffect } from 'react'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { restoreSession } from './store/slices/authSlice'
+import { ssoLogin, restoreSession } from './store/slices/authSlice'
+import SsoAccessError from './views/pages/sso/SsoAccessError'
+import { loadAppConfig } from './store/slices/appConfigSlice'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
@@ -22,11 +24,34 @@ const Page600 = React.lazy(() => import('./views/pages/page500/Page500'))
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
+const Loading = () => (
+  <div className="pt-3 text-center">
+    <CSpinner color="primary" variant="grow" />
+  </div>
+)
+
+const SsoRedirect = () => {
+  const { ssoLoginUrl } = useSelector((state) => state.appConfig)
+
+  useEffect(() => {
+    if (ssoLoginUrl) {
+      window.location.replace(ssoLoginUrl)
+    }
+  }, [ssoLoginUrl])
+
+  return <Loading />
+}
+
 const App = () => {
   const dispatch = useDispatch()
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
-  const { user, isAuthChecked } = useSelector((state) => state.auth)
+  const { user, error, loading, isAuthChecked } = useSelector((state) => state.auth)
+  const { loaded, authMode } = useSelector((state) => state.appConfig)
+
+  useEffect(() => {
+    dispatch(loadAppConfig())
+  }, [])
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.href.split('?')[1])
@@ -40,18 +65,35 @@ const App = () => {
     }
 
     setColorMode(storedTheme)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
-    dispatch(restoreSession())
-  }, [dispatch])
+    if (!loaded) return
+    const initAuth = async () => {
+      const params = new URLSearchParams(window.location.search)
+      const token = params.get('token')
 
-  if (!isAuthChecked) {
-    return (
-      <div className="pt-3 text-center">
-        <CSpinner color="primary" variant="grow" />
-      </div>
-    )
+      try {
+        if (token) {
+          await dispatch(ssoLogin(token)).unwrap()
+
+          window.history.replaceState({}, document.title, window.location.pathname)
+        } else {
+          await dispatch(restoreSession()).unwrap()
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    initAuth()
+  }, [loaded, dispatch])
+
+  if (!loaded || loading || !isAuthChecked) {
+    return <Loading />
+  }
+  if (error?.code) {
+    return <SsoAccessError code={error.code} message={error.message} />
   }
 
   return (
@@ -73,17 +115,49 @@ const App = () => {
         }
       >
         <Routes>
-          {/* <Route exact path="/login" name="Login Page" element={<Login />} /> */}
-          {/* <Route exact path="/login" element={user ? <Navigate to="/" /> : <Login />} /> */}
-          <Route exact path="/register" name="Register Page" element={<Register />} />
-          <Route exact path="/404" name="Page 404" element={<Page404 />} />
-          {/* <Route exact path="/500" name="Page 500" element={<Page500 />} /> */}
-          <Route exact path="/500" name="Page 500" element={<Page500 />} />
-          {/* <Route path="*" name="Home" element={<DefaultLayout />} /> */}
+          <Route path="/register" element={<Register />} />
+          <Route path="/404" element={<Page404 />} />
+          <Route path="/500" element={<Page500 />} />
 
-          <Route path="/login" element={!user ? <Login /> : <Navigate to="/" replace />} />
+          {/* Login */}
+          <Route
+            path="/login"
+            element={
+              user ? <Navigate to="/" replace /> : authMode === 'SSO' ? <SsoRedirect /> : <Login />
+            }
+          />
 
-          <Route path="/*" element={user ? <DefaultLayout /> : <Navigate to="/login" replace />} />
+          {/* Home */}
+          <Route
+            path="/"
+            element={
+              user ? (
+                <DefaultLayout />
+              ) : authMode === 'LOCAL' ? (
+                <Navigate to="/login" replace />
+              ) : authMode === 'SSO' ? (
+                <SsoRedirect />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          {/* All other routes */}
+          <Route
+            path="/*"
+            element={
+              user ? (
+                <DefaultLayout />
+              ) : authMode === 'LOCAL' ? (
+                <Navigate to="/login" replace />
+              ) : authMode === 'SSO' ? (
+                <SsoRedirect />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
         </Routes>
       </Suspense>
     </BrowserRouter>

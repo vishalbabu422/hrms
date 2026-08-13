@@ -12,7 +12,11 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   if (!token) {
-    return next(new AppError("You are not logged in!", 401));
+    return res.status(401).json({
+      status: "failure",
+      code: "ACCESS_TOKEN_MISSING",
+      message: "You are not logged in!",
+    });
   }
 
   let decoded;
@@ -20,12 +24,19 @@ exports.protect = catchAsync(async (req, res, next) => {
   try {
     decoded = verifyToken(token);
   } catch (err) {
-    return next(
-      new AppError(
-        err.name === "TokenExpiredError" ? "Token expired" : "Invalid token",
-        401,
-      ),
-    );
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        status: "failure",
+        code: "ACCESS_TOKEN_EXPIRED",
+        message: "Access token expired",
+      });
+    }
+
+    return res.status(401).json({
+      status: "failure",
+      code: "INVALID_ACCESS_TOKEN",
+      message: "Invalid access token",
+    });
   }
 
   // 🔥 Minimal attributes → performance boost
@@ -47,7 +58,11 @@ exports.protect = catchAsync(async (req, res, next) => {
   });
 
   if (!currentUser) {
-    return next(new AppError("User no longer exists", 401));
+    return res.status(401).json({
+      status: "failure",
+      code: "USER_NOT_FOUND",
+      message: "User no longer exists",
+    });
   }
 
   const roles = currentUser.RoleMasters || [];

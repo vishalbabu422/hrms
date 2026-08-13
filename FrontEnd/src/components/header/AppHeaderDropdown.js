@@ -1,5 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux'
-import { logoutUser } from '../../store/slices/authSlice'
+import { ssoLogout } from '../../store/slices/authSlice'
 import { useNavigate } from 'react-router-dom'
 import { CDropdown, CDropdownItem, CDropdownMenu, CDropdownToggle } from '@coreui/react'
 import { cilUser, cilAccountLogout } from '@coreui/icons'
@@ -13,8 +13,7 @@ const AppHeaderDropdown = () => {
   const user = useSelector((state) => state.auth.user)
 
   const handleLogout = async () => {
-    await dispatch(logoutUser())
-    navigate('/login')
+    await dispatch(ssoLogout())
   }
 
   return (
@@ -33,10 +32,7 @@ const AppHeaderDropdown = () => {
           border: '1px solid #e5e7eb',
         }}
       >
-        <CDropdownItem
-          style={{ padding: '12px 16px' }}
-          onClick={() => navigate('/profile')}
-        >
+        <CDropdownItem style={{ padding: '12px 16px' }} onClick={() => navigate('/profile')}>
           <CIcon icon={cilUser} className="me-2" />
           My Profile
         </CDropdownItem>

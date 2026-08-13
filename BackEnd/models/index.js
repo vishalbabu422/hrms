@@ -45,8 +45,8 @@ const EmployeeWorkOrderLeave = require("./employeeWorkOrderLeave");
 const EmployeeWorkOrderMpr = require("./employeeWorkOrderMpr");
 const SalaryComponent = require("./salaryComponent");
 const SalaryStructure = require("./salaryStructure");
-const SalaryStructureComponent = require("./salaryStructureComponent")
-const EmpSalaryStructure  = require("./employeeSalaryStructure")
+const SalaryStructureComponent = require("./salaryStructureComponent");
+const EmpSalaryStructure = require("./employeeSalaryStructure");
 const EmployeeSalaryRegister = require("./employeeSalaryRegister");
 const EmployeeSalaryRegisterSnapshot = require("./employeeSalaryRegisterSnapshot");
 const SalaryAddonMaster = require("./salaryAddonMaster");
@@ -54,8 +54,8 @@ const StateMaster = require("./stateMaster");
 const DistrictMaster = require("./districtMaster");
 const EmployeeSalaryAddon = require("./employeeSalaryAddon");
 const ResourceRate = require("./resourceRate");
-const WoMilestone = require("./milestone.js");
-
+const WoMilestone = require("./milestone");
+const AppSettings = require("./appSettings");
 
 // Put all models inside object
 const models = {
@@ -115,7 +115,8 @@ const models = {
   DistrictMaster,
   EmployeeSalaryAddon,
   ResourceRate,
-  WoMilestone
+  WoMilestone,
+  AppSettings,
 };
 
 // Run associate method if exists

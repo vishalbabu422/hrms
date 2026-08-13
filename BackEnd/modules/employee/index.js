@@ -1,10 +1,18 @@
 const router = require("express").Router();
+const { checkSSOSession } = require("../../middlewares/ssoMiddleware");
 
+router.use(checkSSOSession);
 router.use("/employee", require("./employee.routes"));
 router.use("/designation", require("./designation/designation.routes"));
 router.use("/division", require("./division/division.routes"));
 router.use("/examinations", require("./exam/examination.routes"));
-router.use("/workorder/:id/employee-work-order-leave", require("./employeeWOLeave/employeeWOLeave.routes"));
-router.use("/workorder/:id/employee-work-order-mpr", require("./employeeWOMpr/employeeWOMpr.routes"));
-router.use("/workorder-milestone",require("./milestone/milestone.routes"));
+router.use(
+  "/workorder/:id/employee-work-order-leave",
+  require("./employeeWOLeave/employeeWOLeave.routes"),
+);
+router.use(
+  "/workorder/:id/employee-work-order-mpr",
+  require("./employeeWOMpr/employeeWOMpr.routes"),
+);
+router.use("/workorder-milestone", require("./milestone/milestone.routes"));
 module.exports = router;
