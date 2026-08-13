@@ -2,6 +2,10 @@ import React from 'react'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
+// HRM LOGIN PAGE
+
+const HRMLogin = React.lazy(() => import('./views/hrmLogin/HRMLogin'))
+
 // UserDashboard
 
 const UserDashboard = React.lazy(() => import('./views/userdashboard/userdashboard'))
@@ -203,13 +207,26 @@ const routes = [
   },
 
 
-  //My Details//
+// HRM LOGIN PAGE
 
 {
-  path: '/mydetails',
-  name: 'My Details',
-  element: MyDetails,
+  path: '/hrmloginpage',
+  name: 'HRM Login Page',
+  element: HRMLogin,
 },
+
+  //My Details//
+
+  {
+    path: '/home/my-details',
+    name: 'My Details',
+    element: MyDetails,
+  },
+  {
+    path: '/home/my-details/edit',
+    name: 'Edit My Details',
+    element: hrmMore,
+  },
 
   // Work Order
   { path: '/work-order', name: 'Work Order', element: WorkOrderIndex },
@@ -259,7 +276,7 @@ const routes = [
   { path: '/hrm', name: 'HRM', element: hrmIndex },
   { path: '/hrm/add', name: 'Add', element: hrmAdd },
   { path: '/hrm/:employeeId', name: 'Edit', element: hrmAdd },
-  { path: '/hrm/:employeeId/more-details', name: 'More Details', element: hrmMore },
+  { path: '/hrm/:employeeId/more-details',  element: hrmMore },
   { path: '/hrm/:employeeId/preview', name: 'Preview', element: hrmPreview },
 
   // Salary Component
