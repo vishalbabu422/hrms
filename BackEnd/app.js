@@ -37,7 +37,6 @@ const swaggerDocument = require("./swagger.json");
 const { RoleMaster } = require("./models");
 const customCss = fs.readFileSync(process.cwd() + "/swagger.css", "utf8");
 
-
 // 1. MIDDLEWARE
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
@@ -90,9 +89,8 @@ app.use("/api/v1", employeeModule);
 app.use("/api/v1/", rolesRoutes);
 app.use("/api/v1/modules", moduleRoute);
 app.use("/api/v1/", salaryRoute);
-app.use("/api/v1/state" , stateMaster);
-app.use("/api/v1/district" , districtMaster);
-
+app.use("/api/v1/state", stateMaster);
+app.use("/api/v1/district", districtMaster);
 
 app.use(globalErrorHandler);
 
