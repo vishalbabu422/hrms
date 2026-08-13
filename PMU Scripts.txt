@@ -6002,5 +6002,18 @@ CREATE TABLE pmu.app_settings (
 
 INSERT INTO pmu.app_settings(id, auth_mode) VALUES (1, 'LOCAL');
 
+-- 13/08/2026
+
+ALTER TABLE pmu.employees
+ADD COLUMN date_of_retirement DATE,
+ADD COLUMN employee_group VARCHAR(50),
+ADD CONSTRAINT employees_employee_group_check
+CHECK (employee_group IN ('A', 'B', 'C', 'D', 'OTHER'));
+
+ALTER TABLE pmu.employee_addresses
+ADD COLUMN hard_location BOOLEAN DEFAULT false;
+
+
+
 COMMIT;
 
