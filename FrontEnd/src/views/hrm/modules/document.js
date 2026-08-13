@@ -180,48 +180,49 @@ const Documents = forwardRef(({ employeeId, isEdit }, ref) => {
   }
 
   // ================= SUBMIT =================
+  useImperativeHandle(ref, () => ({
+    submit: async () => {
+      try {
+        setLoading(true)
 
-  submit: async () => {
-    try {
-      setLoading(true)
+        const validationErrors = validateDocuments(documents)
+        setErrors(validationErrors)
 
-      const validationErrors = validateDocuments(documents)
-      setErrors(validationErrors)
+        const hasError = validationErrors.some((e) => Object.keys(e).length)
 
-      const hasError = validationErrors.some((e) => Object.keys(e).length)
+        if (hasError) {
+          toast.error('Please fix document errors')
+          return false
+        }
 
-      if (hasError) {
-        toast.error('Please fix document errors')
+        for (const doc of documents) {
+          if (doc.isNew && doc.file) {
+            await uploadDocument({
+              file: doc.file,
+              docType: doc.type,
+            })
+          }
+
+          if (!doc.isNew && doc.file && doc.id) {
+            await updateDocument({
+              docId: doc.id,
+              file: doc.file,
+              docType: doc.type,
+            })
+          }
+        }
+
+        toast.success('Documents saved')
+        return true
+      } catch (error) {
+        console.error(error)
+        toast.error(error.response?.data?.message || 'Failed to save documents')
         return false
+      } finally {
+        setLoading(false)
       }
-
-      for (const doc of documents) {
-        if (doc.isNew && doc.file) {
-          await uploadDocument({
-            file: doc.file,
-            docType: doc.type,
-          })
-        }
-
-        if (!doc.isNew && doc.file && doc.id) {
-          await updateDocument({
-            docId: doc.id,
-            file: doc.file,
-            docType: doc.type,
-          })
-        }
-      }
-
-      toast.success('Documents saved')
-      return true
-    } catch (error) {
-      console.error(error)
-      toast.error(error.response?.data?.message || 'Failed to save documents')
-      return false
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  }))
 
   return (
     <>

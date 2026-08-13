@@ -12,6 +12,7 @@ const DistrictSelect = ({
   colSize = 6,
   invalid = false,
   feedback = '',
+  disabled = false,
 }) => {
   const [districts, setDistricts] = useState([])
 
@@ -53,7 +54,7 @@ const DistrictSelect = ({
         value={value || ''}
         onChange={handleSelectChange}
         invalid={invalid}
-        disabled={!stateId}
+        disabled={disabled || !stateId}
       >
         <option value="">{stateId ? placeholder : 'Select State First'}</option>
 

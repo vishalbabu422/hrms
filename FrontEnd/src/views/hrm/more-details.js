@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
 import {
   // cilEducation,
@@ -15,12 +16,35 @@ import {
   cilContact,
   cilBalanceScale,
   cilChart,
-  cilSchool
-  
+  cilSchool,
 } from '@coreui/icons'
 
 const Add = () => {
+  const location = useLocation()
   const [step, setStep] = useState(0)
+
+  const tabMap = {
+    skills: 0,
+    health: 1,
+    vehicle: 2,
+    hobbies: 3,
+    achievements: 4,
+    assets: 5,
+    languages: 6,
+    passport: 7,
+    discipline: 8,
+    exam: 9,
+    training: 10,
+  }
+useEffect(() => {
+  const tab = location.state?.sideTab
+
+  if (tab && tabMap[tab] !== undefined) {
+    setStep(tabMap[tab])
+  }
+}, [location.state])
+
+
 
   const [qualifications, setQualifications] = useState([
     {
@@ -317,93 +341,66 @@ const Add = () => {
     { label: 'Languages', icon: cilGlobeAlt },
     { label: 'Passport', icon: cilContact },
     { label: 'Discipline', icon: cilBalanceScale },
-     { label: 'Exam', icon: cilChart },
-     { label: 'Training', icon: cilSchool }
+    { label: 'Exam', icon: cilChart },
+    { label: 'Training', icon: cilSchool },
   ]
 
-
-
-const [exams, setExams] = useState([
-  {
-    exam_name: '',
-    marks_obtained: '',
-  },
-]);
-const addExam = () => {
-  setExams((prev) => [
-    ...prev,
+  const [exams, setExams] = useState([
     {
       exam_name: '',
-  exam_date: '',
-  marks_obtained: '',
-  result_status: '',
-  certificate_number: ''
-}
-  ]);
-};
-const removeExam = (index) => {
-  setExams((prev) => prev.filter((_, i) => i !== index));
-};
+      marks_obtained: '',
+    },
+  ])
+  const addExam = () => {
+    setExams((prev) => [
+      ...prev,
+      {
+        exam_name: '',
+        exam_date: '',
+        marks_obtained: '',
+        result_status: '',
+        certificate_number: '',
+      },
+    ])
+  }
+  const removeExam = (index) => {
+    setExams((prev) => prev.filter((_, i) => i !== index))
+  }
 
-const handleExamChange = (index, field, value) => {
-  setExams((prev) =>
-    prev.map((exam, i) =>
-      i === index ? { ...exam, [field]: value } : exam
-    )
-  );
-};
+  const handleExamChange = (index, field, value) => {
+    setExams((prev) => prev.map((exam, i) => (i === index ? { ...exam, [field]: value } : exam)))
+  }
 
-
-
-
-
-const [trainings, setTrainings] = useState([
-  {
-    type: '', // 'self' or 'company'
-    certificate: null,
-    company_name: '',
-    training_date: '',
-  },
-]);
-
-
-const addTraining = () => {
-  setTrainings((prev) => [
-    ...prev,
+  const [trainings, setTrainings] = useState([
     {
-      type: '',
+      type: '', // 'self' or 'company'
       certificate: null,
       company_name: '',
       training_date: '',
     },
-  ]);
-};
+  ])
 
-const removeTraining = (index) => {
-  setTrainings((prev) => prev.filter((_, i) => i !== index));
-};
+  const addTraining = () => {
+    setTrainings((prev) => [
+      ...prev,
+      {
+        type: '',
+        certificate: null,
+        company_name: '',
+        training_date: '',
+      },
+    ])
+  }
 
+  const removeTraining = (index) => {
+    setTrainings((prev) => prev.filter((_, i) => i !== index))
+  }
 
-const handleTrainingChange = (index, field, value) => {
-  setTrainings((prev) =>
-    prev.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
+  const handleTrainingChange = (index, field, value) => {
+    setTrainings((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
     )
-  );
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 
   return (
     <div className="container my-4">
@@ -1442,336 +1439,259 @@ const handleTrainingChange = (index, field, value) => {
           </div>
         )}
 
+        {step === 9 && (
+          <div className="step-content">
+            {exams.map((exam, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3">
+                  {/* Exam Name */}
+                  <div className="col-md-6">
+                    <label className="form-label">Examination Name</label>
+                    <select
+                      className="form-select"
+                      value={exam.exam_name}
+                      onChange={(e) => handleExamChange(index, 'exam_name', e.target.value)}
+                    >
+                      <option value="">Select Examination</option>
+                      <option value="Civil Services Examination">Civil Services Examination</option>
+                      <option value="State Public Service Commission Examination">
+                        State Public Service Commission Examination
+                      </option>
+                      <option value="Departmental Promotion Examination">
+                        Departmental Promotion Examination
+                      </option>
+                      <option value="Limited Departmental Competitive Examination (LDCE)">
+                        Limited Departmental Competitive Examination (LDCE)
+                      </option>
+                      <option value="Accounts Test">Accounts Test</option>
+                      <option value="Proficiency Test">Proficiency Test</option>
+                    </select>
+                  </div>
 
-   {step === 9 && (
-  <div className="step-content">
-    {exams.map((exam, index) => (
-      <div key={index} className="border rounded p-3 mb-3">
-        <div className="row g-3">
+                  {/* Exam Date */}
+                  <div className="col-md-6">
+                    <label className="form-label">Exam Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={exam.exam_date}
+                      onChange={(e) => handleExamChange(index, 'exam_date', e.target.value)}
+                    />
+                  </div>
 
-          {/* Exam Name */}
-          <div className="col-md-6">
-            <label className="form-label">Examination Name</label>
-            <select
-              className="form-select"
-              value={exam.exam_name}
-              onChange={(e) =>
-                handleExamChange(index, 'exam_name', e.target.value)
-              }
-            >
-              <option value="">Select Examination</option>
-              <option value="Civil Services Examination">
-                Civil Services Examination
-              </option>
-              <option value="State Public Service Commission Examination">
-                State Public Service Commission Examination
-              </option>
-              <option value="Departmental Promotion Examination">
-                Departmental Promotion Examination
-              </option>
-              <option value="Limited Departmental Competitive Examination (LDCE)">
-                Limited Departmental Competitive Examination (LDCE)
-              </option>
-              <option value="Accounts Test">Accounts Test</option>
-              <option value="Proficiency Test">Proficiency Test</option>
-            </select>
-          </div>
+                  {/* Marks Obtained */}
+                  <div className="col-md-6">
+                    <label className="form-label">Marks Obtained</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      min="0"
+                      value={exam.marks_obtained}
+                      placeholder="Enter marks"
+                      onChange={(e) => handleExamChange(index, 'marks_obtained', e.target.value)}
+                    />
+                  </div>
 
-          {/* Exam Date */}
-          <div className="col-md-6">
-            <label className="form-label">Exam Date</label>
-            <input
-              type="date"
-              className="form-control"
-              value={exam.exam_date}
-              onChange={(e) =>
-                handleExamChange(index, 'exam_date', e.target.value)
-              }
-            />
-          </div>
+                  {/* Certificate Number */}
+                  <div className="col-md-6">
+                    <label className="form-label">Certificate Number</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={exam.certificate_number}
+                      placeholder="Enter certificate number"
+                      onChange={(e) =>
+                        handleExamChange(index, 'certificate_number', e.target.value)
+                      }
+                    />
+                  </div>
 
-          {/* Marks Obtained */}
-          <div className="col-md-6">
-            <label className="form-label">Marks Obtained</label>
-            <input
-              type="number"
-              className="form-control"
-              min="0"
-              value={exam.marks_obtained}
-              placeholder="Enter marks"
-              onChange={(e) =>
-                handleExamChange(index, 'marks_obtained', e.target.value)
-              }
-            />
-          </div>
+                  {/* Result Status - RADIO (Better than Checkbox) */}
+                  <div className="col-md-12">
+                    <label className="form-label d-block">Result</label>
 
-          {/* Certificate Number */}
-          <div className="col-md-6">
-            <label className="form-label">Certificate Number</label>
-            <input
-              type="text"
-              className="form-control"
-              value={exam.certificate_number}
-              placeholder="Enter certificate number"
-              onChange={(e) =>
-                handleExamChange(index, 'certificate_number', e.target.value)
-              }
-            />
-          </div>
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name={`result_status_${index}`}
+                        value="PASS"
+                        checked={exam.result === 'PASS'}
+                        onChange={(e) => handleExamChange(index, 'result', e.target.value)}
+                      />
+                      <label className="form-check-label">Pass</label>
+                    </div>
 
-          {/* Result Status - RADIO (Better than Checkbox) */}
-          <div className="col-md-12">
-            <label className="form-label d-block">Result</label>
+                    <div className="form-check form-check-inline">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name={`result${index}`}
+                        value="FAIL"
+                        checked={exam.result_status === 'FAIL'}
+                        onChange={(e) => handleExamChange(index, 'result', e.target.value)}
+                      />
+                      <label className="form-check-label">Fail</label>
+                    </div>
+                  </div>
+                </div>
 
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name={`result_status_${index}`}
-                value="PASS"
-                checked={exam.result === 'PASS'}
-                onChange={(e) =>
-                  handleExamChange(index, 'result', e.target.value)
-                }
-              />
-              <label className="form-check-label">Pass</label>
-            </div>
+                {exams.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => removeExam(index)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="radio"
-                name={`result${index}`}
-                value="FAIL"
-                checked={exam.result_status === 'FAIL'}
-                onChange={(e) =>
-                  handleExamChange(index, 'result', e.target.value)
-                }
-              />
-              <label className="form-check-label">Fail</label>
-            </div>
-          </div>
-
-        </div>
-
-        {exams.length > 1 && (
-          <div className="text-end mt-2">
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm"
-              onClick={() => removeExam(index)}
-            >
-              Remove
+            <button type="button" className="btn btn-outline-primary mb-4" onClick={addExam}>
+              + Add Exam
             </button>
           </div>
         )}
-      </div>
-    ))}
+        {step === 10 && (
+          <div className="step-content">
+            {trainings.map((training, index) => (
+              <div key={index} className="border rounded p-3 mb-3">
+                <div className="row g-3">
+                  {/* Training Name */}
+                  <div className="col-md-6">
+                    <label className="form-label">Training Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={training.training_name}
+                      placeholder="Enter training name"
+                      onChange={(e) => handleTrainingChange(index, 'training_name', e.target.value)}
+                    />
+                  </div>
 
-    <button
-      type="button"
-      className="btn btn-outline-primary mb-4"
-      onClick={addExam}
-    >
-      + Add Exam
-    </button>
-  </div>
-)}
-{step === 10 && (
-  <div className="step-content">
-    {trainings.map((training, index) => (
-      <div key={index} className="border rounded p-3 mb-3">
-        <div className="row g-3">
+                  {/* Training Type (Radio - ENUM) */}
+                  <div className="col-md-6">
+                    <label className="form-label d-block">Training Type</label>
 
-          {/* Training Name */}
-          <div className="col-md-6">
-            <label className="form-label">Training Name</label>
-            <input
-              type="text"
-              className="form-control"
-              value={training.training_name}
-              placeholder="Enter training name"
-              onChange={(e) =>
-                handleTrainingChange(
-                  index,
-                  'training_name',
-                  e.target.value
-                )
-              }
-            />
-          </div>
+                    <div className="form-check form-check-inline">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        name={`training_type_${index}`}
+                        value="SELF"
+                        checked={training.training_type === 'SELF'}
+                        onChange={(e) =>
+                          handleTrainingChange(index, 'training_type', e.target.value)
+                        }
+                      />
+                      <label className="form-check-label">Self</label>
+                    </div>
 
-          {/* Training Type (Radio - ENUM) */}
-          <div className="col-md-6">
-            <label className="form-label d-block">
-              Training Type
-            </label>
+                    <div className="form-check form-check-inline">
+                      <input
+                        type="radio"
+                        className="form-check-input"
+                        name={`training_type_${index}`}
+                        value="COMPANY"
+                        checked={training.training_type === 'COMPANY'}
+                        onChange={(e) =>
+                          handleTrainingChange(index, 'training_type', e.target.value)
+                        }
+                      />
+                      <label className="form-check-label">Company</label>
+                    </div>
+                  </div>
 
-            <div className="form-check form-check-inline">
-              <input
-                type="radio"
-                className="form-check-input"
-                name={`training_type_${index}`}
-                value="SELF"
-                checked={training.training_type === 'SELF'}
-                onChange={(e) =>
-                  handleTrainingChange(
-                    index,
-                    'training_type',
-                    e.target.value
-                  )
-                }
-              />
-              <label className="form-check-label">Self</label>
-            </div>
+                  {/* Training Provider (Only if COMPANY) */}
+                  {training.training_type === 'COMPANY' && (
+                    <div className="col-md-6">
+                      <label className="form-label">Training Provider</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={training.training_provider}
+                        placeholder="Enter provider name"
+                        onChange={(e) =>
+                          handleTrainingChange(index, 'training_provider', e.target.value)
+                        }
+                      />
+                    </div>
+                  )}
 
-            <div className="form-check form-check-inline">
-              <input
-                type="radio"
-                className="form-check-input"
-                name={`training_type_${index}`}
-                value="COMPANY"
-                checked={training.training_type === 'COMPANY'}
-                onChange={(e) =>
-                  handleTrainingChange(
-                    index,
-                    'training_type',
-                    e.target.value
-                  )
-                }
-              />
-              <label className="form-check-label">Company</label>
-            </div>
-          </div>
+                  {/* Training Start Date */}
+                  <div className="col-md-6">
+                    <label className="form-label">Training Start Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={training.training_start_date}
+                      onChange={(e) =>
+                        handleTrainingChange(index, 'training_start_date', e.target.value)
+                      }
+                    />
+                  </div>
 
-          {/* Training Provider (Only if COMPANY) */}
-          {training.training_type === 'COMPANY' && (
-            <div className="col-md-6">
-              <label className="form-label">
-                Training Provider
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                value={training.training_provider}
-                placeholder="Enter provider name"
-                onChange={(e) =>
-                  handleTrainingChange(
-                    index,
-                    'training_provider',
-                    e.target.value
-                  )
-                }
-              />
-            </div>
-          )}
+                  {/* Training End Date */}
+                  <div className="col-md-6">
+                    <label className="form-label">Training End Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={training.training_end_date}
+                      onChange={(e) =>
+                        handleTrainingChange(index, 'training_end_date', e.target.value)
+                      }
+                    />
+                  </div>
 
-          {/* Training Start Date */}
-          <div className="col-md-6">
-            <label className="form-label">
-              Training Start Date
-            </label>
-            <input
-              type="date"
-              className="form-control"
-              value={training.training_start_date}
-              onChange={(e) =>
-                handleTrainingChange(
-                  index,
-                  'training_start_date',
-                  e.target.value
-                )
-              }
-            />
-          </div>
+                  {/* Certificate Upload */}
+                  <div className="col-md-6">
+                    <label className="form-label">Certificate Upload</label>
+                    <input
+                      type="file"
+                      className="form-control"
+                      onChange={(e) =>
+                        handleTrainingChange(index, 'certificate_file', e.target.files[0])
+                      }
+                    />
+                  </div>
 
-          {/* Training End Date */}
-          <div className="col-md-6">
-            <label className="form-label">
-              Training End Date
-            </label>
-            <input
-              type="date"
-              className="form-control"
-              value={training.training_end_date}
-              onChange={(e) =>
-                handleTrainingChange(
-                  index,
-                  'training_end_date',
-                  e.target.value
-                )
-              }
-            />
-          </div>
+                  {/* Description */}
+                  <div className="col-md-12">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      value={training.description}
+                      placeholder="Enter training description"
+                      onChange={(e) => handleTrainingChange(index, 'description', e.target.value)}
+                    />
+                  </div>
+                </div>
 
-          {/* Certificate Upload */}
-          <div className="col-md-6">
-            <label className="form-label">
-              Certificate Upload
-            </label>
-            <input
-              type="file"
-              className="form-control"
-              onChange={(e) =>
-                handleTrainingChange(
-                  index,
-                  'certificate_file',
-                  e.target.files[0]
-                )
-              }
-            />
-          </div>
+                {/* Remove Button */}
+                {trainings.length > 1 && (
+                  <div className="text-end mt-2">
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => removeTraining(index)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
 
-          {/* Description */}
-          <div className="col-md-12">
-            <label className="form-label">
-              Description
-            </label>
-            <textarea
-              className="form-control"
-              rows="3"
-              value={training.description}
-              placeholder="Enter training description"
-              onChange={(e) =>
-                handleTrainingChange(
-                  index,
-                  'description',
-                  e.target.value
-                )
-              }
-            />
-          </div>
-
-        </div>
-
-        {/* Remove Button */}
-        {trainings.length > 1 && (
-          <div className="text-end mt-2">
-            <button
-              type="button"
-              className="btn btn-outline-danger btn-sm"
-              onClick={() => removeTraining(index)}
-            >
-              Remove
+            <button type="button" className="btn btn-outline-primary mb-4" onClick={addTraining}>
+              + Add Training
             </button>
           </div>
         )}
-      </div>
-    ))}
-
-    <button
-      type="button"
-      className="btn btn-outline-primary mb-4"
-      onClick={addTraining}
-    >
-      + Add Training
-    </button>
-  </div>
-)}
-
-
-
-
 
         {/* 🔹 FOOTER */}
         <div className="d-flex justify-content-end gap-2 mt-4">

@@ -12,6 +12,7 @@ const Bank = forwardRef(({ employeeId }, ref) => {
   const { uploadDocument, updateDocument } = useDocumentUpload(employeeId)
 
   const { documents } = useEmployeeDocuments(employeeId, 'CANCEL_CHEQUE')
+
   const chequeDoc = documents.find((d) => d.doc_type === 'CANCEL_CHEQUE')
 
   const [chequeFile, setChequeFile] = useState(null)
@@ -65,6 +66,7 @@ const Bank = forwardRef(({ employeeId }, ref) => {
   // ================= SUBMIT =================
   useImperativeHandle(ref, () => ({
     submit: async () => {
+
       try {
         setLoading(true)
 
@@ -79,7 +81,7 @@ const Bank = forwardRef(({ employeeId }, ref) => {
         const { bank_name, branch_name, bank_address, account_number, ifsc, micr_code } =
           employeeBank
 
-        // ✅ Validation
+        //  Validation
         if (!bank_name.trim()) {
           toast.error('Bank name is required')
           return false
@@ -149,24 +151,6 @@ const Bank = forwardRef(({ employeeId }, ref) => {
           await api.post(url, employeeBank)
         }
 
-        // File upload (no validation required as per your request)
-        if (chequeFile) {
-          if (chequeDoc?.id) {
-            await updateDocument({
-              docId: chequeDoc.id,
-              file: chequeFile,
-              docType: 'CANCEL_CHEQUE',
-              remarks: 'Cancelled cheque',
-            })
-          } else {
-            await uploadDocument({
-              file: chequeFile,
-              docType: 'CANCEL_CHEQUE',
-              remarks: 'Cancelled cheque',
-            })
-          }
-        }
-
         toast.success('Bank details saved')
         return true
       } catch (error) {
@@ -183,119 +167,118 @@ const Bank = forwardRef(({ employeeId }, ref) => {
     <div className="step-content">
       <div className="border rounded p-3 mb-3">
         <div className="row g-3">
+          <div className="col-md-6">
+            <label className="form-label">
+              Bank Name <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            Bank Name <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.bank_name ? 'is-invalid' : ''}`}
+              value={employeeBank.bank_name || ''}
+              onChange={(e) => handleChange('bank_name', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.bank_name ? 'is-invalid' : ''}`}
-            value={employeeBank.bank_name || ''}
-            onChange={(e) => handleChange('bank_name', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.bank_name}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.bank_name}</div>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label">
+              Branch Name <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            Branch Name <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.branch_name ? 'is-invalid' : ''}`}
+              value={employeeBank.branch_name || ''}
+              onChange={(e) => handleChange('branch_name', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.branch_name ? 'is-invalid' : ''}`}
-            value={employeeBank.branch_name || ''}
-            onChange={(e) => handleChange('branch_name', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.branch_name}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.branch_name}</div>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label">
+              Bank Address <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            Bank Address <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.bank_address ? 'is-invalid' : ''}`}
+              value={employeeBank.bank_address || ''}
+              onChange={(e) => handleChange('bank_address', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.bank_address ? 'is-invalid' : ''}`}
-            value={employeeBank.bank_address || ''}
-            onChange={(e) => handleChange('bank_address', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.bank_address}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.bank_address}</div>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label">
+              Account Number <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            Account Number <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.account_number ? 'is-invalid' : ''}`}
+              value={employeeBank.account_number || ''}
+              onChange={(e) => handleChange('account_number', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.account_number ? 'is-invalid' : ''}`}
-            value={employeeBank.account_number || ''}
-            onChange={(e) => handleChange('account_number', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.account_number}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.account_number}</div>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label">
+              IFSC Code <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            IFSC Code <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.ifsc ? 'is-invalid' : ''}`}
+              value={employeeBank.ifsc || ''}
+              onChange={(e) => handleChange('ifsc', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.ifsc ? 'is-invalid' : ''}`}
-            value={employeeBank.ifsc || ''}
-            onChange={(e) => handleChange('ifsc', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.ifsc}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.ifsc}</div>
-        </div>
+          <div className="col-md-6">
+            <label className="form-label">
+              MICR Code <span className="text-danger">*</span>
+            </label>
 
-        <div className="col-md-6">
-          <label className="form-label">
-            MICR Code <span className="text-danger">*</span>
-          </label>
+            <input
+              className={`form-control ${errors.micr_code ? 'is-invalid' : ''}`}
+              value={employeeBank.micr_code || ''}
+              onChange={(e) => handleChange('micr_code', e.target.value)}
+            />
 
-          <input
-            className={`form-control ${errors.micr_code ? 'is-invalid' : ''}`}
-            value={employeeBank.micr_code || ''}
-            onChange={(e) => handleChange('micr_code', e.target.value)}
-          />
+            <div className="invalid-feedback">{errors.micr_code}</div>
+          </div>
 
-          <div className="invalid-feedback">{errors.micr_code}</div>
-        </div>
+          {/* Cheque Upload */}
+          <div className="col-md-12">
+            <label className="form-label">Cancelled Cheque</label>
 
-        {/* Cheque Upload */}
-        <div className="col-md-12">
-          <label className="form-label">Cancelled Cheque</label>
+            <input
+              type="file"
+              className="form-control"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleChequeUpload}
+            />
 
-          <input
-            type="file"
-            className="form-control"
-            accept=".pdf,.jpg,.jpeg,.png"
-            onChange={handleChequeUpload}
-          />
+            {/* Existing document */}
+            {!chequeFile && chequeDoc && (
+              <div className="mt-2">
+                <small className="text-primary">
+                  Existing File:{' '}
+                  <a href={chequeDoc.file_url} target="_blank" rel="noreferrer">
+                    {chequeDoc.file_name}
+                  </a>
+                </small>
+              </div>
+            )}
 
-          {/* Existing document */}
-          {!chequeFile && chequeDoc && (
-            <div className="mt-2">
-              <small className="text-primary">
-                Existing File:{' '}
-                <a href={chequeDoc.file_url} target="_blank" rel="noreferrer">
-                  {chequeDoc.file_name}
-                </a>
-              </small>
-            </div>
-          )}
-
-          {/* Newly selected file */}
-          {chequeFile && <small className="text-success mt-2 d-block">{chequeFile.name}</small>}
+            {/* Newly selected file */}
+            {chequeFile && <small className="text-success mt-2 d-block">{chequeFile.name}</small>}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   )
 })

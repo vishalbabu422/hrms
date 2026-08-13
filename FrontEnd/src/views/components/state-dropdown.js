@@ -17,15 +17,16 @@ const StateSelect = ({
   colSize = 6,
   invalid = false,
   feedback = '',
+   disabled = false,
 }) => {
   const [states, setStates] = useState([])
 
   useEffect(() => {
     fetchStates()
-    const options = states.map((state) => ({
-      value: state.id,
-      label: state.state_name,
-    }))
+    // const options = states.map((state) => ({
+    //   value: state.id,
+    //   label: state.state_name,
+    // }))
   }, [])
 
   const fetchStates = async () => {
@@ -61,6 +62,7 @@ const StateSelect = ({
         placeholder={placeholder}
         isSearchable
         isClearable
+        isDisabled={disabled}
         classNamePrefix="react-select"
         value={options.find((option) => String(option.value) === String(value)) || null}
         onChange={(selected) =>

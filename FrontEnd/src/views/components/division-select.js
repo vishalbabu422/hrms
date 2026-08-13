@@ -13,6 +13,7 @@ const DivisionSelect = ({
   colSize = 6,
   invalid = false,
   feedback = '',
+  required = false, // <-- add this
 }) => {
   const selectOptions = Array.isArray(options)
     ? options.map((item) => ({
@@ -24,7 +25,7 @@ const DivisionSelect = ({
   return (
     <CCol md={colSize}>
       <CFormLabel>
-        {label} <span className="text-danger">*</span>
+        {label} {required ? <span className="text-danger">*</span> : null}
       </CFormLabel>
 
       <Select

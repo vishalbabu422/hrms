@@ -69,7 +69,6 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
 
   const removeExperience = async (exp, index) => {
     try {
-      // delete experience
       if (exp.id) {
         const confirmDelete = window.confirm('Are you sure you want to delete this experience?')
 
@@ -78,7 +77,6 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
         toast.success('Experience deleted')
       }
 
-      // 🔥 REMOVE FROM UI
       setExperiences((prev) => prev.filter((_, i) => i !== index))
     } catch (error) {
       console.error(error)
@@ -92,7 +90,6 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
       try {
         setLoading(true)
 
-        // ✅ ADD HERE
         const allErrors = []
 
         for (const exp of experiences) {
@@ -114,7 +111,7 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
 
           let savedExp
 
-          // 🔥 CREATE / UPDATE
+          //  CREATE / UPDATE
           if (exp.id) {
             const res = await api.patch(url + '/' + exp.id, exp)
             savedExp = res.data?.data
@@ -123,7 +120,7 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
             savedExp = res.data?.data
           }
 
-          // 🔥 HANDLE DOCUMENT
+          //  HANDLE DOCUMENT
           if (exp.document) {
             const existingDoc = documents?.find((d) => d.experience_id === savedExp.id)
 
@@ -164,148 +161,118 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
         const existingDoc = documents?.find((d) => d.experience_id === exp.id)
 
         return (
-        <div key={index} className="border rounded p-3 mb-3">
-  <div className="row g-3">
+          <div key={index} className="border rounded p-3 mb-3">
+            <div className="row g-3">
+              {/* Company Name */}
+              <div className="col-md-6">
+                <label className="form-label">
+                  Company Name <span className="text-danger">*</span>
+                </label>
 
-    {/* Company Name */}
-    <div className="col-md-6">
-      <label className="form-label">
-        Company Name <span className="text-danger">*</span>
-      </label>
+                <input
+                  className={`form-control ${errors[index]?.company_name ? 'is-invalid' : ''}`}
+                  placeholder="Enter company name"
+                  value={exp.company_name || ''}
+                  onChange={(e) => handleChange(index, 'company_name', e.target.value)}
+                />
 
-      <input
-        className={`form-control ${
-          errors[index]?.company_name ? 'is-invalid' : ''
-        }`}
-        value={exp.company_name || ''}
-        onChange={(e) =>
-          handleChange(index, 'company_name', e.target.value)
-        }
-      />
+                <div className="invalid-feedback">{errors[index]?.company_name}</div>
+              </div>
 
-      <div className="invalid-feedback">
-        {errors[index]?.company_name}
-      </div>
-    </div>
+              {/* Designation */}
+              <div className="col-md-6">
+                <label className="form-label">
+                  Designation <span className="text-danger">*</span>
+                </label>
 
-    {/* Designation */}
-    <div className="col-md-6">
-      <label className="form-label">
-        Designation <span className="text-danger">*</span>
-      </label>
+                <input
+                  className={`form-control ${errors[index]?.designation ? 'is-invalid' : ''}`}
+                  placeholder="Enter designation"
+                  value={exp.designation || ''}
+                  onChange={(e) => handleChange(index, 'designation', e.target.value)}
+                />
 
-      <input
-        className={`form-control ${
-          errors[index]?.designation ? 'is-invalid' : ''
-        }`}
-        value={exp.designation || ''}
-        onChange={(e) =>
-          handleChange(index, 'designation', e.target.value)
-        }
-      />
+                <div className="invalid-feedback">{errors[index]?.designation}</div>
+              </div>
 
-      <div className="invalid-feedback">
-        {errors[index]?.designation}
-      </div>
-    </div>
+              {/* Start Date */}
+              <div className="col-md-6">
+                <label className="form-label">
+                  Start Date <span className="text-danger">*</span>
+                </label>
 
-    {/* Start Date */}
-    <div className="col-md-6">
-      <label className="form-label">
-        Start Date <span className="text-danger">*</span>
-      </label>
+                <input
+                  type="date"
+                  className={`form-control ${errors[index]?.start_date ? 'is-invalid' : ''}`}
+                  value={exp.start_date || ''}
+                  onChange={(e) => handleChange(index, 'start_date', e.target.value)}
+                />
 
-      <input
-        type="date"
-        className={`form-control ${
-          errors[index]?.start_date ? 'is-invalid' : ''
-        }`}
-        value={exp.start_date || ''}
-        onChange={(e) =>
-          handleChange(index, 'start_date', e.target.value)
-        }
-      />
+                <div className="invalid-feedback">{errors[index]?.start_date}</div>
+              </div>
 
-      <div className="invalid-feedback">
-        {errors[index]?.start_date}
-      </div>
-    </div>
+              {/* End Date */}
+              <div className="col-md-6">
+                <label className="form-label">
+                  End Date <span className="text-danger">*</span>
+                </label>
 
-    {/* End Date */}
-    <div className="col-md-6">
-      <label className="form-label">
-        End Date <span className="text-danger">*</span>
-      </label>
+                <input
+                  type="date"
+                  className={`form-control ${errors[index]?.end_date ? 'is-invalid' : ''}`}
+                  value={exp.end_date || ''}
+                  onChange={(e) => handleChange(index, 'end_date', e.target.value)}
+                />
 
-      <input
-        type="date"
-        className={`form-control ${
-          errors[index]?.end_date ? 'is-invalid' : ''
-        }`}
-        value={exp.end_date || ''}
-        onChange={(e) =>
-          handleChange(index, 'end_date', e.target.value)
-        }
-      />
+                <div className="invalid-feedback">{errors[index]?.end_date}</div>
+              </div>
 
-      <div className="invalid-feedback">
-        {errors[index]?.end_date}
-      </div>
-    </div>
+              {/* Total Years */}
+              <div className="col-md-6">
+                <label className="form-label">Total Years</label>
 
-    {/* Total Years */}
-    <div className="col-md-6">
-      <label className="form-label">Total Years</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="Total Years"
+                  value={exp.total_years || ''}
+                  onChange={(e) => handleChange(index, 'total_years', e.target.value)}
+                />
+              </div>
 
-      <input
-        type="number"
-        className="form-control"
-        placeholder="Total Years"
-        value={exp.total_years || ''}
-        onChange={(e) =>
-          handleChange(index, 'total_years', e.target.value)
-        }
-      />
-    </div>
+              {/* File Upload */}
+              <div className="col-md-6">
+                <label className="form-label">Experience Certificate</label>
 
-    {/* File Upload */}
-    <div className="col-md-6">
-      <label className="form-label">Experience Certificate</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  onChange={(e) => handleChange(index, 'document', e.target.files[0])}
+                />
 
-      <input
-        type="file"
-        className="form-control"
-        onChange={(e) =>
-          handleChange(index, 'document', e.target.files[0])
-        }
-      />
+                {/* existing */}
+                {!exp.document && existingDoc && (
+                  <div className="mt-2">
+                    <a href={existingDoc.file_url} target="_blank" rel="noreferrer">
+                      View existing document
+                    </a>
+                  </div>
+                )}
 
-      {/* existing */}
-      {!exp.document && existingDoc && (
-        <div className="mt-2">
-          <a href={existingDoc.file_url} target="_blank" rel="noreferrer">
-            View existing document
-          </a>
-        </div>
-      )}
+                {/* new */}
+                {exp.document && <small className="text-success">{exp.document.name}</small>}
+              </div>
+            </div>
 
-      {/* new */}
-      {exp.document && (
-        <small className="text-success">{exp.document.name}</small>
-      )}
-    </div>
-
-  </div>
-
-  {experiences.length > 1 && (
-    <button
-      className="btn btn-danger btn-sm mt-3"
-      onClick={() => removeExperience(exp, index)}
-    >
-      Remove
-    </button>
-  )}
-</div>
+            {experiences.length > 1 && (
+              <button
+                className="btn btn-danger btn-sm mt-3"
+                onClick={() => removeExperience(exp, index)}
+              >
+                Remove
+              </button>
+            )}
+          </div>
         )
       })}
 

@@ -5,6 +5,7 @@ import {
     CFormTextarea
 } from "@coreui/react";
 import { useEffect, useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     getEmployeeTrainings,
@@ -21,6 +22,7 @@ const TrainingStep = ({ state, dispatch, employeeId }) => {
     const { trainings } = state;
     const { uploadDocument, uploading } = useDocumentUpload(employeeId);
     const [errors, setErrors] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -174,6 +176,7 @@ const TrainingStep = ({ state, dispatch, employeeId }) => {
             }
 
             toast.success('Training saved!');
+            navigate('/hrm');
         } catch (err) {
             console.error("Error saving trainings:", err);
             toast.error('Failed to save training. Please try again.');

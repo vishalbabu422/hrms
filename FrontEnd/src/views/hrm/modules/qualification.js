@@ -124,7 +124,7 @@ useImperativeHandle(ref, () => ({
       for (const qual of employeeQualification) {
         if (!qual.qualification_name) continue
 
-        if (qual.id) {
+        if (qual.id) {       
           await api.patch(`${baseUrl}/${qual.id}`, qual)
         } else {
           await api.post(baseUrl, qual)
@@ -136,7 +136,7 @@ useImperativeHandle(ref, () => ({
       return true
     } catch (error) {
       console.error(error)
-      return false
+      return false 
     } finally {
       setLoading(false)
     }

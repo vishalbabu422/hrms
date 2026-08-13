@@ -15,6 +15,7 @@ const DesignationSelect = ({
   colSize = 6,
   invalid = false,
   feedback = '',
+  required = false, // <-- add this
 }) => {
   const selectOptions = options.map((item) => ({
     value: item.id,
@@ -24,9 +25,8 @@ const DesignationSelect = ({
   return (
     <CCol md={colSize}>
       <CFormLabel>
-        {label} <span className="text-danger">*</span>
+        {label} {required ? <span className="text-danger">*</span> : null}
       </CFormLabel>
-
       <Select
         name={name}
         options={selectOptions}
