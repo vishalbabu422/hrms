@@ -21,6 +21,8 @@ import PassportView from './preview-module/passport-view'
 import DisciplineView from './preview-module/discipline-view'
 import ExamView from './preview-module/exam-view'
 import TrainingView from './preview-module/training-view'
+import DivisionView from './preview-module/division-view'
+import DesignationView from './preview-module/designation-view'
 import {
   CContainer,
   CRow,
@@ -88,6 +90,9 @@ const EmployeeProfile = () => {
   const [sideTab, setSideTab] = useState('basic')
   const [employee, setEmployee] = useState({})
 
+  const [divisions, setDivisions] = useState([])
+  const [designations, setDesignations] = useState([])
+
   const [employeeAddress, setEmployeeAddress] = useState({
     correspondence: {
       address_line1: '',
@@ -114,9 +119,13 @@ const EmployeeProfile = () => {
     const fetchEmployee = async () => {
       try {
         const res = await api.get(
-          `/employee/${employeeId}?models=employeeDesignations,employeeDivisions&modelFilter={}`,
+          `/employee/${employeeId}?models=employeeDesignations.designation,employeeDivisions.division&modelFilter={}`,
         )
         const empData = res.data?.data || res?.data
+        console.log(empData)
+        setDivisions(empData.employeeDivisions || empData.employee_divisions || [])
+
+        setDesignations(empData.employeeDesignations || empData.employee_designations || [])
 
         setEmployee({
           salutation: empData.salutation || '',
@@ -215,6 +224,8 @@ const EmployeeProfile = () => {
                 <CListGroup flush>
                   {[
                     { key: 'basic', label: 'Basic Details' },
+                    { key: 'division', label: 'Division' },
+                    { key: 'designation', label: 'Designation' },
                     { key: 'skills', label: 'Skills' },
                     { key: 'health', label: 'Health' },
                     { key: 'vehicle', label: 'Vehicle' },
@@ -410,6 +421,20 @@ const EmployeeProfile = () => {
 
             {/* training */}
             {sideTab === 'training' && <TrainingView />}
+
+            {/* Division History */}
+            {sideTab === 'division' && (
+              <CCol md={10}>
+                <DivisionView divisions={divisions} />
+              </CCol>
+            )}
+
+            {/* Designation History */}
+            {sideTab === 'designation' && (
+              <CCol md={10}>
+                <DesignationView designations={designations} />
+              </CCol>
+            )}
           </CRow>
         </CCardBody>
       </CCard>
