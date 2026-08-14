@@ -17,7 +17,6 @@ import { toast } from 'react-toastify'
 import api from '../../api/axios'
 import OrganizationSelect from '../components/organization-select'
 
-
 const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
   const [formData, setFormData] = useState(initialData)
   const [errors, setErrors] = useState({})
@@ -83,7 +82,6 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-
     if (!validateForm()) return
 
     let payload = { ...formData }

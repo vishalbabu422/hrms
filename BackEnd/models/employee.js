@@ -118,6 +118,19 @@ const Employee = sequelize.define(
     },
 
     organization_id: DataTypes.BIGINT,
+
+    date_of_retirement: {
+     type: DataTypes.DATEONLY,
+    },
+
+employee_group: {
+  type: DataTypes.STRING(50),
+  validate: {
+    isIn: [["A", "B", "C", "D", "OTHER"]],
+  },
+},
+
+notice_period_days: DataTypes.INTEGER,
   },
   {
     tableName: "employees",

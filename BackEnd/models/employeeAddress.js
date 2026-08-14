@@ -62,7 +62,11 @@ const EmployeeAddress = sequelize.define('EmployeeAddress', {
         type: DataTypes.BOOLEAN,
         defaultValue: false
         
-    }
+    },
+    hard_location: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
 
 }, {
     tableName: 'employee_addresses',

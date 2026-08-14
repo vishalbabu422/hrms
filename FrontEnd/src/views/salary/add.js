@@ -17,9 +17,8 @@ const Add = () => {
     }
   }
 
-
   const initialData = {
-    org_id: null,   // <-- Add this
+    org_id: null, // <-- Add this
     name: '',
     code: '',
     type: '',

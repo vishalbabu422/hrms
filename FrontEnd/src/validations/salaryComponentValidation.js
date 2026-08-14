@@ -26,11 +26,6 @@ export const validateSalaryComponent = (data, type = 'Salary Component') => {
 
   /* ================================ */
   
-  
-if (!data.org_id) {
-  errors.org_id = `${type}: Organization is required`
-}
-
 
   if (!baseType) {
     errors.base_type = `${type}: Base type is required`
