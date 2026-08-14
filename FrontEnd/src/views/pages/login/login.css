@@ -1,0 +1,1327 @@
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  font-family: 'Inter', sans-serif;
+
+  background: #ffffff;
+}
+
+.login-header {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  height: 105px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 22px 48px;
+
+  z-index: 20;
+}
+
+.gov-brand {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+}
+
+.gov-brand img {
+  width: 48px;
+  height: 62px;
+
+  object-fit: contain;
+}
+
+.gov-text span {
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.digital-india-brand img {
+  width: 155px;
+  height: auto;
+}
+
+.login-main {
+  min-height: 100vh;
+
+  display: grid;
+
+  /*
+    Wider left section
+  */
+  grid-template-columns: 44% 56%;
+}
+
+.login-intro {
+  position: relative;
+
+  min-height: 100vh;
+
+  background:
+    radial-gradient(circle at 75% 15%, rgba(45, 132, 255, 0.18), transparent 30%),
+    linear-gradient(135deg, #06235a 0%, #073f8f 100%);
+
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+
+  overflow: hidden;
+
+  padding: 130px 70px 80px;
+
+  z-index: 2;
+}
+
+.login-intro::after {
+  content: '';
+
+  position: absolute;
+
+  top: -10%;
+
+  /*
+    Controls how far the curve
+    extends into the blue area.
+  */
+  right: -220px;
+
+  width: 430px;
+  height: 120%;
+
+  background: #f8fbff;
+
+  border-radius: 50%;
+
+  z-index: 3;
+
+  pointer-events: none;
+}
+
+.intro-content {
+  position: relative;
+
+  z-index: 10;
+
+  width: 100%;
+
+  max-width: 440px;
+}
+
+.intro-content h1 {
+  margin: 0;
+
+  font-size: 58px;
+
+  font-weight: 600;
+
+  line-height: 1.1;
+
+  letter-spacing: -1px;
+
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.intro-content h2 {
+  margin: 12px 0 0;
+
+  font-size: 16px;
+
+  font-weight: 400;
+
+  line-height: 1.4;
+
+  color: #ffffff;
+
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.intro-line {
+  width: 50px;
+  height: 4px;
+
+  background: #20b8ff;
+
+  margin: 26px 0 25px;
+
+  border-radius: 10px;
+}
+
+.intro-description {
+  width: 100%;
+
+  max-width: 400px;
+
+  margin: 0 0 34px;
+
+  font-size: 17px;
+
+  font-weight: 400;
+
+  line-height: 1.7;
+
+  color: #ffffff;
+}
+
+.feature-list {
+  display: grid;
+
+  grid-template-columns: 1fr;
+
+  gap: 22px;
+
+  max-width: 440px;
+}
+
+.feature-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.feature-icon {
+  flex-shrink: 0;
+
+  width: 60px;
+  height: 60px;
+
+  background: #ffffff;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  color: #0864d8;
+
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.feature-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.feature-content h3 {
+  margin: 0 0 5px;
+
+  font-size: 17px;
+
+  font-weight: 600;
+}
+
+.feature-content p {
+  margin: 0;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.building-container {
+  position: absolute;
+
+  bottom: -5px;
+  left: 0;
+
+  width: 72%;
+
+  z-index: 1;
+
+  opacity: 0.35;
+}
+
+.building-container img {
+  width: 100%;
+  height: auto;
+}
+
+.login-auth {
+  position: relative;
+
+  min-height: 100vh;
+
+  background: radial-gradient(circle at 90% 15%, rgba(0, 87, 255, 0.08), transparent 30%), #f8fbff;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 120px 50px 30px;
+
+  overflow: hidden;
+
+  z-index: 1;
+}
+
+/* =========================================================
+   BACKGROUND SHAPES
+========================================================= */
+
+.auth-background-shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(31, 105, 235, 0.035);
+  pointer-events: none;
+}
+
+.shape-one {
+  width: 400px;
+  height: 400px;
+  top: -90px;
+  right: -120px;
+}
+
+.shape-two {
+  width: 144px;
+  height: 140px;
+  bottom: 45px;
+  left: 128px;
+  border-radius: 50%;
+  background: rgba(31, 105, 235, 0.07);
+}
+
+.login-card {
+  position: relative;
+
+  z-index: 5;
+
+  width: 100%;
+
+  max-width: 700px;
+
+  border: none !important;
+
+  border-radius: 20px !important;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  box-shadow: 0 15px 50px rgba(30, 68, 120, 0.12);
+
+  overflow: hidden;
+}
+
+.login-card .card-body {
+  padding: 38px 58px 32px;
+}
+
+.login-card-header {
+  text-align: center;
+
+  margin-bottom: 28px;
+}
+
+.login-user-icon {
+  width: 76px;
+  height: 76px;
+
+  margin: 0 auto 14px;
+
+  border-radius: 50%;
+
+  background: #eef5ff;
+
+  color: #0864d8;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border: 7px solid #f7faff;
+}
+
+.login-user-icon svg {
+  width: 31px;
+  height: 31px;
+}
+
+.login-card-header h2 {
+  margin: 0;
+
+  color: #152d55;
+
+  font-size: 31px;
+
+  font-weight: 700;
+}
+
+.login-card-header p {
+  margin: 7px 0 0;
+
+  color: #6d7c96;
+
+  font-size: 16px;
+}
+
+.form-group {
+  margin-bottom: 21px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #1c3154;
+
+  font-size: 14px;
+
+  font-weight: 600;
+}
+
+.password-label {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+}
+
+.password-label label {
+  margin-bottom: 8px;
+}
+
+.forgot-password {
+  border: none;
+
+  background: none;
+
+  padding: 0;
+
+  color: #075bd6;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  font-weight: 500;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+.input-wrapper {
+  position: relative;
+
+  display: flex;
+
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+
+  left: 16px;
+
+  top: 50%;
+
+  z-index: 2;
+
+  width: 20px;
+  height: 20px;
+
+  color: #71829d;
+
+  pointer-events: none;
+
+  transform: translateY(-50%);
+}
+
+.login-input {
+  width: 100% !important;
+
+  height: 52px !important;
+
+  border: 1px solid #d9e1ed !important;
+
+  border-radius: 9px !important;
+
+  padding-left: 48px !important;
+
+  padding-right: 45px !important;
+
+  color: #1c3154 !important;
+
+  font-size: 14px !important;
+
+  box-shadow: none !important;
+}
+
+.login-input::placeholder {
+  color: #8c9ab0;
+}
+
+.login-input:focus {
+  border-color: #1166dc !important;
+
+  box-shadow: 0 0 0 3px rgba(17, 102, 220, 0.08) !important;
+}
+
+.password-toggle {
+  position: absolute;
+
+  right: 15px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #6f7f98;
+
+  font-size: 12px;
+
+  cursor: pointer;
+
+  padding: 4px;
+}
+
+.password-toggle:hover {
+  color: #0864d8;
+}
+
+.remember-row {
+  margin: -2px 0 19px;
+}
+
+.remember-row .form-check {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+}
+
+.remember-row .form-check-input {
+  width: 17px;
+  height: 17px;
+
+  margin: 0;
+}
+
+.remember-row .form-check-label {
+  color: #40516d;
+
+  font-size: 13px;
+}
+
+.captcha-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    145px
+    32px;
+
+  gap: 10px;
+
+  align-items: center;
+}
+
+.captcha-input-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.captcha-input-wrapper .input-icon {
+  top: 50%;
+
+  transform: translateY(-50%);
+}
+
+.captcha-box {
+  height: 52px;
+
+  border: 1px solid #d8e0ec;
+
+  border-radius: 8px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  background: repeating-linear-gradient(135deg, #ffffff, #ffffff 5px, #f5f7fa 6px, #ffffff 10px);
+
+  overflow: hidden;
+}
+
+.captcha-box span {
+  font-family: Georgia, serif;
+
+  font-size: 22px;
+
+  font-weight: 700;
+
+  letter-spacing: 6px;
+
+  color: #172c50;
+
+  transform: rotate(-2deg);
+
+  user-select: none;
+}
+
+.captcha-refresh {
+  width: 32px;
+  height: 32px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #3c536f;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  border-radius: 50%;
+}
+
+.captcha-refresh:hover {
+  background: #eaf2ff;
+
+  color: #0864d8;
+}
+
+.captcha-refresh svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sign-in-button {
+  width: 100%;
+
+  height: 52px;
+
+  border: none !important;
+
+  border-radius: 8px !important;
+
+  background: #073f8f !important;
+
+  color: #ffffff !important;
+
+  display: flex !important;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 10px;
+
+  font-size: 16px !important;
+
+  font-weight: 600 !important;
+
+  box-shadow: none !important;
+
+  transition: all 0.2s ease;
+}
+
+.sign-in-button span {
+  color: #ffffff !important;
+}
+
+.sign-in-button svg {
+  width: 20px;
+  height: 20px;
+
+  color: #ffffff !important;
+}
+
+.sign-in-button:hover {
+  background: #0755bd !important;
+
+  color: #ffffff !important;
+
+  transform: translateY(-1px);
+}
+
+.sign-in-button:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+.auth-links {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 20px;
+
+  margin-top: 25px;
+}
+
+.auth-links button {
+  border: none;
+
+  background: transparent;
+
+  color: #50627e;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 0;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.auth-links button:hover {
+  color: #0864d8;
+}
+
+.auth-links svg {
+  width: 16px;
+  height: 16px;
+}
+
+.link-divider {
+  width: 1px;
+
+  height: 18px;
+
+  background: #d8deea;
+}
+
+.copyright {
+  position: relative;
+
+  z-index: 5;
+
+  width: 100%;
+
+  max-width: 700px;
+
+  margin-top: 22px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  color: #8793a7;
+
+  font-size: 11px;
+}
+
+.copyright img {
+  width: 95px;
+
+  height: auto;
+}
+
+@media (max-width: 1200px) {
+  .login-main {
+    grid-template-columns: 44% 56%;
+  }
+
+  .login-intro {
+    padding-left: 50px;
+    padding-right: 45px;
+  }
+
+  .login-intro::after {
+    right: -200px;
+
+    width: 400px;
+  }
+
+  .intro-content {
+    max-width: 400px;
+  }
+
+  .intro-content h1 {
+    font-size: 50px;
+  }
+
+  .intro-content h2 {
+    font-size: 15px;
+  }
+
+  .intro-description {
+    max-width: 370px;
+
+    font-size: 16px;
+  }
+
+  .feature-list {
+    gap: 18px;
+
+    max-width: 400px;
+  }
+
+  .feature-icon {
+    width: 55px;
+    height: 55px;
+  }
+
+  .feature-content h3 {
+    font-size: 16px;
+  }
+
+  .feature-content p {
+    font-size: 13px;
+  }
+
+  .login-card .card-body {
+    padding: 34px 42px 30px;
+  }
+
+  .login-header {
+    padding: 20px 35px;
+  }
+}
+
+@media (max-width: 991px) {
+  .login-header {
+    height: 82px;
+
+    padding: 15px 25px;
+  }
+
+  .gov-brand img {
+    width: 40px;
+    height: 50px;
+  }
+
+  .gov-text span {
+    font-size: 16px;
+  }
+
+  .digital-india-brand img {
+    width: 125px;
+  }
+
+  /* Stack sections */
+
+  .login-main {
+    grid-template-columns: 1fr;
+  }
+
+  .login-intro {
+    min-height: auto;
+
+    padding: 115px 40px 45px;
+
+    display: block;
+  }
+
+  /* Remove desktop curve */
+
+  .login-intro::after {
+    display: none;
+  }
+
+  .intro-content {
+    max-width: 720px;
+
+    margin: auto;
+  }
+
+  .intro-content h1 {
+    font-size: 45px;
+  }
+
+  .intro-content h2 {
+    font-size: 20px;
+
+    white-space: normal;
+  }
+
+  .intro-description {
+    max-width: 650px;
+
+    font-size: 15px;
+  }
+
+  /* Features 2 columns */
+
+  .feature-list {
+    max-width: none;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 20px;
+  }
+
+  .feature-item {
+    align-items: center;
+  }
+
+  .feature-icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .feature-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .feature-content h3 {
+    font-size: 15px;
+  }
+
+  .feature-content p {
+    font-size: 12px;
+  }
+
+  /* Building hidden */
+
+  .building-container {
+    display: none;
+  }
+
+  .login-auth {
+    min-height: auto;
+
+    padding: 50px 30px 35px;
+
+    justify-content: flex-start;
+  }
+
+  .login-card {
+    max-width: 650px;
+  }
+
+  .copyright {
+    max-width: 650px;
+  }
+}
+
+@media (max-width: 767px) {
+  .login-header {
+    position: absolute;
+
+    height: 70px;
+
+    padding: 12px 18px;
+  }
+
+  .gov-brand {
+    gap: 8px;
+  }
+
+  .gov-brand img {
+    width: 32px;
+    height: 42px;
+  }
+
+  .gov-text span {
+    font-size: 13px;
+  }
+
+  .digital-india-brand img {
+    width: 100px;
+  }
+
+  .login-intro {
+    padding: 100px 22px 38px;
+  }
+
+  .intro-content {
+    text-align: left;
+
+    max-width: 100%;
+  }
+
+  .intro-content h1 {
+    font-size: 38px;
+
+    letter-spacing: -0.5px;
+
+    white-space: normal;
+  }
+
+  .intro-content h2 {
+    font-size: 16px;
+
+    margin-top: 7px;
+
+    white-space: normal;
+  }
+
+  .intro-line {
+    width: 42px;
+
+    margin: 18px 0;
+  }
+
+  .intro-description {
+    max-width: 100%;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    margin-bottom: 25px;
+  }
+
+  .feature-list {
+    grid-template-columns: 1fr;
+
+    gap: 15px;
+  }
+
+  .feature-item {
+    gap: 13px;
+  }
+
+  .feature-icon {
+    width: 43px;
+    height: 43px;
+  }
+
+  .feature-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .feature-content h3 {
+    font-size: 14px;
+
+    margin-bottom: 2px;
+  }
+
+  .feature-content p {
+    font-size: 11px;
+  }
+
+  .login-auth {
+    padding: 35px 18px 25px;
+  }
+
+  .login-card {
+    border-radius: 15px !important;
+  }
+
+  .login-card .card-body {
+    padding: 28px 20px 24px;
+  }
+
+  .login-card-header {
+    margin-bottom: 23px;
+  }
+
+  .login-user-icon {
+    width: 60px;
+    height: 60px;
+
+    margin-bottom: 10px;
+  }
+
+  .login-user-icon svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .login-card-header h2 {
+    font-size: 25px;
+  }
+
+  .login-card-header p {
+    font-size: 13px;
+  }
+
+  .login-input {
+    height: 48px !important;
+
+    font-size: 13px !important;
+  }
+
+  .captcha-row {
+    grid-template-columns:
+      minmax(0, 1fr)
+      110px
+      30px;
+
+    gap: 6px;
+  }
+
+  .captcha-box {
+    height: 48px;
+  }
+
+  .captcha-box span {
+    font-size: 17px;
+
+    letter-spacing: 4px;
+  }
+
+  .captcha-refresh {
+    width: 30px;
+    height: 30px;
+  }
+
+  .sign-in-button {
+    height: 50px;
+
+    font-size: 15px !important;
+  }
+
+  .auth-links {
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-top: 22px;
+  }
+
+  .terms-link {
+    display: none !important;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  .copyright {
+    flex-direction: column;
+
+    gap: 13px;
+
+    text-align: center;
+
+    margin-top: 20px;
+  }
+
+  .copyright img {
+    width: 85px;
+  }
+}
+
+@media (max-width: 400px) {
+  .login-header {
+    padding: 10px 14px;
+  }
+
+  .gov-brand img {
+    width: 28px;
+    height: 38px;
+  }
+
+  .gov-text span {
+    font-size: 11px;
+  }
+
+  .digital-india-brand img {
+    width: 85px;
+  }
+
+  /* Intro */
+
+  .login-intro {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+
+  .intro-content h1 {
+    font-size: 34px;
+  }
+
+  .intro-content h2 {
+    font-size: 14px;
+  }
+
+  .intro-description {
+    font-size: 13px;
+  }
+
+  /* Auth */
+
+  .login-auth {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .login-card .card-body {
+    padding: 24px 16px 20px;
+  }
+
+  .login-card-header h2 {
+    font-size: 23px;
+  }
+
+  /* Captcha */
+
+  .captcha-row {
+    grid-template-columns:
+      1fr
+      95px
+      28px;
+  }
+
+  .captcha-box span {
+    font-size: 15px;
+
+    letter-spacing: 3px;
+  }
+}
+
+.sso-section {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.sso-divider {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  margin-bottom: 16px;
+}
+
+.sso-divider span {
+  flex: 1;
+
+  height: 1px;
+
+  background: #d9e1ec;
+}
+
+.sso-divider p {
+  margin: 0;
+
+  color: #718096;
+
+  font-size: 12px;
+
+  font-weight: 500;
+
+  line-height: 1;
+}
+
+/* =========================================================
+   SSO BUTTON
+========================================================= */
+
+.sso-button {
+  width: 100%;
+
+  height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid #073f8f;
+
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #073f8f;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.sso-button:hover {
+  background: #0755bd !important;
+  color: #ffffff !important;
+  border-color: #0755bd !important;
+  transform: translateY(-1px);
+}
+
+.sso-button:active {
+  background: #0755bd;
+
+  border-color: #0755bd;
+
+  color: #ffffff;
+
+  transform: translateY(1px);
+}
+
+.sso-button:focus {
+  outline: none;
+
+  box-shadow: 0 0 0 3px rgba(7, 63, 143, 0.1);
+}
+
+@media (max-width: 767px) {
+  .sso-section {
+    margin-top: 17px;
+  }
+
+  .sso-divider {
+    gap: 11px;
+
+    margin-bottom: 15px;
+  }
+
+  .sso-divider p {
+    font-size: 12px;
+  }
+
+  .sso-button {
+    height: 42px;
+
+    font-size: 13px;
+  }
+}
