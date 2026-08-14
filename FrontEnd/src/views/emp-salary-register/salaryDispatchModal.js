@@ -108,6 +108,9 @@ const SalaryDispatchModal = ({
         year: Number(year),
         salary_structure_id: Number(salaryStructureId),
       })
+
+      console.log(res)
+
       setSalaryData(res?.data?.data || null)
     } catch (error) {
       console.error(error)
@@ -178,7 +181,6 @@ const SalaryDispatchModal = ({
   }
 
   // dispatch payload
-
   const buildDispatchPayload = (newlyCreatedAddons) => {
     return [
       {
@@ -341,27 +343,46 @@ const SalaryDispatchModal = ({
               </thead>
 
               <tbody>
-                {salaryData?.components?.map((component) => (
-                  <tr key={component.component_id}>
-                    <td
-                      style={{
-                        border: '1px solid #000',
-                        padding: '6px',
-                      }}
-                    >
-                      {component.name}
-                    </td>
+                {/* ================= EARNINGS ================= */}
 
-                    <td
-                      style={{
-                        border: '1px solid #000',
-                        padding: '6px',
-                      }}
-                    >
-                      ₹ {Number(component.amount).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                <tr>
+                  <td
+                    colSpan="2"
+                    style={{
+                      border: '1px solid #000',
+                      padding: '6px',
+                      background: '#f3f4f6',
+                    }}
+                  >
+                    <strong>Earnings</strong>
+                  </td>
+                </tr>
+
+                {salaryData?.components
+                  ?.filter((component) => component.type === 'EARNING')
+                  .map((component) => (
+                    <tr key={component.component_id}>
+                      <td
+                        style={{
+                          border: '1px solid #000',
+                          padding: '6px',
+                        }}
+                      >
+                        {component.name}
+                      </td>
+
+                      <td
+                        style={{
+                          border: '1px solid #000',
+                          padding: '6px',
+                        }}
+                      >
+                        ₹ {Number(component.amount).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+
+                {/* ================= GROSS EARNINGS ================= */}
 
                 <tr>
                   <td
@@ -383,6 +404,47 @@ const SalaryDispatchModal = ({
                   </td>
                 </tr>
 
+                {/* ================= DEDUCTIONS ================= */}
+
+                <tr>
+                  <td
+                    colSpan="2"
+                    style={{
+                      border: '1px solid #000',
+                      padding: '6px',
+                      background: '#f3f4f6',
+                    }}
+                  >
+                    <strong>Deductions</strong>
+                  </td>
+                </tr>
+
+                {salaryData?.components
+                  ?.filter((component) => component.type === 'DEDUCTION')
+                  .map((component) => (
+                    <tr key={component.component_id}>
+                      <td
+                        style={{
+                          border: '1px solid #000',
+                          padding: '6px',
+                        }}
+                      >
+                        {component.name}
+                      </td>
+
+                      <td
+                        style={{
+                          border: '1px solid #000',
+                          padding: '6px',
+                        }}
+                      >
+                        ₹ {Number(component.amount).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+
+                {/* ================= TOTAL DEDUCTIONS ================= */}
+
                 <tr>
                   <td
                     style={{
@@ -402,6 +464,8 @@ const SalaryDispatchModal = ({
                     <strong>₹ {Number(salaryData?.total_deductions || 0).toFixed(2)}</strong>
                   </td>
                 </tr>
+
+                {/* ================= NET SALARY ================= */}
 
                 <tr>
                   <td
@@ -423,6 +487,8 @@ const SalaryDispatchModal = ({
                   </td>
                 </tr>
 
+                {/* ================= CTC ================= */}
+
                 <tr>
                   <td
                     style={{
@@ -442,6 +508,7 @@ const SalaryDispatchModal = ({
                     <strong>₹ {Number(salaryData?.ctc || 0).toFixed(2)}</strong>
                   </td>
                 </tr>
+
                 {/* ADDONS HEADING */}
 
                 {salaryData?.addons?.length > 0 && (
@@ -455,6 +522,7 @@ const SalaryDispatchModal = ({
                         }}
                       ></td>
                     </tr>
+
                     <tr>
                       <th
                         colSpan={2}
@@ -570,6 +638,7 @@ const SalaryDispatchModal = ({
                       }}
                       onClick={() => {
                         const amount = document.getElementById('addonAmountInput')?.value
+
                         if (!showAddonDropdown || !amount) {
                           toast.error('Please select addon and enter amount')
 
@@ -735,6 +804,7 @@ const SalaryDispatchModal = ({
             </p>
 
             {/* TRANSACTION */}
+
             <div className="mt-3">
               <label>
                 <strong>Transaction Number</strong>
