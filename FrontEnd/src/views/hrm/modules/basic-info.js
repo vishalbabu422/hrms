@@ -681,6 +681,16 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
             </CCol>
 
             <CCol md={6}>
+              <CFormLabel>Retirement Date</CFormLabel>
+              <CFormInput
+                type="date"
+                name="retirement_date"
+                value={employeeDetails.retirement_date || ''}
+                onChange={handleChange}
+              />
+            </CCol>
+
+            <CCol md={6}>
               <CFormLabel>Notice Period (Days)</CFormLabel>
               <CFormInput
                 type="number"
@@ -692,9 +702,26 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
               />
             </CCol>
 
+            <CCol md={6}>
+              <CFormLabel>Groups</CFormLabel>
+              <CFormSelect
+                name="groups"
+                value={employeeDetails.groups || ''}
+                onChange={handleChange}
+                maxLength={100}
+                disabled={!isOrgAdmin}
+              >
+                <option value="">Select</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </CFormSelect>
+            </CCol>
+
             {/* Checkbox */}
-            <CCol md={6} className="d-flex align-items-center">
-              <CFormCheck
+            <CCol md={6} className="d-flex align-items-center ">
+              <CFormCheck className="mt-3"
                 label="Gazetted"
                 name="is_gazetted"
                 checked={employeeDetails.is_gazetted || false}

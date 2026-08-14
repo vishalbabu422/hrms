@@ -89,14 +89,12 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
         const url = `/employee/${employeeId}/address`
         const addresses = [employeeAddress.office, employeeAddress.client_office]
 
-        // ✅ clear old errors
         setErrors({
           office: {},
           client_office: {},
         })
 
         for (const addr of addresses) {
-          // ✅ VALIDATION (same as your address code)
           const validationErrors = validateOfficeAddress(
             addr,
             addr.address_type === 'OFFICE' ? 'Office Address' : 'Client Address',
@@ -111,7 +109,6 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
             return false // stop API
           }
 
-          // ✅ API CALL
           if (addr.id) {
             await api.patch(url + '/' + addr.id, addr)
           } else {
@@ -162,6 +159,17 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
                 <div className="invalid-feedback">{errors.office[field]}</div>
               </div>
             ))}
+
+            {/* Location Checkbox */}
+            <div className="col-md-3 d-flex align-items-center">
+              <div className="form-check">
+                <input type="checkbox" className="form-check-input" id="officeLocation" />
+
+                <label className="form-check-label" htmlFor="officeLocation">
+                  Hard Location
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -193,6 +201,16 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
                 <div className="invalid-feedback">{errors.client_office[field]}</div>
               </div>
             ))}
+            {/* Location Checkbox */}
+            <div className="col-md-3 d-flex align-items-center">
+              <div className="form-check">
+                <input type="checkbox" className="form-check-input" id="officeLocation" />
+
+                <label className="form-check-label" htmlFor="officeLocation">
+                  Hard Location
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -2,10 +2,6 @@ import React from 'react'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 
-// HRM LOGIN PAGE
-
-const HRMLogin = React.lazy(() => import('./views/hrmLogin/HRMLogin'))
-
 // UserDashboard
 
 const UserDashboard = React.lazy(() => import('./views/userdashboard/userdashboard'))
@@ -14,8 +10,6 @@ const UserDashboard = React.lazy(() => import('./views/userdashboard/userdashboa
 const MyDetails = React.lazy(() => import('./views/my-details'))
 
 //----------------------------------------------------------//
-
-
 
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
@@ -206,14 +200,6 @@ const routes = [
     element: UserDashboard,
   },
 
-
-// HRM LOGIN PAGE
-
-{
-  path: '/hrmloginpage',
-  name: 'HRM Login Page',
-  element: HRMLogin,
-},
 
   //My Details//
 

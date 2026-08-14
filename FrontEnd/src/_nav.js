@@ -42,12 +42,6 @@ const _nav = [
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
 
-  {
-    component: CNavItem,
-    name: 'HRM Login Page',
-    to: '/hrmloginpage',
-    icon: <CIcon icon={ cilFingerprint } customClassName="nav-icon" />,
-  },
 
   {
     component: CNavItem,
