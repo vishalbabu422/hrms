@@ -49,11 +49,12 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     confirmation_date: '',
     resignation_date: '',
     relieving_date: '',
+    retirement_date: '', // ADD
     notice_period_days: '',
+    groups: '', // ADD
     hr_verified: true,
     is_gazetted: false,
   })
-
   const [employeeExtraDetails, setEmployeeExtraDetails] = useState({
     dob: '',
     birth_place: '',
@@ -264,7 +265,18 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
             Object.entries(obj).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v]),
           )
 
+        // const employeePayload = isEdit ? trim(employeeDetails) : clean(employeeDetails)
         const employeePayload = isEdit ? trim(employeeDetails) : clean(employeeDetails)
+
+        if (employeePayload.retirement_date) {
+          employeePayload.date_of_retirement = employeePayload.retirement_date
+          delete employeePayload.retirement_date
+        }
+
+        if (employeePayload.groups) {
+          employeePayload.employee_group = employeePayload.groups
+          delete employeePayload.groups
+        }
         const detailsPayload = mapExtraDetailsToApi(clean(employeeExtraDetails))
 
         // ========================
@@ -721,7 +733,8 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
 
             {/* Checkbox */}
             <CCol md={6} className="d-flex align-items-center ">
-              <CFormCheck className="mt-3"
+              <CFormCheck
+                className="mt-3"
                 label="Gazetted"
                 name="is_gazetted"
                 checked={employeeDetails.is_gazetted || false}

@@ -10,7 +10,6 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
     office: {},
     client_office: {},
   })
-
   const createAddress = (type) => ({
     address_type: type,
     address_line1: '',
@@ -20,6 +19,7 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
     state: '',
     country: '',
     pin_code: '',
+    hard_location: false,
   })
 
   const initialAddressDetails = {
@@ -56,29 +56,28 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
   // ================= HANDLE CHANGE =================
 
   const handleOfficeChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
 
     setEmployeeAddress((prev) => ({
       ...prev,
       office: {
         ...prev.office,
-        [name]: value,
+        [name]: type === 'checkbox' ? checked : value,
       },
     }))
   }
 
   const handleClientChange = (e) => {
-    const { name, value } = e.target
+    const { name, value, type, checked } = e.target
 
     setEmployeeAddress((prev) => ({
       ...prev,
       client_office: {
         ...prev.client_office,
-        [name]: value,
+        [name]: type === 'checkbox' ? checked : value,
       },
     }))
   }
-
   // ================= SUBMIT =================
 
   useImperativeHandle(ref, () => ({
@@ -163,9 +162,16 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
             {/* Location Checkbox */}
             <div className="col-md-3 d-flex align-items-center">
               <div className="form-check">
-                <input type="checkbox" className="form-check-input" id="officeLocation" />
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="officeHardLocation"
+                  name="hard_location"
+                  checked={employeeAddress.office.hard_location || false}
+                  onChange={handleOfficeChange}
+                />
 
-                <label className="form-check-label" htmlFor="officeLocation">
+                <label className="form-check-label" htmlFor="officeHardLocation">
                   Hard Location
                 </label>
               </div>
@@ -202,15 +208,22 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
               </div>
             ))}
             {/* Location Checkbox */}
-            <div className="col-md-3 d-flex align-items-center">
-              <div className="form-check">
-                <input type="checkbox" className="form-check-input" id="officeLocation" />
+           <div className="col-md-3 d-flex align-items-center">
+  <div className="form-check">
+    <input
+      type="checkbox"
+      className="form-check-input"
+      id="clientHardLocation"
+      name="hard_location"
+      checked={employeeAddress.client_office.hard_location || false}
+      onChange={handleClientChange}
+    />
 
-                <label className="form-check-label" htmlFor="officeLocation">
-                  Hard Location
-                </label>
-              </div>
-            </div>
+    <label className="form-check-label" htmlFor="clientHardLocation">
+      Hard Location
+    </label>
+  </div>
+</div>
           </div>
         </div>
       </div>
