@@ -77,7 +77,6 @@ const useLeaveMprForm = (mpr = false) => {
       const modelFilter = {
         EmployeeWorkOrderDeployment: {
           is_deleted: false,
-          relieving_date: null,
         },
         WoDesgnMapping: {
           work_order_id: workOrder,
@@ -107,7 +106,7 @@ const useLeaveMprForm = (mpr = false) => {
       const res = await api.get(url)
 
       const list = res.data?.data || []
-      console.log(list)
+
       setAllEmployees(list)
 
       // map employee data from API
