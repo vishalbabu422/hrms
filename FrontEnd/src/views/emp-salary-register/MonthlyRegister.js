@@ -34,11 +34,17 @@ import PayslipModal from './payslipModal'
 import SalaryFilterSection from './SalaryFilterSection'
 import SalaryBulkDispatchModal from './salaryBulkDispatchModal'
 import { validateBulkTransactions } from '../../validations/bulkTransitionValidation'
+import SortableHeaderCell from '../components/sort-table-header'
 
 const SalaryRegister = () => {
   /* ================= FILTERS ================= */
 
   const FILE_BASE_URL = import.meta.env.VITE_FILE_BASE_URL
+
+  const [sort, setSort] = useState({
+    key: 'first_name',
+    order: 'asc',
+  })
 
   const currentDate = new Date()
 
@@ -115,7 +121,7 @@ const SalaryRegister = () => {
     }
 
     fetchEmployees()
-  }, [month, year, selectedWorkOrders, selectedStructures])
+  }, [month, year, selectedWorkOrders, selectedStructures, sort])
 
   /* ================= FETCH INITIAL DATA ================= */
 
@@ -169,6 +175,7 @@ const SalaryRegister = () => {
           'empSalaryStructure.salaryStructure,employeeSalaryRegisters,employeeWorkOrderDeployment.WoDesgnMapping',
 
         is_active: true,
+        sort: `${sort.key} ${sort.order}`,
       }
 
       const modelFilter = {}
@@ -525,6 +532,15 @@ const SalaryRegister = () => {
   const filteredSalaryStructures = salaryStructures.filter((item) =>
     item.name?.toLowerCase().includes(salaryStructureSearch.toLowerCase()),
   )
+
+  const handleSort = (key) => {
+    setSort((prev) => {
+      if (prev.key === key) {
+        return { key, order: prev.order === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, order: 'asc' }
+    })
+  }
 
   return (
     <>
@@ -954,7 +970,12 @@ const SalaryRegister = () => {
                   <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
                 </CTableHeaderCell>
 
-                <CTableHeaderCell>Employee</CTableHeaderCell>
+                <SortableHeaderCell
+                  label="Employee"
+                  sortKey="first_name"
+                  sort={sort}
+                  onSort={handleSort}
+                />
 
                 <CTableHeaderCell>Employee Code</CTableHeaderCell>
 
@@ -1005,7 +1026,7 @@ const SalaryRegister = () => {
 
                       {/* EMPLOYEE */}
                       <CTableDataCell>
-                        {item.first_name} {item.middle_name || ''} {item.last_name}
+                        {item?.first_name} {item?.middle_name || ''} {item?.last_name || ''}
                       </CTableDataCell>
 
                       {/* EMPLOYEE CODE */}
@@ -1112,8 +1133,6 @@ const SalaryRegister = () => {
                               Download
                             </CButton>
                           </>
-
-                          
                         ) : (
                           <span className="text-muted">Pending</span>
                         )}
