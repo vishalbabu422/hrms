@@ -1,4 +1,4 @@
-const { Op  } = require("sequelize");
+const { Op } = require("sequelize");
 const {
   EmployeeSalaryRegister,
   EmpSalaryStructure,
@@ -36,62 +36,58 @@ exports.generateMonthlySalary = async (data) => {
 
   if (existing) {
     const employee = await Employee.findOne({
-  where: {
-    id: employee_id,
-    is_deleted: false,
-  },
-  attributes: [
-    "first_name",
-    "middle_name",
-    "last_name",
-  ],
-});
+      where: {
+        id: employee_id,
+        is_deleted: false,
+      },
+      attributes: ["first_name", "middle_name", "last_name"],
+    });
 
-const employee_name = [
-  employee?.first_name,
-  employee?.middle_name,
-  employee?.last_name,
-]
-  .filter(Boolean)
-  .join(" ");
+    const employee_name = [
+      employee?.first_name,
+      employee?.middle_name,
+      employee?.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
- const snapshots = await EmployeeSalaryRegisterSnapshot.findAll({
-    where: {
-      employee_salary_register_id: existing.id,
-      is_deleted: false,
-    },
-    order: [["id", "ASC"]],
-  });
+    const snapshots = await EmployeeSalaryRegisterSnapshot.findAll({
+      where: {
+        employee_salary_register_id: existing.id,
+        is_deleted: false,
+      },
+      order: [["id", "ASC"]],
+    });
 
-  const employeeAddons = await EmployeeSalaryAddon.findAll({
-  where: {
-    employee_id,
-    is_deleted: false,
-    is_active: true,
+    const employeeAddons = await EmployeeSalaryAddon.findAll({
+      where: {
+        employee_id,
+        is_deleted: false,
+        is_active: true,
 
-    effective_from: {
-      [Op.lte]: requestedDate,
-    },
-
-    [Op.or]: [
-      {
-        effective_to: {
-          [Op.gte]: requestedDate,
+        effective_from: {
+          [Op.lte]: requestedDate,
         },
-      },
-      {
-        effective_to: null,
-      },
-    ],
-  },
 
-  include: [
-    {
-      model: SalaryAddonMaster,
-      as: "salaryAddonMaster",
-    },
-  ],
-});
+        [Op.or]: [
+          {
+            effective_to: {
+              [Op.gte]: requestedDate,
+            },
+          },
+          {
+            effective_to: null,
+          },
+        ],
+      },
+
+      include: [
+        {
+          model: SalaryAddonMaster,
+          as: "salaryAddonMaster",
+        },
+      ],
+    });
 
     return {
       register_id: existing.id,
@@ -119,15 +115,14 @@ const employee_name = [
         amount: Number(item.final_amount || 0),
       })),
       addons: employeeAddons.map((addon) => ({
-       addon_id: addon.id,
-       salary_addon_master_id:
-       addon.salaryAddonMaster?.id,
-       name: addon.salaryAddonMaster?.name,
-       code: addon.salaryAddonMaster?.code,
-       type: addon.salaryAddonMaster?.addon_type,
-       amount: Number(addon.amount || 0),
-       recurrence_type: addon.recurrence_type,
-})),
+        addon_id: addon.id,
+        salary_addon_master_id: addon.salaryAddonMaster?.id,
+        name: addon.salaryAddonMaster?.name,
+        code: addon.salaryAddonMaster?.code,
+        type: addon.salaryAddonMaster?.addon_type,
+        amount: Number(addon.amount || 0),
+        recurrence_type: addon.recurrence_type,
+      })),
     };
   }
 
@@ -166,12 +161,12 @@ const employee_name = [
 
   //const CTC = Number(empSalary.ctc);
   const yearlyCTC = Number(empSalary.ctc);
- 
+
   if (!yearlyCTC) {
-  throw new AppError("CTC not found", 404);
+    throw new AppError("CTC not found", 404);
   }
 
-const CTC = yearlyCTC / 12;
+  const CTC = yearlyCTC / 12;
 
   // Get structure components
   const components = await SalaryStructureComponent.findAll({
@@ -196,38 +191,39 @@ const CTC = yearlyCTC / 12;
   });
 
   const employeeAddons = await EmployeeSalaryAddon.findAll({
-  where: {
-    employee_id,
-    is_deleted: false,
-    is_active: true,
+    where: {
+      employee_id,
+      is_deleted: false,
+      is_active: true,
 
-    effective_from: {
-      [Op.lte]: requestedDate,
+      effective_from: {
+        [Op.lte]: requestedDate,
+      },
+
+      [Op.or]: [
+        {
+          effective_to: {
+            [Op.gte]: requestedDate,
+          },
+        },
+        {
+          effective_to: null,
+        },
+      ],
     },
 
-    [Op.or]: [
+    include: [
       {
-        effective_to: {
-          [Op.gte]: requestedDate,
+        model: SalaryAddonMaster,
+        as: "salaryAddonMaster",
+        where: {
+          is_deleted: false,
+          is_active: true,
         },
       },
-      {
-        effective_to: null,
-      },
     ],
-  },
+  });
 
-  include: [
-    {
-      model: SalaryAddonMaster,
-      as: "salaryAddonMaster",
-      where: {
-        is_deleted: false,
-        is_active: true,
-      },
-    },
-  ],
-});
   if (!components.length) {
     throw new AppError("No components found for structure", 404);
   }
@@ -298,61 +294,54 @@ const CTC = yearlyCTC / 12;
 
   //const net = gross - deduction;
   for (const addon of employeeAddons) {
-  const master = addon.salaryAddonMaster;
+    const master = addon.salaryAddonMaster;
 
-  if (!master) continue;
+    if (!master) continue;
 
-  const addonAmount = Number(addon.amount || 0);
+    const addonAmount = Number(addon.amount || 0);
 
-if (master.addon_type === "DEDUCTION") {
-  addonDeduction += addonAmount;
-}if (master.addon_type === "EARNING") {
-  addonEarning += addonAmount;
-}
+    if (master.addon_type === "DEDUCTION") {
+      addonDeduction += addonAmount;
+    }
+    if (master.addon_type === "EARNING") {
+      addonEarning += addonAmount;
+    }
 
-
-
-  addonsBreakdown.push({
-    addon_id: addon.id,
-    salary_addon_master_id: master.id,
-    name: master.name,
-    code: master.code,
-    type: master.addon_type,
-    amount: addonAmount,
-    recurrence_type: addon.recurrence_type,
-  });
-}
+    addonsBreakdown.push({
+      addon_id: addon.id,
+      salary_addon_master_id: master.id,
+      name: master.name,
+      code: master.code,
+      type: master.addon_type,
+      amount: addonAmount,
+      recurrence_type: addon.recurrence_type,
+    });
+  }
   // Leave data fetch
-const leaveData = await EmployeeWorkOrderLeave.findOne({
-  where: {
-    employee_id,
-    month,
-    year: String(year),
+  const leaveData = await EmployeeWorkOrderLeave.findOne({
+    where: {
+      employee_id,
+      month,
+      year: String(year),
+    },
+  });
 
-  },
-});
+  const leaveTaken = Math.abs(Number(leaveData?.leave_granted || 0));
 
-const leaveTaken = Number(leaveData?.leave_granted || 0);
+  // Total days in current month
+  const totalDays = getDaysInMonth(month, year);
 
-// Total days in current month
-const totalDays = getDaysInMonth(month, year);
+  // Per day salary
+  const perDaySalary = gross / totalDays;
 
-// Per day salary
-const perDaySalary = gross / totalDays;
+  // Leave deduction
+  const leaveDeduction = perDaySalary * leaveTaken;
 
-// Leave deduction
-const leaveDeduction = perDaySalary * leaveTaken;
+  // Total deduction me add karo
+  deduction += leaveDeduction;
 
-// Total deduction me add karo
-deduction += leaveDeduction;
-
-
-// Final net salary
-const net =
-  gross -
-  deduction +
-  addonEarning -
-  addonDeduction;
+  // Final net salary
+  const net = gross - deduction + addonEarning - addonDeduction;
   // 5️⃣ Final response
   return {
     is_existing: false,
@@ -370,7 +359,6 @@ const net =
     addons: addonsBreakdown,
   };
 };
-
 
 exports.dispatchSalary = async (data, transaction) => {
   // req.body should be array of employees
@@ -409,7 +397,7 @@ exports.dispatchSalary = async (data, transaction) => {
     if (existing) {
       throw new AppError(
         `Salary already dispatched for employee ${employee_id}`,
-        409
+        409,
       );
     }
 
@@ -425,48 +413,45 @@ exports.dispatchSalary = async (data, transaction) => {
         status: "DISPATCHED",
         dispatched_at: new Date(),
         transaction_number,
-        transaction_date
+        transaction_date,
       },
-      { transaction }
+      { transaction },
     );
 
     // 3️⃣ Insert snapshots
     const componentSnapshots = (components || []).map((comp) => ({
-  employee_salary_register_id: register.id,
+      employee_salary_register_id: register.id,
 
-  salary_component_id: comp.component_id,
+      salary_component_id: comp.component_id,
 
-  component_name: comp.name,
+      component_name: comp.name,
 
-  component_type: comp.type,
+      component_type: comp.type,
 
-  final_amount: comp.amount,
+      final_amount: comp.amount,
 
-  source_type: "STRUCTURE",
+      source_type: "STRUCTURE",
 
-  addon_id: null,
-}));
+      addon_id: null,
+    }));
 
-const addonSnapshots = (addons || []).map((addon) => ({
-  employee_salary_register_id: register.id,
+    const addonSnapshots = (addons || []).map((addon) => ({
+      employee_salary_register_id: register.id,
 
-  salary_component_id: null,
+      salary_component_id: null,
 
-  component_name: addon.name,
+      component_name: addon.name,
 
-  component_type: addon.type,
+      component_type: addon.type,
 
-  final_amount: addon.amount,
+      final_amount: addon.amount,
 
-  source_type: "ADDON",
+      source_type: "ADDON",
 
-  addon_id: addon.addon_id,
-}));
+      addon_id: addon.addon_id,
+    }));
 
-const snapshotData = [
-  ...componentSnapshots,
-  ...addonSnapshots,
-];
+    const snapshotData = [...componentSnapshots, ...addonSnapshots];
 
     if (snapshotData.length) {
       await EmployeeSalaryRegisterSnapshot.bulkCreate(snapshotData, {
@@ -509,13 +494,12 @@ exports.generateSalarySlip = async (register_id, transaction) => {
   const employee = await Employee.findByPk(register.employee_id);
 
   const leaveData = await EmployeeWorkOrderLeave.findOne({
-  where: {
-    employee_id: register.employee_id,
-    month: register.month,
-    year: String(register.year),
-
-  },
-});
+    where: {
+      employee_id: register.employee_id,
+      month: register.month,
+      year: String(register.year),
+    },
+  });
   // snapshots
   const snapshots = await EmployeeSalaryRegisterSnapshot.findAll({
     where: {
@@ -526,16 +510,16 @@ exports.generateSalarySlip = async (register_id, transaction) => {
   });
 
   const addons = snapshots
-  .filter((item) => item.source_type === "ADDON")
-  .map((item) => ({
-    addon_id: item.addon_id,
+    .filter((item) => item.source_type === "ADDON")
+    .map((item) => ({
+      addon_id: item.addon_id,
 
-    name: item.component_name,
+      name: item.component_name,
 
-    type: item.component_type,
+      type: item.component_type,
 
-    amount: Number(item.final_amount),
-  }));
+      amount: Number(item.final_amount),
+    }));
 
   // prepare data
   const pdfData = {
@@ -558,21 +542,21 @@ exports.generateSalarySlip = async (register_id, transaction) => {
 
     net_salary: Number(register.net_salary),
 
-   leave_taken: Number(leaveData?.leave_granted || 0),
+    leave_taken: Number(leaveData?.leave_granted || 0),
 
-leave_deduction:
-  Number(leaveData?.leave_granted || 0) *
-  (Number(register.gross_earnings) /
-    getDaysInMonth(register.month, register.year)), 
+    leave_deduction:
+      Number(leaveData?.leave_granted || 0) *
+      (Number(register.gross_earnings) /
+        getDaysInMonth(register.month, register.year)),
 
     components: snapshots
-  .filter((item) => item.source_type === "STRUCTURE")
-  .map((item) => ({
-    name: item.component_name,
-    type: item.component_type,
-    amount: Number(item.final_amount),
-  })),
-   addons,
+      .filter((item) => item.source_type === "STRUCTURE")
+      .map((item) => ({
+        name: item.component_name,
+        type: item.component_type,
+        amount: Number(item.final_amount),
+      })),
+    addons,
   };
 
   //  generate pdf

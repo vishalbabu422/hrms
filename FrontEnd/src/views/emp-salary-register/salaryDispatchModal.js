@@ -109,8 +109,6 @@ const SalaryDispatchModal = ({
         salary_structure_id: Number(salaryStructureId),
       })
 
-      console.log(res)
-
       setSalaryData(res?.data?.data || null)
     } catch (error) {
       console.error(error)
@@ -416,6 +414,26 @@ const SalaryDispatchModal = ({
                     }}
                   >
                     <strong>Deductions</strong>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '6px',
+                    }}
+                  >
+                    Leave
+                  </td>
+
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '6px',
+                    }}
+                  >
+                    ₹ {Number(salaryData?.lop || 0).toFixed(2)}
                   </td>
                 </tr>
 
