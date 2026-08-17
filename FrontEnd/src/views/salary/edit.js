@@ -37,6 +37,7 @@ const Edit = () => {
     calculation_priority: data.calculation_priority ?? 1,
     is_prorated: data.is_prorated ?? true,
     is_mandatory: data.is_mandatory ?? false,
+    is_pf: data.is_pf ?? false,
     is_active: data.is_active ?? true,
   })
 

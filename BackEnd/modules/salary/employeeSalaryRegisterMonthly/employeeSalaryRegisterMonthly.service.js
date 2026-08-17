@@ -279,17 +279,39 @@ exports.generateMonthlySalary = async (data) => {
     if (comp.type === "EARNING") {
       gross += amount;
     } else {
-      deduction += amount;
+      if (comp.is_pf) {
+        deduction += amount * 2;
+      } else {
+        deduction += amount;
+      }
     }
 
     // breakdown for frontend
-    breakdown.push({
-      component_id: comp.id,
-      name: comp.name,
-      code: comp.code,
-      type: comp.type,
-      amount,
-    });
+    if (comp.is_pf) {
+      breakdown.push({
+        component_id: comp.id,
+        name: `${comp.name} (Company)`,
+        code: comp.code,
+        type: "DEDUCTION",
+        amount,
+      });
+
+      breakdown.push({
+        component_id: comp.id,
+        name: `${comp.name} (Self)`,
+        code: comp.code,
+        type: "DEDUCTION",
+        amount,
+      });
+    } else {
+      breakdown.push({
+        component_id: comp.id,
+        name: comp.name,
+        code: comp.code,
+        type: comp.type,
+        amount,
+      });
+    }
   }
 
   //const net = gross - deduction;

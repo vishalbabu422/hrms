@@ -30,6 +30,7 @@ const Add = () => {
     calculation_priority: 1,
     is_prorated: true,
     is_mandatory: false,
+    is_pf: false,
     is_active: true,
   }
 

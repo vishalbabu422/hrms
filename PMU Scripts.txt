@@ -6013,7 +6013,10 @@ CHECK (employee_group IN ('A', 'B', 'C', 'D', 'OTHER'));
 ALTER TABLE pmu.employee_addresses
 ADD COLUMN hard_location BOOLEAN DEFAULT false;
 
+-- 17/08/2026
 
+ALTER TABLE pmu.salary_component
+ADD COLUMN is_pf BOOLEAN DEFAULT FALSE;
 
 COMMIT;
 

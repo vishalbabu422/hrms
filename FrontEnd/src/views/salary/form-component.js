@@ -297,6 +297,20 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
                 />
               </CCol>
 
+              <CCol md={6} className="d-flex align-items-end">
+                <CFormCheck
+                  label="Is PF"
+                  name="is_pf"
+                  checked={formData.is_pf || false}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      is_pf: e.target.checked,
+                    }))
+                  }
+                />
+              </CCol>
+
               {/* Submit */}
               <CCol xs={12}>
                 <CButton type="submit" color="primary">

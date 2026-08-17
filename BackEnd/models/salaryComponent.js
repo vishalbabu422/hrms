@@ -85,9 +85,13 @@ const SalaryComponent = sequelize.define(
       type: DataTypes.BIGINT,
     },
     org_id: {
-     type: DataTypes.BIGINT,
-     allowNull: false,
-    }
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    is_pf: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
   },
   {
     tableName: "salary_component",
@@ -95,7 +99,7 @@ const SalaryComponent = sequelize.define(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
-  }
+  },
 );
 
 // Associations
