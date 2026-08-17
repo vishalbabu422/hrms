@@ -200,6 +200,7 @@ const SalaryDispatchModal = ({
 
         net_salary: Number(salaryData?.net_salary || 0),
 
+        leave_deduction: Number(salaryData?.lop || 0),
         components: (salaryData?.components || []).map((component) => ({
           component_id: component.component_id ? Number(component.component_id) : null,
 

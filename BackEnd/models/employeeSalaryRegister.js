@@ -5,11 +5,11 @@ const EmployeeSalaryRegister = sequelize.define(
   "EmployeeSalaryRegister",
   {
     id: {
-  type: DataTypes.BIGINT,
-  primaryKey: true,
-  autoIncrement: true,
-  allowNull: false,
-},
+      type: DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+      allowNull: false,
+    },
 
     employee_id: {
       type: DataTypes.BIGINT,
@@ -94,8 +94,11 @@ const EmployeeSalaryRegister = sequelize.define(
       allowNull: true,
     },
     transaction_date: {
-    type: DataTypes.DATEONLY,
-    allowNull: true,
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+    leave_deduction: {
+      type: DataTypes.DECIMAL(14, 2),
     },
   },
   {

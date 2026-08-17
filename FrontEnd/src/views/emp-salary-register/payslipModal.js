@@ -139,28 +139,47 @@ const PayslipModal = ({
           </thead>
 
           <tbody>
-            {salaryData?.components?.map((component) => (
-              <tr key={component.component_id}>
-                <td
-                  style={{
-                    border: '1px solid #000',
-                    padding: '8px',
-                  }}
-                >
-                  {component.name}
-                </td>
+            {/* ================= EARNINGS ================= */}
 
-                <td
-                  style={{
-                    border: '1px solid #000',
-                    padding: '8px',
-                    textAlign: 'right',
-                  }}
-                >
-                  ₹ {Number(component.amount || 0).toFixed(2)}
-                </td>
-              </tr>
-            ))}
+            <tr>
+              <td
+                colSpan="2"
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                  background: '#f3f4f6',
+                }}
+              >
+                <strong>Earnings</strong>
+              </td>
+            </tr>
+
+            {salaryData?.components
+              ?.filter((component) => component.type === 'EARNING')
+              .map((component, index) => (
+                <tr key={`${component.component_id}-earning-${index}`}>
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '8px',
+                    }}
+                  >
+                    {component.name}
+                  </td>
+
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '8px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    ₹ {Number(component.amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+
+            {/* ================= GROSS EARNINGS ================= */}
 
             <tr>
               <td
@@ -183,6 +202,73 @@ const PayslipModal = ({
               </td>
             </tr>
 
+            {/* ================= DEDUCTIONS ================= */}
+
+            <tr>
+              <td
+                colSpan="2"
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                  background: '#f3f4f6',
+                }}
+              >
+                <strong>Deductions</strong>
+              </td>
+            </tr>
+
+            {/* ================= LEAVE DEDUCTION ================= */}
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                }}
+              >
+                Leave
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                  textAlign: 'right',
+                }}
+              >
+                ₹ {Number(salaryData?.leave_deduction || 0).toFixed(2)}
+              </td>
+            </tr>
+
+            {/* ================= SALARY DEDUCTION COMPONENTS ================= */}
+
+            {salaryData?.components
+              ?.filter((component) => component.type === 'DEDUCTION')
+              .map((component, index) => (
+                <tr key={`${component.component_id}-deduction-${index}`}>
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '8px',
+                    }}
+                  >
+                    {component.name}
+                  </td>
+
+                  <td
+                    style={{
+                      border: '1px solid #000',
+                      padding: '8px',
+                      textAlign: 'right',
+                    }}
+                  >
+                    ₹ {Number(component.amount || 0).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+
+            {/* ================= TOTAL DEDUCTIONS ================= */}
+
             <tr>
               <td
                 style={{
@@ -203,6 +289,8 @@ const PayslipModal = ({
                 <strong>₹ {Number(salaryData?.total_deductions || 0).toFixed(2)}</strong>
               </td>
             </tr>
+
+            {/* ================= NET SALARY ================= */}
 
             <tr>
               <td
@@ -225,6 +313,29 @@ const PayslipModal = ({
               </td>
             </tr>
 
+            {/* ================= CTC ================= */}
+
+            <tr>
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                }}
+              >
+                <strong>CTC</strong>
+              </td>
+
+              <td
+                style={{
+                  border: '1px solid #000',
+                  padding: '8px',
+                  textAlign: 'right',
+                }}
+              >
+                <strong>₹ {Number(salaryData?.ctc || 0).toFixed(2)}</strong>
+              </td>
+            </tr>
+
             {/* ================= ADDONS HEADING ================= */}
 
             {salaryData?.addons?.length > 0 && (
@@ -238,24 +349,16 @@ const PayslipModal = ({
                     }}
                   ></td>
                 </tr>
+
                 <tr>
                   <th
+                    colSpan={2}
                     style={{
                       border: '1px solid #000',
                       padding: '6px',
                     }}
                   >
                     Add-Ons
-                  </th>
-
-                  <th
-                    style={{
-                      border: '1px solid #000',
-                      padding: '6px',
-                      textAlign: 'right',
-                    }}
-                  >
-                    Amount
                   </th>
                 </tr>
               </>

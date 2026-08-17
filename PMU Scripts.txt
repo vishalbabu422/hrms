@@ -6018,5 +6018,8 @@ ADD COLUMN hard_location BOOLEAN DEFAULT false;
 ALTER TABLE pmu.salary_component
 ADD COLUMN is_pf BOOLEAN DEFAULT FALSE;
 
+ALTER TABLE pmu.employee_salary_register
+ADD COLUMN leave_deduction NUMERIC(14,2) DEFAULT 0.00;
+
 COMMIT;
 

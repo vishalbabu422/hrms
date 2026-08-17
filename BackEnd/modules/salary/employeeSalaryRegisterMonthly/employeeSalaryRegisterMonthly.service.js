@@ -98,6 +98,7 @@ exports.generateMonthlySalary = async (data) => {
       year: existing.year,
 
       gross_earnings: Number(existing.gross_earnings || 0),
+      leave_deduction: Number(existing.leave_deduction || 0),
       total_deductions: Number(existing.total_deductions || 0),
       net_salary: Number(existing.net_salary || 0),
 
@@ -399,6 +400,7 @@ exports.dispatchSalary = async (data, transaction) => {
       month,
       year,
       gross_earnings,
+      leave_deduction,
       total_deductions,
       net_salary,
       components,
@@ -432,6 +434,7 @@ exports.dispatchSalary = async (data, transaction) => {
         gross_earnings,
         total_deductions,
         net_salary,
+        leave_deduction,
         status: "DISPATCHED",
         dispatched_at: new Date(),
         transaction_number,
