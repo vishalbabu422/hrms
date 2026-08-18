@@ -30,6 +30,7 @@ import { saveAs } from 'file-saver'
 import ViewField from '../components/preview-field'
 import api from '../../api/axios'
 import { calculateAmounts, calculateDuration } from '../../utils/workOrderCalculations'
+import { formatDate } from '../../utils/dateUtils'
 
 const WorkOrderPreview = () => {
   const { id } = useParams()
@@ -199,7 +200,7 @@ const WorkOrderPreview = () => {
                 <CRow>
                   <CRow className="g-2">
                     <ViewField label="Work Order No" value={workOrder.work_order_no} />
-                    <ViewField label="Date" value={workOrder.work_order_date} />
+                    <ViewField label="Date" value={formatDate(workOrder.work_order_date)} />
                     <ViewField label="Project No" value={workOrder.project_no} />
                     <ViewField label="PI No" value={workOrder.pi_no} />
                     <ViewField label="Project Name" value={workOrder.project_name} />
@@ -290,8 +291,13 @@ const WorkOrderPreview = () => {
                                           <CTableDataCell>
                                             {emp?.Employee.contact_no}
                                           </CTableDataCell>
-                                          <CTableDataCell>{emp?.joining_date}</CTableDataCell>
-                                          <CTableDataCell>{emp?.relieving_date}</CTableDataCell>
+                                          <CTableDataCell>
+                                            {formatDate(emp?.joining_date)}
+                                          </CTableDataCell>
+
+                                          <CTableDataCell>
+                                            {formatDate(emp?.relieving_date)}
+                                          </CTableDataCell>
                                         </CTableRow>
                                       ))
                                     ) : (

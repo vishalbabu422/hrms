@@ -1,4 +1,5 @@
 import React from 'react'
+import { formatDate } from '../../../utils/dateUtils'
 
 const BasicInfo = ({ employee }) => {
   if (!employee) return null
@@ -31,9 +32,9 @@ const BasicInfo = ({ employee }) => {
         <Field label="Contact No" value={employee.contact} />
         <Field label="Father's Name" value={employee.fatherName} />
         <Field label="Marital Status" value={employee.maritalStatus} />
-        <Field label="Date Of Joining" value={employee.joiningDate} />
-        <Field label="Confirmation Date" value={employee.confirmationDate} />
-        <Field label="Resignation Date" value={employee.resignationDate} />
+        <Field label="Date Of Joining" value={formatDate(employee.joiningDate)} />
+        <Field label="Confirmation Date" value={formatDate(employee.confirmationDate)} />
+        <Field label="Resignation Date" value={formatDate(employee.resignationDate)} />
         <Field label="Gazetted" value={employee.gazetted ? 'Yes' : 'No'} />
       </div>
     </div>

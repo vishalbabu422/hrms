@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { formatDate } from '../../../utils/dateUtils'
 import { useParams } from 'react-router-dom'
 import { CButton, CCard, CCardHeader, CCardBody } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -47,12 +48,12 @@ const ScreeningView = () => {
             <div className="row g-4">
 
               <div className="col-md-6">
-                <Field label="Test Scheduled Date" value={screening.scheduledDate} />
+              <Field label="Test Scheduled Date" value={formatDate(screening.scheduledDate)} />
                 <Field label="Marks Secured" value={screening.marks} />
               </div>
 
               <div className="col-md-6">
-                <Field label="Test Given Date" value={screening.givenDate} />
+            <Field label="Test Given Date" value={formatDate(screening.givenDate)} />
 
                 <div className="mb-4">
                   <small className="text-muted">Result</small>

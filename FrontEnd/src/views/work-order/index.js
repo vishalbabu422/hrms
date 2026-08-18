@@ -29,12 +29,13 @@ import {
 import SimpleBar from 'simplebar-react'
 import { toast } from 'react-toastify'
 import api from '../../api/axios'
-
+import { formatDate } from '../../utils/dateUtils'
 import SortableHeaderCell from '../components/sort-table-header'
 import AppPagination from '../components/app-pagination'
 import TableEmptyState from '../components/table-empty'
 import PageHeader from '../components/form-header'
 import ActionButton from '../components/action-button'
+
 
 const Index = () => {
   const navigate = useNavigate()
@@ -266,7 +267,7 @@ const Index = () => {
                           {!item.type && <span className="badge bg-secondary">Not Set</span>}
                         </CTableDataCell>
                         <CTableDataCell>{item.work_order_no}</CTableDataCell>
-                        <CTableDataCell>{item.work_order_date}</CTableDataCell>
+                        <CTableDataCell>{formatDate(item.work_order_date)}</CTableDataCell>
                         <CTableDataCell>{item.project_no}</CTableDataCell>
                         <CTableDataCell>{item.grand_total}</CTableDataCell>
                         <CTableDataCell>{item.project_name}</CTableDataCell>

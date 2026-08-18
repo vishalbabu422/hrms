@@ -17,6 +17,7 @@ import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash } from '@coreui/icons'
 import api from '../../api/axios'
 import TableEmptyState from './table-empty'
+import { formatDate } from '../../utils/dateUtils'
 
 const DeploymentTableModal = ({
   visible,
@@ -98,9 +99,11 @@ const DeploymentTableModal = ({
                 <CTableRow key={emp.id}>
                   <CTableDataCell>{`${emp?.Employee.first_name} ${emp?.Employee.middle_name ?? ''} ${emp?.Employee.last_name ?? ''}`}</CTableDataCell>
                   <CTableDataCell>{emp?.Employee.email}</CTableDataCell>
+
                   <CTableDataCell>{emp?.Employee.contact_no}</CTableDataCell>
-                  <CTableDataCell>{emp?.joining_date}</CTableDataCell>
-                  <CTableDataCell>{emp?.relieving_date}</CTableDataCell>
+                  <CTableDataCell>{formatDate(emp?.joining_date)}</CTableDataCell>
+                  
+                  <CTableDataCell>{formatDate(emp?.relieving_date)}</CTableDataCell>
 
                   <CTableDataCell>
                     <CButton

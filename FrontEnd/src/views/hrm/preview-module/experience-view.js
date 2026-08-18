@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { formatDate } from '../../../utils/dateUtils'
 import { useParams } from 'react-router-dom'
 import {
   CAccordion,
@@ -70,7 +71,7 @@ const ExperienceView = () => {
                   {/* LEFT */}
                   <div className="col-md-6">
                     <Field label="Company Name" value={item.company} />
-                    <Field label="Start Date" value={item.startDate} />
+                  <Field label="Start Date" value={formatDate(item.startDate)} />
                     <Field
                       label="Total Experience (Years)"
                       value={item.totalExperience}
@@ -80,7 +81,7 @@ const ExperienceView = () => {
                   {/* RIGHT */}
                   <div className="col-md-6">
                     <Field label="Designation" value={item.designation} />
-                    <Field label="End Date" value={item.endDate} />
+                   <Field label="End Date" value={formatDate(item.endDate)} />
                   </div>
 
                   {/* DOCUMENT */}

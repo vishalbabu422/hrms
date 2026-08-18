@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import {
-  CCol,
-  CCard,
-  CCardBody,
-  CCardHeader,
-} from '@coreui/react'
+import { CCol, CCard, CCardBody, CCardHeader } from '@coreui/react'
 import { getEmployeePassportVisa } from '../../../services/employeePassportVisa'
 
 const PassportView = () => {
@@ -54,9 +49,7 @@ const PassportView = () => {
         {!loading && (
           <>
             <CCard className="border-0 shadow-sm mb-4">
-              <CCardHeader className="bg-light fw-semibold">
-                Passport Details
-              </CCardHeader>
+              <CCardHeader className="bg-light fw-semibold">Passport Details</CCardHeader>
 
               <CCardBody>
                 <div className="row g-4">
@@ -92,7 +85,7 @@ const PassportView = () => {
                     <small className="text-muted">Issue Date</small>
                     <div className="fw-semibold border-bottom pb-2">
                       {employee.passport_issue_date
-                        ? new Date(employee.issueDate).toLocaleDateString()
+                        ? new Date(employee.passport_issue_date).toLocaleDateString('en-GB')
                         : '-'}
                     </div>
                   </div>
@@ -101,7 +94,7 @@ const PassportView = () => {
                     <small className="text-muted">Expiry Date</small>
                     <div className="fw-semibold border-bottom pb-2">
                       {employee.passport_expiry_date
-                        ? new Date(employee.expiryDate).toLocaleDateString()
+                        ? new Date(employee.passport_expiry_date).toLocaleDateString('en-GB')
                         : '-'}
                     </div>
                   </div>
@@ -111,16 +104,12 @@ const PassportView = () => {
 
             {/* ================= VISA ================= */}
             <CCard className="border-0 shadow-sm">
-              <CCardHeader className="bg-light fw-semibold">
-                Visa Details (Optional)
-              </CCardHeader>
+              <CCardHeader className="bg-light fw-semibold">Visa Details (Optional)</CCardHeader>
 
               <CCardBody>
                 <div className="row g-4">
                   <div className="col-md-4">
-                    <small className="text-muted">
-                      Visa Issuing Authority
-                    </small>
+                    <small className="text-muted">Visa Issuing Authority</small>
                     <div className="fw-semibold border-bottom pb-2">
                       {employee.visa_issuing_authority || '-'}
                     </div>
@@ -130,7 +119,7 @@ const PassportView = () => {
                     <small className="text-muted">Visa Start Date</small>
                     <div className="fw-semibold border-bottom pb-2">
                       {employee.visa_start_date
-                        ? new Date(employee.visaStartDate).toLocaleDateString()
+                        ? new Date(employee.visa_start_date).toLocaleDateString('en-GB')
                         : '-'}
                     </div>
                   </div>
@@ -139,7 +128,7 @@ const PassportView = () => {
                     <small className="text-muted">Visa End Date</small>
                     <div className="fw-semibold border-bottom pb-2">
                       {employee.visa_end_date
-                        ? new Date(employee.visaEndDate).toLocaleDateString()
+                        ? new Date(employee.visa_end_date).toLocaleDateString('en-GB')
                         : '-'}
                     </div>
                   </div>

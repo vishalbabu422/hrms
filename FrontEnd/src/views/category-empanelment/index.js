@@ -23,13 +23,13 @@ import { toast } from 'react-toastify'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-
 import api from '../../api/axios'
 import SortableHeaderCell from '../components/sort-table-header'
 import AppPagination from '../components/app-pagination'
 import TableEmptyState from '../components/table-empty'
 import PageHeader from '../components/form-header'
 import ActionButton from '../components/action-button'
+import { formatDate } from '../../utils/dateUtils'
 
 const Index = () => {
   const navigate = useNavigate()
@@ -240,9 +240,12 @@ const Index = () => {
                       <CTableDataCell>{item.empanelment_no}</CTableDataCell>
                       <CTableDataCell>{item.shortcode}</CTableDataCell>
                       <CTableDataCell>{item.rfe}</CTableDataCell>
-                      <CTableDataCell>{item.date}</CTableDataCell>
-                      <CTableDataCell>{item.effective_from || '-'}</CTableDataCell>
-                      <CTableDataCell>{item.effective_to || '-'}</CTableDataCell>
+                      <CTableDataCell>{formatDate(item.date)}</CTableDataCell>
+
+                      <CTableDataCell>{formatDate(item.effective_from)}</CTableDataCell>
+
+                      <CTableDataCell>{formatDate(item.effective_to)}</CTableDataCell>
+
                       <CTableDataCell>
                         {item.is_active ? (
                           <CIcon icon={cilCheckCircle} className="text-success" />

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { formatDate } from '../../../utils/dateUtils'
 import { useParams } from 'react-router-dom'
 import { CCard, CCardHeader, CCardBody, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
@@ -44,7 +45,7 @@ const InsuranceView = () => {
                   {/* LEFT */}
                   <div className="col-md-6">
                     <Field label="Insurance Company" value={item.insurance_company} />
-                    <Field label="From Date" value={item.from_date} />
+                    <Field label="From Date" value={formatDate(item.from_date)} />
                     <Field label="Sum Insured" value={item.sum_insured} />
                     <Field label="Family Members Covered" value={item.family_members_covered} />
                   </div>
@@ -52,7 +53,7 @@ const InsuranceView = () => {
                   {/* RIGHT */}
                   <div className="col-md-6">
                     <Field label="Policy Number" value={item.policy_number} />
-                    <Field label="To Date" value={item.to_date} />
+                   <Field label="To Date" value={formatDate(item.to_date)} />
                     <Field label="Policy Premium" value={item.policy_premium} />
                   </div>
 
