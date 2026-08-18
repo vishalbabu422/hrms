@@ -230,7 +230,29 @@ const SalaryRegister = () => {
 
       const employees = response?.data?.data || []
 
-      const formattedEmployees = employees.map((employee) => {
+      const monthStart = new Date(Number(year), Number(month) - 1, 1)
+      const monthEnd = new Date(Number(year), Number(month), 0)
+
+      const filteredEmployees = employees.filter((employee) => {
+        const deployment = employee.employeeWorkOrderDeployment
+
+        // No deployment = don't show employee
+        if (!deployment || deployment.is_deleted) {
+          return false
+        }
+
+        const joiningDate = new Date(deployment.joining_date)
+        const relievingDate = deployment.relieving_date ? new Date(deployment.relieving_date) : null
+
+        // Deployment must overlap the selected salary month
+        const joinedBeforeMonthEnd = joiningDate <= monthEnd
+
+        const notRelievedBeforeMonth = !relievingDate || relievingDate >= monthStart
+
+        return joinedBeforeMonthEnd && notRelievedBeforeMonth
+      })
+
+      const formattedEmployees = filteredEmployees.map((employee) => {
         const latestSalaryStructure =
           employee?.empSalaryStructure?.length > 0
             ? [...employee.empSalaryStructure].sort(
