@@ -277,8 +277,8 @@ const SalaryAddonView = () => {
                         <CTableDataCell>
                           {[
                             item.employee?.first_name,
-                            item.employee?.middle_name,
-                            item.employee?.last_name,
+                            item.employee?.middle_name ?? '',
+                            item.employee?.last_name ?? '',
                           ]
                             .filter(Boolean)
                             .join(' ')}

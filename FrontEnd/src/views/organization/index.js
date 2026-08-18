@@ -251,7 +251,7 @@ const Index = () => {
                       <CTableDataCell className="text-center">
                         {item.Employees?.length
                           ? item.Employees.map((employee) =>
-                              [employee.first_name, employee.middle_name, employee.last_name]
+                              [employee.first_name, employee?.middle_name, employee?.last_name]
                                 .filter(Boolean)
                                 .join(' '),
                             ).join(', ')

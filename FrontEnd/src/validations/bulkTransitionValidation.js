@@ -12,7 +12,7 @@ export const validateBulkTransactions = ({
       return {
         isValid: false,
 
-        message: `Transaction Number missing for ${employee.first_name} ${employee.middle_name || ''} ${employee.last_name}`,
+        message: `Transaction Number missing for ${employee.first_name} ${employee.middle_name || ''} ${employee.last_name || ''}`,
       }
     }
 
@@ -20,7 +20,7 @@ export const validateBulkTransactions = ({
       return {
         isValid: false,
 
-        message: `Transaction Date missing for ${employee.first_name} ${employee.middle_name || ''} ${employee.last_name}`,
+        message: `Transaction Date missing for ${employee.first_name} ${employee.middle_name || ''} ${employee.last_name || ''}`,
       }
     }
   }

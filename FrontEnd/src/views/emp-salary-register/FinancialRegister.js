@@ -325,7 +325,8 @@ const FinancialRegister = () => {
 
               {employees.map((item) => (
                 <option key={item.employee.id} value={item.employee.id}>
-                  {item.employee.first_name} {item.employee.last_name}
+                  {item.employee.first_name} {item.employee?.middle_name ?? ''}{' '}
+                  {item.employee?.last_name ?? ''}
                 </option>
               ))}
 
@@ -623,7 +624,7 @@ const FinancialRegister = () => {
                                   monthData.components?.find((c) => c.code === row.code) ||
                                   monthData.addons?.find((a) => a.code === row.code)
 
-                                value = component?.amount || 0 
+                                value = component?.amount || 0
                               }
 
                               return sum + Number(value)

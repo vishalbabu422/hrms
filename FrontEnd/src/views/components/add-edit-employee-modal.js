@@ -39,7 +39,6 @@ const AddEditEmployeeModal = ({
         )
       })
 
-
       setEmployee(availableEmployees || [])
     } catch (error) {
       console.error(error)
@@ -105,7 +104,7 @@ const AddEditEmployeeModal = ({
           isDisabled={editMode}
           options={employee.map((emp) => ({
             value: emp.id,
-            label: [emp.first_name, emp.middle_name, emp.last_name].filter(Boolean).join(' '),
+            label: [emp.first_name, emp?.middle_name, emp?.last_name].filter(Boolean).join(' '),
             data: emp,
           }))}
           value={
@@ -123,7 +122,7 @@ const AddEditEmployeeModal = ({
             const deployment = emp.EmployeeWorkOrderDeployment?.[0] || {}
 
             setFormData({
-              ...emp
+              ...emp,
             })
           }}
           placeholder="Search employee..."

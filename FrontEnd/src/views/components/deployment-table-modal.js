@@ -96,7 +96,7 @@ const DeploymentTableModal = ({
             ) : employeeDeployment?.length > 0 ? (
               employeeDeployment?.map((emp) => (
                 <CTableRow key={emp.id}>
-                  <CTableDataCell>{`${emp?.Employee.first_name} ${emp?.Employee.middle_name ?? ''} ${emp?.Employee.last_name}`}</CTableDataCell>
+                  <CTableDataCell>{`${emp?.Employee.first_name} ${emp?.Employee.middle_name ?? ''} ${emp?.Employee.last_name ?? ''}`}</CTableDataCell>
                   <CTableDataCell>{emp?.Employee.email}</CTableDataCell>
                   <CTableDataCell>{emp?.Employee.contact_no}</CTableDataCell>
                   <CTableDataCell>{emp?.joining_date}</CTableDataCell>

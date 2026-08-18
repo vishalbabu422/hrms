@@ -203,7 +203,7 @@ const Index = () => {
 
                     <CTableDataCell>
                       {item.first_name} {item.middle_name ? item.middle_name + ' ' : ''}
-                      {item.last_name}
+                      {item.last_name ?? ''}
                     </CTableDataCell>
 
                     <CTableDataCell>{item.email}</CTableDataCell>

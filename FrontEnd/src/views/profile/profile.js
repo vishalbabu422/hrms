@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getEmployeeById } from '../../services/employeeProfileService'
-import {
-  CAvatar,
-  CBadge,
-  CCard,
-  CCardBody,
-  CCol,
-  CContainer,
-  CRow,
-} from '@coreui/react'
+import { CAvatar, CBadge, CCard, CCardBody, CCol, CContainer, CRow } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import CIcon from '@coreui/icons-react'
 import { cilUser } from '@coreui/icons'
@@ -46,23 +38,17 @@ const Profile = () => {
   }
 
   if (loading) {
-    return (
-      <div className="text-center py-5">
-        Loading...
-      </div>
-    )
+    return <div className="text-center py-5">Loading...</div>
   }
 
   const currentDesignation =
-    employee?.employeeDesignations?.find((item) => item.is_current)
-      ?.designation?.designation_name || '-'
+    employee?.employeeDesignations?.find((item) => item.is_current)?.designation
+      ?.designation_name || '-'
 
   const currentDivision =
-    employee?.employeeDivisions?.find((item) => item.is_current)?.division
+    employee?.employeeDivisions?.find((item) => item.is_current)?.division?.division_name ||
+    employee?.employeeDivisions?.[employee?.employeeDivisions?.length - 1]?.division
       ?.division_name ||
-    employee?.employeeDivisions?.[
-      employee?.employeeDivisions?.length - 1
-    ]?.division?.division_name ||
     '-'
 
   return (
@@ -78,13 +64,11 @@ const Profile = () => {
 
             <div className="ms-3 flex-grow-1">
               <h4 className="mb-1 profile-name">
-                {employee?.salutation} {employee?.first_name}{' '}
-                {employee?.middle_name} {employee?.last_name}
+                {employee?.salutation} {employee?.first_name} {employee?.middle_name ?? ''}{' '}
+                {employee?.last_name ?? ''}
               </h4>
 
-              <div className="profile-subtitle">
-                Employee Code: {employee?.employee_code}
-              </div>
+              <div className="profile-subtitle">Employee Code: {employee?.employee_code}</div>
 
               {/* <div className="profile-stats">
                 <CBadge color="success">
@@ -113,32 +97,18 @@ const Profile = () => {
 
         <CCol lg={6}>
           <CCard className="shadow-sm mb-4 profile-card">
-            <div className="profile-section-title">
-              Personal Information
-            </div>
+            <div className="profile-section-title">Personal Information</div>
 
             <CCardBody className="p-0">
               <InfoField label="Email" value={employee?.email} />
 
-              <InfoField
-                label="Contact Number"
-                value={employee?.contact_no}
-              />
+              <InfoField label="Contact Number" value={employee?.contact_no} />
 
-              <InfoField
-                label="Date Of Birth"
-                value={employee?.EmployeeDetail?.date_of_birth}
-              />
+              <InfoField label="Date Of Birth" value={employee?.EmployeeDetail?.date_of_birth} />
 
-              <InfoField
-                label="Gender"
-                value={employee?.EmployeeDetail?.gender}
-              />
+              <InfoField label="Gender" value={employee?.EmployeeDetail?.gender} />
 
-              <InfoField
-                label="Marital Status"
-                value={employee?.EmployeeDetail?.marital_status}
-              />
+              <InfoField label="Marital Status" value={employee?.EmployeeDetail?.marital_status} />
             </CCardBody>
           </CCard>
         </CCol>
@@ -147,35 +117,18 @@ const Profile = () => {
 
         <CCol lg={6}>
           <CCard className="shadow-sm mb-4 profile-card">
-            <div className="profile-section-title">
-              Employment Information
-            </div>
+            <div className="profile-section-title">Employment Information</div>
 
             <CCardBody className="p-0">
-              <InfoField
-                label="Employee Code"
-                value={employee?.employee_code}
-              />
+              <InfoField label="Employee Code" value={employee?.employee_code} />
 
-              <InfoField
-                label="Designation"
-                value={currentDesignation}
-              />
+              <InfoField label="Designation" value={currentDesignation} />
 
-              <InfoField
-                label="Division"
-                value={currentDivision}
-              />
+              <InfoField label="Division" value={currentDivision} />
 
-              <InfoField
-                label="Mode Of Working"
-                value={employee?.mode_of_working}
-              />
+              <InfoField label="Mode Of Working" value={employee?.mode_of_working} />
 
-              <InfoField
-                label="State Of Working"
-                value={employee?.state_of_working}
-              />
+              <InfoField label="State Of Working" value={employee?.state_of_working} />
             </CCardBody>
           </CCard>
         </CCol>
@@ -184,30 +137,16 @@ const Profile = () => {
 
         <CCol lg={6}>
           <CCard className="shadow-sm mb-4 profile-card">
-            <div className="profile-section-title">
-              Service Details
-            </div>
+            <div className="profile-section-title">Service Details</div>
 
             <CCardBody className="p-0">
-              <InfoField
-                label="Joining Date"
-                value={employee?.date_of_joining}
-              />
+              <InfoField label="Joining Date" value={employee?.date_of_joining} />
 
-              <InfoField
-                label="Probation End Date"
-                value={employee?.probation_end_date}
-              />
+              <InfoField label="Probation End Date" value={employee?.probation_end_date} />
 
-              <InfoField
-                label="Confirmation Date"
-                value={employee?.confirmation_date}
-              />
+              <InfoField label="Confirmation Date" value={employee?.confirmation_date} />
 
-              <InfoField
-                label="Notice Period"
-                value={employee?.notice_period_days}
-              />
+              <InfoField label="Notice Period" value={employee?.notice_period_days} />
             </CCardBody>
           </CCard>
         </CCol>
@@ -216,30 +155,16 @@ const Profile = () => {
 
         <CCol lg={6}>
           <CCard className="shadow-sm mb-4 profile-card">
-            <div className="profile-section-title">
-              Other Information
-            </div>
+            <div className="profile-section-title">Other Information</div>
 
             <CCardBody className="p-0">
-              <InfoField
-                label="Employee Category"
-                value={employee?.employee_category}
-              />
+              <InfoField label="Employee Category" value={employee?.employee_category} />
 
-              <InfoField
-                label="Account Status"
-                value={employee?.account_status}
-              />
+              <InfoField label="Account Status" value={employee?.account_status} />
 
-              <InfoField
-                label="Gazetted"
-                value={employee?.is_gazetted ? 'Yes' : 'No'}
-              />
+              <InfoField label="Gazetted" value={employee?.is_gazetted ? 'Yes' : 'No'} />
 
-              <InfoField
-                label="HR Verified"
-                value={employee?.hr_verified ? 'Yes' : 'No'}
-              />
+              <InfoField label="HR Verified" value={employee?.hr_verified ? 'Yes' : 'No'} />
             </CCardBody>
           </CCard>
         </CCol>
