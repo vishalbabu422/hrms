@@ -16,6 +16,7 @@ import CompanySelect from '../components/company-select'
 import OrganizationSelect from '../components/organization-select'
 import { validateEmpanelment } from '../../validations/empanelmentValidation'
 import api from '../../api/axios'
+import { formatDate } from '../../utils/dateUtils'
 
 const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
   const [formData, setFormData] = useState(initialData)
@@ -148,6 +149,7 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
                 <CFormLabel>
                   Date <span className="text-danger">*</span>
                 </CFormLabel>
+
                 <CFormInput
                   type="date"
                   name="date"
@@ -279,6 +281,7 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
                 <CFormLabel>
                   Effective From <span className="text-danger">*</span>
                 </CFormLabel>
+
                 <CFormInput
                   type="date"
                   name="effective_from"
@@ -292,6 +295,7 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
 
               <CCol md={6}>
                 <CFormLabel>Effective To</CFormLabel>
+
                 <CFormInput
                   type="date"
                   name="effective_to"

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { formatDate } from '../../utils/dateUtils'
 
 import {
   CContainer,
@@ -269,16 +270,8 @@ const Index = () => {
                       <CTableDataCell>{Number(item.sgst_rate).toFixed(2)}%</CTableDataCell>
                       <CTableDataCell>{Number(item.igst_rate).toFixed(2)}%</CTableDataCell>
                       <CTableDataCell>{Number(item.cess_rate).toFixed(2)}%</CTableDataCell>
-                      <CTableDataCell>
-                        {item.effective_from
-                          ? new Date(item.effective_from).toLocaleDateString('en-IN')
-                          : '-'}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {item.effective_to
-                          ? new Date(item.effective_to).toLocaleDateString('en-IN')
-                          : '-'}
-                      </CTableDataCell>
+                      <CTableDataCell>{formatDate(item.effective_from)}</CTableDataCell>
+                      <CTableDataCell>{formatDate(item.effective_to)}</CTableDataCell>
                       <CTableDataCell>
                         {item.is_active ? (
                           <CIcon icon={cilCheckCircle} className="text-success" />

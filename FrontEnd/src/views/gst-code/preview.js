@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { formatDate } from '../../utils/dateUtils'
 
 import {
   CContainer,
@@ -133,8 +134,9 @@ const GstCodePreview = () => {
                     <ViewField label="CESS Rate (%)" value={`${gstCode.cess_rate}%`} />
                     <ViewField label="OTHER Rate (%)" value={`${gstCode.other_rate}%`} />
 
-                    <ViewField label="Effective From" value={gstCode.effective_from} />
-                    <ViewField label="Effective To" value={gstCode.effective_to} />
+                    <ViewField label="Effective From" value={formatDate(gstCode.effective_from)} />
+
+                    <ViewField label="Effective To" value={formatDate(gstCode.effective_to)} />
                     <ViewField label="Status" value={gstCode.is_active ? 'Active' : 'Inactive'} />
                   </CRow>
                 </div>

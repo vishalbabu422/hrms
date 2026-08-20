@@ -160,7 +160,6 @@ const GstFormComponent = ({ initialData, mode, onSubmit }) => {
                 />
               </CCol>
 
-
               {['cgst', 'sgst', 'igst', 'cess', 'other'].map((f) => {
                 const isDisabled =
                   (isInter && (f === 'cgst' || f === 'sgst')) || (isIntra && f === 'igst')
@@ -215,11 +214,14 @@ const GstFormComponent = ({ initialData, mode, onSubmit }) => {
 
               <CCol md={4}>
                 <CFormLabel>Effective To</CFormLabel>
+
                 <CFormInput
                   type="date"
                   name="effective_to"
                   value={formData.effective_to || ''}
                   onChange={handleChange}
+                  invalid={!!errors.effective_to}
+                  feedback={errors.effective_to}
                 />
               </CCol>
               <CCol md={4}>
