@@ -191,6 +191,13 @@ const SalaryRegister = () => {
 
         modelFilter.employeeWorkOrderDeployment = {
           required: true,
+          is_deleted: false,
+        }
+      } else {
+        // Always take only the active deployment
+        modelFilter.employeeWorkOrderDeployment = {
+          required: true,
+          is_deleted: false,
         }
       }
 
@@ -248,6 +255,8 @@ const SalaryRegister = () => {
         const joinedBeforeMonthEnd = joiningDate <= monthEnd
 
         const notRelievedBeforeMonth = !relievingDate || relievingDate >= monthStart
+
+        if (joinedBeforeMonthEnd && notRelievedBeforeMonth) console.log(employee.first_name)
 
         return joinedBeforeMonthEnd && notRelievedBeforeMonth
       })
