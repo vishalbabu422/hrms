@@ -120,7 +120,7 @@ const EmployeeProfile = () => {
     const fetchEmployee = async () => {
       try {
         const res = await api.get(
-          `/employee/${employeeId}?models=employeeDesignations.designation,employeeDivisions.division&modelFilter={}`,
+          `/employee/${employeeId}?models=employeeDesignations.designation,employeeDivisions.division,state&modelFilter={}`,
         )
         const empData = res.data?.data || res?.data
         console.log(empData)
@@ -140,7 +140,7 @@ const EmployeeProfile = () => {
           category: empData.employee_category || '',
 
           modeOfWorking: empData.mode_of_working || '',
-          stateOfWorking: empData.state_of_working || '',
+          stateOfWorking: empData.state?.state_name || '-',
 
           email: empData.email || '',
           contact: empData.contact_no || '',
@@ -158,7 +158,7 @@ const EmployeeProfile = () => {
 
           profileImage: empData.profile_image || '',
 
-// ADDED to fetch division and designation data in preview
+          // ADDED to fetch division and designation data in preview
 
           designation:
             empData.employeeDesignations?.find((item) => item.is_active)?.designation

@@ -22,7 +22,6 @@ const ExperienceView = () => {
 
     getEmployeeExperiences(employeeId)
       .then((res) => {
-
         const list = res.data?.data || []
 
         const formatted = list.map((item) => ({
@@ -31,11 +30,9 @@ const ExperienceView = () => {
           designation: item.designation,
           startDate: item.start_date,
           endDate: item.end_date,
-          totalExperience: item.total_experience,
+          totalExperience: item.total_years,
           document: item.document,
-          documentName: item.document
-            ? item.document.split('/').pop()
-            : '',
+          documentName: item.document ? item.document.split('/').pop() : '',
         }))
 
         setExperienceData(formatted)
@@ -67,48 +64,36 @@ const ExperienceView = () => {
               {/* BODY */}
               <CAccordionBody>
                 <div className="row g-4">
-
                   {/* LEFT */}
                   <div className="col-md-6">
                     <Field label="Company Name" value={item.company} />
-                  <Field label="Start Date" value={formatDate(item.startDate)} />
-                    <Field
-                      label="Total Experience (Years)"
-                      value={item.totalExperience}
-                    />
+                    <Field label="Start Date" value={formatDate(item.startDate)} />
+                    <Field label="Total Experience (Years)" value={item.totalExperience} />
                   </div>
 
                   {/* RIGHT */}
                   <div className="col-md-6">
                     <Field label="Designation" value={item.designation} />
-                   <Field label="End Date" value={formatDate(item.endDate)} />
+                    <Field label="End Date" value={formatDate(item.endDate)} />
                   </div>
 
                   {/* DOCUMENT */}
                   <div className="col-12">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <small className="text-muted">
-                          Experience Certificate
-                        </small>
+                        <small className="text-muted">Experience Certificate</small>
                         <div className="fw-semibold">
                           {item.documentName || 'No document uploaded'}
                         </div>
                       </div>
 
                       {item.document && (
-                        <CButton
-                          size="sm"
-                          variant="outline"
-                          href={item.document}
-                          download
-                        >
+                        <CButton size="sm" variant="outline" href={item.document} download>
                           <CIcon icon={cilCloudDownload} />
                         </CButton>
                       )}
                     </div>
                   </div>
-
                 </div>
               </CAccordionBody>
             </CAccordionItem>

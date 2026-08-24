@@ -65,6 +65,11 @@ StateMaster.associate = (models) => {
     foreignKey: "state_id",
     as: "districts",
   });
+
+   StateMaster.hasMany(models.Employee, {
+    foreignKey: "state_of_working",
+    as: "employees",
+  });
 };
 
 module.exports = StateMaster;

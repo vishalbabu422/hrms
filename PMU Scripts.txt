@@ -6021,5 +6021,16 @@ ADD COLUMN is_pf BOOLEAN DEFAULT FALSE;
 ALTER TABLE pmu.employee_salary_register
 ADD COLUMN leave_deduction NUMERIC(14,2) DEFAULT 0.00;
 
+---24/08/2026
+
+ALTER TABLE pmu.employees
+ALTER COLUMN state_of_working TYPE BIGINT
+USING NULLIF(state_of_working, '')::BIGINT;
+
+ALTER TABLE pmu.employees
+ADD CONSTRAINT employees_state_of_working_fkey
+FOREIGN KEY (state_of_working)
+REFERENCES pmu.state_master(id);
+
 COMMIT;
 

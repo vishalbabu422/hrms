@@ -92,9 +92,10 @@ const Employee = sequelize.define(
       type: DataTypes.STRING(100),
     },
 
-    state_of_working: {
-      type: DataTypes.STRING(100),
-    },
+   state_of_working: {
+  type: DataTypes.BIGINT,
+  allowNull: true,
+},
 
     employee_category: {
       type: DataTypes.STRING(100),
@@ -304,6 +305,11 @@ Employee.associate = (models) => {
     onDelete: "RESTRICT",
     as: "employeeSalaryAddon",
   });
+
+  Employee.belongsTo(models.StateMaster, {
+  foreignKey: "state_of_working",
+  as: "state",
+});
 };
 
 module.exports = Employee;
