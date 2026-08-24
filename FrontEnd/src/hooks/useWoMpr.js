@@ -91,12 +91,14 @@ const useLeaveMprForm = (mpr = false) => {
         modelFilter.employeeWorkOrderLeaves = {
           month: monthNum,
           year: year,
+          wo_id: workOrder,
         }
 
         modelFilter.employeeWorkOrderMprs = {
           month: monthNum,
           year: year,
-          required: false
+          wo_id: workOrder,
+          required: false,
         }
       }
 
