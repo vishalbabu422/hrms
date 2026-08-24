@@ -127,15 +127,16 @@ const EmployeeProfile = () => {
         setDivisions(empData.employeeDivisions || empData.employee_divisions || [])
 
         setDesignations(empData.employeeDesignations || empData.employee_designations || [])
-
         setEmployee({
+          employeeCode: empData.employee_code || '',
+          attendanceCode: empData.attendance_code || '',
+
           salutation: empData.salutation || '',
           firstName: empData.first_name || '',
           middleName: empData.middle_name || '',
           lastName: empData.last_name || '',
-          gender: empData.gender || '',
-          profileImage: empData.profile_image || '',
-          employeeType: empData.employee_type || '',
+
+          employeeType: empData.employment_type || '',
           category: empData.employee_category || '',
 
           modeOfWorking: empData.mode_of_working || '',
@@ -144,18 +145,59 @@ const EmployeeProfile = () => {
           email: empData.email || '',
           contact: empData.contact_no || '',
 
-          dob: empData.date_of_birth || '',
           joiningDate: empData.date_of_joining || '',
+          probationEnd: empData.probation_end_date || '',
+          confirmationDate: empData.confirmation_date || '',
+          resignationDate: empData.resignation_date || '',
 
-          designation: '-',
-          division: '-',
+          retirementDate: empData.date_of_retirement || '',
+          noticePeriod: empData.notice_period_days || '',
+          groups: empData.employee_group || '',
+
+          gazetted: empData.is_gazetted ?? false,
+
+          profileImage: empData.profile_image || '',
+
+// ADDED to fetch division and designation data in preview
+
+          designation:
+            empData.employeeDesignations?.find((item) => item.is_active)?.designation
+              ?.designation_name ||
+            empData.employeeDesignations?.[0]?.designation?.designation_name ||
+            '-',
+
+          division:
+            empData.employeeDivisions?.find((item) => item.is_active)?.division?.division_name ||
+            empData.employeeDivisions?.[0]?.division?.division_name ||
+            '-',
         })
       } catch (err) {
         console.error(err)
       }
     }
-    0
+
+    //ADDED to fetch family data, gender, dob, martial status in preview
+
+    const fetchEmployeeDetails = async () => {
+      try {
+        const res = await api.get(`/employee/${employeeId}/details`)
+        const details = res.data?.data
+
+        setEmployee((prev) => ({
+          ...prev,
+          dob: details?.dob || details?.date_of_birth || '',
+          fatherName: details?.father_name || '',
+          motherName: details?.mother_name || '',
+          maritalStatus: details?.marital_status || '',
+          gender: details?.gender || '',
+        }))
+      } catch (err) {
+        console.error('Failed to fetch employee details', err)
+      }
+    }
+
     fetchEmployee()
+    fetchEmployeeDetails()
   }, [employeeId])
 
   const getProfileImage = () => {

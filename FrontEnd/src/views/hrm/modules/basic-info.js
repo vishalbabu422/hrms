@@ -86,6 +86,9 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     alternate_email: data.alternate_email || '',
     emergency_contact_no: data.emergency_contact_no || '',
     blood_group: data.blood_group || '',
+
+
+    
   })
 
   const mapExtraDetailsToApi = (obj) => {

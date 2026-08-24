@@ -8,18 +8,21 @@ const BasicInfo = ({ employee }) => {
     <div className="row g-4">
       {/* LEFT COLUMN */}
       <div className="col-md-6">
+       
         <Field label="Salutation" value={employee.salutation} />
         <Field label="Middle Name" value={employee.middleName} />
+         <Field label="Employee Code" value={employee.employeeCode} />
         <Field label="Employee Type" value={employee.employeeType} />
         <Field label="Division" value={employee.division} />
         <Field label="State of Working" value={employee.stateOfWorking} />
         <Field label="Email Address" value={employee.email} />
-        <Field label="Date of Birth" value={employee.dob} />
+        <Field label="Date of Birth" value={formatDate(employee.dob)} />
         <Field label="Mother's Name" value={employee.motherName} />
         <Field label="Gender" value={employee.gender} />
-        <Field label="Probation End Date" value={employee.probationEnd} />
-        <Field label="Relieving Date" value={employee.relievingDate} />
-        <Field label="Notice Period (Days)" value={employee.noticePeriod} />
+        <Field label="Probation End Date" value={formatDate(employee.probationEnd)} />
+        <Field label="Resignation Date" value={formatDate(employee.resignationDate)} />
+        <Field label="Retirement Date" value={formatDate(employee.retirementDate)} />
+        <Field label="Groups" value={employee.groups} />
       </div>
 
       {/* RIGHT COLUMN */}
@@ -29,6 +32,7 @@ const BasicInfo = ({ employee }) => {
         <Field label="Designation" value={employee.designation} />
         <Field label="Mode of Working" value={employee.modeOfWorking} />
         <Field label="Employee Category" value={employee.category} />
+        <Field label="Attendance Code" value={employee.attendanceCode} />
         <Field label="Contact No" value={employee.contact} />
         <Field label="Father's Name" value={employee.fatherName} />
         <Field label="Marital Status" value={employee.maritalStatus} />
