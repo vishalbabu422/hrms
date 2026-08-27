@@ -103,6 +103,11 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
       payload.percentage = null
     }
 
+    if (!payload.is_pf) {
+      payload.pf_percentage = null
+      payload.pf_upper_limit = null
+    }
+
     onSubmit(payload)
   }
 
@@ -302,14 +307,42 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
                   label="Is PF"
                   name="is_pf"
                   checked={formData.is_pf || false}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const isPf = e.target.checked
+
                     setFormData((prev) => ({
                       ...prev,
-                      is_pf: e.target.checked,
+                      is_pf: isPf,
+                      pf_upper_limit: isPf ? (prev.pf_upper_limit ?? 1800) : null,
                     }))
-                  }
+                  }}
                 />
               </CCol>
+
+              {formData.is_pf && (
+                <>
+                  <CCol md={6}>
+                    <CFormLabel>
+                      PF Upper Limit <span className="text-danger">*</span>
+                    </CFormLabel>
+
+                    <CFormInput
+                      type="number"
+                      name="pf_upper_limit"
+                      placeholder="Enter PF Upper Limit"
+                      value={formData.pf_upper_limit ?? 1800}
+                      onChange={handleChange}
+                      min="0"
+                      step="0.01"
+                      invalid={!!errors.pf_upper_limit}
+                    />
+
+                    {errors.pf_upper_limit && (
+                      <div className="invalid-feedback d-block">{errors.pf_upper_limit}</div>
+                    )}
+                  </CCol>
+                </>
+              )}
 
               {/* Submit */}
               <CCol xs={12}>

@@ -92,6 +92,10 @@ const SalaryComponent = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    pf_upper_limit: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: true,
+    },
   },
   {
     tableName: "salary_component",

@@ -31,6 +31,7 @@ const Add = () => {
     is_prorated: true,
     is_mandatory: false,
     is_pf: false,
+    pf_upper_limit: null,
     is_active: true,
   }
 

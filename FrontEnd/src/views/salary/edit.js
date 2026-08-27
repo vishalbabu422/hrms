@@ -38,6 +38,7 @@ const Edit = () => {
     is_prorated: data.is_prorated ?? true,
     is_mandatory: data.is_mandatory ?? false,
     is_pf: data.is_pf ?? false,
+    pf_upper_limit: data.pf_upper_limit ?? 1800,
     is_active: data.is_active ?? true,
   })
 

@@ -163,8 +163,6 @@ exports.generateMonthlySalary = async (data) => {
     order: [["id", "DESC"]],
   });
 
-
-
   if (!empSalary) {
     throw new AppError("Employee salary structure not found", 404);
   }
@@ -323,12 +321,10 @@ exports.generateMonthlySalary = async (data) => {
     if (value_type === "PERCENTAGE") {
       const percentage = Number(item.percentage ?? comp.percentage ?? 0);
 
-      // Percentage of monthly CTC
       if (comp.base_type === "CTC") {
         baseAmount = (percentage / 100) * monthlyCTC;
       }
 
-      // Percentage of another component
       if (comp.base_type === "COMPONENT") {
         const baseVal = componentValues[comp.base_component_id];
 
@@ -340,6 +336,11 @@ exports.generateMonthlySalary = async (data) => {
         }
 
         baseAmount = (percentage / 100) * baseVal;
+      }
+
+      // PF upper limit
+      if (comp.code === "PF" && comp.pf_upper_limit != null) {
+        baseAmount = Math.min(baseAmount, Number(comp.pf_upper_limit));
       }
     }
 

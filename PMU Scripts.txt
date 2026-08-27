@@ -6032,5 +6032,10 @@ ADD CONSTRAINT employees_state_of_working_fkey
 FOREIGN KEY (state_of_working)
 REFERENCES pmu.state_master(id);
 
+-- 27/08/2026
+
+ALTER TABLE pmu.salary_component
+ADD COLUMN pf_upper_limit NUMERIC(12,2);
+
 COMMIT;
 
