@@ -16,7 +16,6 @@ import CompanySelect from '../components/company-select'
 import OrganizationSelect from '../components/organization-select'
 import { validateEmpanelment } from '../../validations/empanelmentValidation'
 import api from '../../api/axios'
-import { formatDate } from '../../utils/dateUtils'
 
 const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
   const [formData, setFormData] = useState(initialData)
@@ -155,9 +154,9 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
                   name="date"
                   value={formData.date || ''}
                   onChange={handleChange}
+                  placeholder="MM/DD/YYYY"
                   invalid={!!errors.date}
                   feedback={errors.date}
-                  placeholder="Select date"
                 />
               </CCol>
 

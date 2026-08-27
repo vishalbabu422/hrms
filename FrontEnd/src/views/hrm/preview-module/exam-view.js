@@ -57,8 +57,8 @@ const ExamView = () => {
               resultStatus.toString().toLowerCase() === 'pass'
                 ? 'text-success'
                 : resultStatus.toString().toLowerCase() === 'fail'
-                ? 'text-danger'
-                : ''
+                  ? 'text-danger'
+                  : ''
 
             return (
               <div key={item.id || index} className="mb-4">
@@ -71,6 +71,7 @@ const ExamView = () => {
                     </div>
 
                     <div className="mb-4">
+                      <small className="text-muted">Marks Obtained</small>
                       <div className="fw-semibold border-bottom pb-2">{marks}</div>
                     </div>
 
@@ -87,9 +88,7 @@ const ExamView = () => {
                     <div className="mb-4">
                       <small className="text-muted">Exam Date</small>
                       <div className="fw-semibold border-bottom pb-2">
-                        {item.exam_date
-                          ? new Date(item.exam_date).toLocaleDateString()
-                          : '-'}
+                        {item.exam_date ? new Date(item.exam_date).toLocaleDateString() : '-'}
                       </div>
                     </div>
 

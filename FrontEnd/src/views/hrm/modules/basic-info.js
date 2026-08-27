@@ -49,7 +49,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     confirmation_date: '',
     resignation_date: '',
     relieving_date: '',
-    retirement_date: '', // ADD
+    retirement_date: '', 
     notice_period_days: '',
     groups: '', // ADD
     hr_verified: true,
@@ -109,7 +109,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
 
     const val = type === 'checkbox' ? checked : value
 
-    // fields that go to employee_details
+   
     const detailFields = [
       'dob',
       'birth_place',
@@ -138,7 +138,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     }
   }
 
-  // Fetch dropdowns
+ 
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -185,6 +185,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
         setEmployeeDetails((prev) => ({
           ...prev,
           ...data,
+          
         }))
       } catch (err) {
         console.error(err)
@@ -281,10 +282,9 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           delete employeePayload.groups
         }
         const detailsPayload = mapExtraDetailsToApi(clean(employeeExtraDetails))
-
-        // ========================
+       
         // 1. EMPLOYEE SAVE
-        // ========================
+       
         if (!isEdit) {
           const res = await api.post('/employee', employeePayload)
           id = res.data?.data?.id || res.data?.id
@@ -292,9 +292,9 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           await api.patch(`/employee/${employeeId}`, employeePayload)
         }
 
-        // ========================
+       
         // 2. EMPLOYEE DETAILS SAVE
-        // ========================
+       
         if (isEdit) {
           try {
             await api.patch(`/employee/${id}/details`, detailsPayload)
@@ -313,9 +313,9 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           await api.post(`/employee/${id}/details`, detailsPayload)
         }
 
-        // ========================
+       
         // 3. DESIGNATION / DIVISION
-        // ========================
+       
         const today = new Date().toISOString().split('T')[0]
 
         if (employeeDetails.designation) {
@@ -617,8 +617,8 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 onChange={handleChange}
               >
                 <option value="">Select</option>
-                <option value="SINGLE">Single</option>
-                <option value="MARRIED">Married</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
               </CFormSelect>
             </CCol>
 
