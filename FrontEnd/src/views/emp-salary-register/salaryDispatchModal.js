@@ -508,26 +508,6 @@ const SalaryDispatchModal = ({
 
                 {/* ================= CTC ================= */}
 
-                <tr>
-                  <td
-                    style={{
-                      border: '1px solid #000',
-                      padding: '6px',
-                    }}
-                  >
-                    <strong>CTC</strong>
-                  </td>
-
-                  <td
-                    style={{
-                      border: '1px solid #000',
-                      padding: '6px',
-                    }}
-                  >
-                    <strong>₹ {Number(salaryData?.ctc || 0).toFixed(2)}</strong>
-                  </td>
-                </tr>
-
                 {/* ADDONS HEADING */}
 
                 {salaryData?.addons?.length > 0 && (

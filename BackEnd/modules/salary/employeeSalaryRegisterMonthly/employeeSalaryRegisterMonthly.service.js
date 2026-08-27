@@ -25,6 +25,7 @@ const getDateOnlyUTC = (date) => {
 
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 };
+
 exports.generateMonthlySalary = async (data) => {
   const { employee_id, month, year, salary_structure_id } = data;
 
@@ -159,7 +160,10 @@ exports.generateMonthlySalary = async (data) => {
       employee_id,
       is_deleted: false,
     },
+    order: [["id", "DESC"]],
   });
+
+
 
   if (!empSalary) {
     throw new AppError("Employee salary structure not found", 404);
@@ -175,8 +179,9 @@ exports.generateMonthlySalary = async (data) => {
 
   const totalDays = getDaysInMonth(month, year);
 
-  const monthStart = new Date(year, month - 1, 1);
-  const monthEnd = new Date(year, month, 0);
+  const monthStart = new Date(Date.UTC(year, month - 1, 1));
+
+  const monthEnd = new Date(Date.UTC(year, month, 0));
 
   const deployment = await EmployeeWorkOrderDeployment.findOne({
     where: {
@@ -215,10 +220,12 @@ exports.generateMonthlySalary = async (data) => {
     ? getDateOnlyUTC(deployment.relieving_date)
     : null;
 
-  const effectiveStartDate = Math.max(joiningDate, monthStart);
+  const effectiveStartDate = Math.max(joiningDate, monthStart.getTime());
 
   const effectiveEndDate =
-    relievingDate !== null ? Math.min(relievingDate, monthEnd) : monthEnd;
+    relievingDate !== null
+      ? Math.min(relievingDate, monthEnd.getTime())
+      : monthEnd.getTime();
 
   let payableDays = 0;
 
@@ -394,11 +401,14 @@ exports.generateMonthlySalary = async (data) => {
 
   const leaveTaken = Number(leaveData?.leave_taken || 0);
 
+  const leaveGranted =
+    leaveTaken === 0 ? 0 : Number(leaveData?.leave_granted || 0);
+
   // Per day salary
   const perDaySalary = gross / totalDays;
 
   // Leave deduction
-  const leaveDeduction = perDaySalary * leaveTaken;
+  const leaveDeduction = perDaySalary * leaveGranted;
 
   // Total deduction me add karo
   deduction += leaveDeduction;

@@ -256,7 +256,7 @@ const SalaryRegister = () => {
 
         const notRelievedBeforeMonth = !relievingDate || relievingDate >= monthStart
 
-        if (joinedBeforeMonthEnd && notRelievedBeforeMonth) console.log(employee.first_name)
+        if (joinedBeforeMonthEnd && notRelievedBeforeMonth) 
 
         return joinedBeforeMonthEnd && notRelievedBeforeMonth
       })
