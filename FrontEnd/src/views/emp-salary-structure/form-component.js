@@ -44,6 +44,8 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
   const [historyEmployee, setHistoryEmployee] = useState(null)
   const [viewModal, setViewModal] = useState(false)
   const [viewEmployee, setViewEmployee] = useState(null)
+  const [showMappedEmployees, setShowMappedEmployees] = useState(true)
+  const [salaryStructureName, setSalaryStructureName] = useState('')
 
   const user = useSelector((state) => state.auth.user)
 
@@ -63,7 +65,6 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
       )
 
       const list = res?.data?.data || []
-
       const prefillMap = {}
 
       list.forEach((emp) => {
@@ -88,22 +89,86 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
     }
   }
 
+  const fetchSalaryStructureEmployees = async () => {
+    try {
+      const res = await api.get(
+        `salary-structure/${salaryStructureId}?models=empSalaryStructures.employee&modelFilter=%7B%22empSalaryStructures%22%3A%7B%22is_active%22%3Atrue%7D%7D`,
+      )
+
+      const structure = res?.data?.data
+      const salaryList = structure?.empSalaryStructures || []
+      setSalaryStructureName(structure?.name || '')
+      setShowMappedEmployees(true)
+
+      // No employees mapped
+      if (salaryList.length === 0) {
+        setEmployees([])
+        setSelectedEmployees({})
+        setSelectAll(false)
+        return
+      }
+
+      const latestByEmployee = {}
+
+      salaryList.forEach((item) => {
+        const employeeId = item.employee_id
+
+        if (
+          !latestByEmployee[employeeId] ||
+          new Date(item.effective_from) > new Date(latestByEmployee[employeeId].effective_from)
+        ) {
+          latestByEmployee[employeeId] = item
+        }
+      })
+
+      const list = Object.values(latestByEmployee)
+
+      const employeeList = list.map((item) => ({
+        employee_id: item.employee_id,
+        name: [item.employee?.first_name, item.employee?.middle_name, item.employee?.last_name]
+          .filter(Boolean)
+          .join(' '),
+        employee_code: item.employee?.employee_code,
+        ctc: item.ctc,
+        effective_from: item.effective_from,
+      }))
+
+      const prefillMap = {}
+
+      list.forEach((item) => {
+        const annual = item.ctc || ''
+
+        prefillMap[item.employee_id] = {
+          checked: true,
+          annual_ctc: annual,
+          monthly_ctc: annual ? Math.round(Number(annual) / 12) : '',
+          effective_from: item.effective_from || '',
+          hasExistingSalary: true,
+        }
+      })
+
+      setEmployees(employeeList)
+      setSelectedEmployees(prefillMap)
+      setSelectAll(employeeList.length > 0)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   useEffect(() => {
     fetchWorkOrder()
   }, [])
 
   useEffect(() => {
     if (selectedWorkOrder) {
+      setShowMappedEmployees(false)
       fetchEmployees(selectedWorkOrder)
     } else {
-      setEmployees([])
+      fetchSalaryStructureEmployees()
     }
-
-    setSelectedEmployees({})
-    setSelectAll(false)
   }, [selectedWorkOrder])
 
-  const show = selectedWorkOrder && salaryStructureId
+  const show = salaryStructureId
 
   /* ================= HANDLERS ================= */
 
@@ -170,8 +235,6 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
     const validationErrors = validateEmpSalaryStructure(selectedEmployees)
     setErrors(validationErrors)
     if (Object.keys(validationErrors).length > 0) return
-
-
 
     const finalData = Object.entries(selectedEmployees)
       .filter(([_, v]) => v.checked)
@@ -260,8 +323,9 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
           <CCol md={12}>
             <CCard>
               <CCardBody>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h6>Employees</h6>
+                <h4>{salaryStructureName}</h4>
+                <div className="d-flex justify-content-between align-items-center mb-3 mt-3">
+                  <h6>{showMappedEmployees ? 'Employees Mapped' : 'Employees'}</h6>
 
                   <div className="d-flex align-items-center gap-2">
                     <span>Effective Date:</span>
@@ -306,119 +370,127 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
                   </thead>
 
                   <tbody>
-                    {employees.map((emp) => {
-                      const selected = selectedEmployees[emp.employee_id] || {}
+                    {employees.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="text-center text-muted py-4">
+                          {showMappedEmployees ? 'No employee mapped' : 'No employee found'}
+                        </td>
+                      </tr>
+                    ) : (
+                      employees.map((emp) => {
+                        const selected = selectedEmployees[emp.employee_id] || {}
 
-                      return (
-                        <tr key={emp.employee_id}>
-                          {/* CHECKBOX */}
-                          <td className="text-center">
-                            <input
-                              type="checkbox"
-                              checked={!!selected.checked}
-                              onChange={() => handleCheckbox(emp.employee_id)}
-                            />
-                          </td>
+                        return (
+                          <tr key={emp.employee_id}>
+                            {/* CHECKBOX */}
+                            <td className="text-center">
+                              <input
+                                type="checkbox"
+                                checked={!!selected.checked}
+                                onChange={() => handleCheckbox(emp.employee_id)}
+                              />
+                            </td>
 
-                          {/* EMPLOYEE NAME */}
-                          <td>{emp.name}</td>
+                            {/* EMPLOYEE NAME */}
+                            <td>{emp.name}</td>
 
-                          {/* MONTHLY CTC */}
-                          <td>
-                            <div className="input-group">
-                              <span className="input-group-text">₹</span>
+                            {/* MONTHLY CTC */}
+                            <td>
+                              <div className="input-group">
+                                <span className="input-group-text">₹</span>
 
+                                <CFormInput
+                                  type="number"
+                                  value={selected.monthly_ctc || ''}
+                                  readOnly={!selected.checked}
+                                  onChange={(e) =>
+                                    handleMonthlyCtcChange(emp.employee_id, e.target.value)
+                                  }
+                                />
+                              </div>
+                            </td>
+
+                            {/* ANNUAL CTC */}
+                            <td>
+                              <div className="input-group">
+                                <span className="input-group-text">₹</span>
+
+                                <CFormInput
+                                  type="number"
+                                  value={selected.annual_ctc || ''}
+                                  readOnly={!selected.checked}
+                                  onChange={(e) =>
+                                    handleAnnualCtcChange(emp.employee_id, e.target.value)
+                                  }
+                                />
+                              </div>
+                            </td>
+
+                            {/* EFFECTIVE FROM */}
+                            <td>
                               <CFormInput
-                                type="number"
-                                value={selected.monthly_ctc || ''}
-                                readOnly={!selected.checked}
+                                type="date"
+                                value={selected.effective_from || ''}
+                                readOnly={!selected.checked || selected.hasExistingSalary}
                                 onChange={(e) =>
-                                  handleMonthlyCtcChange(emp.employee_id, e.target.value)
+                                  handleChange(emp.employee_id, 'effective_from', e.target.value)
                                 }
                               />
-                            </div>
-                          </td>
+                            </td>
 
-                          {/* ANNUAL CTC */}
-                          <td>
-                            <div className="input-group">
-                              <span className="input-group-text">₹</span>
+                            {/* ACTIONS */}
+                            <td>
+                              <div className="d-flex justify-content-center gap-2">
+                                <CTooltip content="Add Increment">
+                                  <span>
+                                    <CButton
+                                      color="light"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedEmployee(emp)
+                                        setIncrementModal(true)
+                                      }}
+                                    >
+                                      <CIcon icon={cilPlus} />
+                                    </CButton>
+                                  </span>
+                                </CTooltip>
 
-                              <CFormInput
-                                type="number"
-                                value={selected.annual_ctc || ''}
-                                readOnly={!selected.checked}
-                                onChange={(e) =>
-                                  handleAnnualCtcChange(emp.employee_id, e.target.value)
-                                }
-                              />
-                            </div>
-                          </td>
+                                <CTooltip content="CTC History">
+                                  <span>
+                                    <CButton
+                                      color="light"
+                                      size="sm"
+                                      onClick={() => {
+                                        setHistoryEmployee(emp)
+                                        setHistoryModal(true)
+                                      }}
+                                    >
+                                      <CIcon icon={cilHistory} />
+                                    </CButton>
+                                  </span>
+                                </CTooltip>
 
-                          {/* EFFECTIVE FROM */}
-                          <td>
-                            <CFormInput
-                              type="date"
-                              value={selected.effective_from || ''}
-                              readOnly={!selected.checked || selected.hasExistingSalary}
-                              onChange={(e) =>
-                                handleChange(emp.employee_id, 'effective_from', e.target.value)
-                              }
-                            />
-                          </td>
-
-                          {/* ACTIONS */}
-                          <td>
-                            <div className="d-flex justify-content-center gap-2">
-                              <CTooltip content="Add Increment">
-                                <span>
-                                  <CButton
-                                    color="light"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedEmployee(emp)
-                                      setIncrementModal(true)
-                                    }}
-                                  >
-                                    <CIcon icon={cilPlus} />
-                                  </CButton>
-                                </span>
-                              </CTooltip>
-
-                              <CTooltip content="CTC History">
-                                <span>
-                                  <CButton
-                                    color="light"
-                                    size="sm"
-                                    onClick={() => {
-                                      setHistoryEmployee(emp)
-                                      setHistoryModal(true)
-                                    }}
-                                  >
-                                    <CIcon icon={cilHistory} />
-                                  </CButton>
-                                </span>
-                              </CTooltip>
-
-                              <CTooltip content="View Salary Breakdown">
-                                <span>
-                                  <CButton
-                                    color="light"
-                                    size="sm"
-                                    onClick={() => {
-                                      setViewEmployee(emp)
-                                      setViewModal(true)
-                                    }}
-                                  >
-                                    <CIcon icon={cilDescription} />
-                                  </CButton>
-                                </span>
-                              </CTooltip>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
+                                <CTooltip content="View Salary Breakdown">
+                                  <span>
+                                    <CButton
+                                      color="light"
+                                      size="sm"
+                                      onClick={() => {
+                                        setViewEmployee(emp)
+                                        setViewModal(true)
+                                      }}
+                                    >
+                                      <CIcon icon={cilDescription} />
+                                    </CButton>
+                                  </span>
+                                </CTooltip>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    )}
                   </tbody>
                 </table>
 
