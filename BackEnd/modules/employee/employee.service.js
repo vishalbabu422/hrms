@@ -1,7 +1,12 @@
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 
-const { Employee, Organization } = require("../../models");
+const {
+  Employee,
+  Organization,
+  RoleMaster,
+  EmployeeRole,
+} = require("../../models");
 const sequelize = require("../../utils/database");
 
 exports.getEmployeeList = async (queryOptions) => {
@@ -86,31 +91,31 @@ exports.createEmployee = async (payload) => {
     );
 
     const defaultRole = await RoleMaster.findOne({
-  where: {
-    role_code: "EMPLOYEE",
-    organization_id: payload.organization_id,
-    is_active: true,
-    is_deleted: false,
-  },
-  transaction: t,
-});
+      where: {
+        role_code: "EMPLOYEE",
+        organization_id: payload.organization_id,
+        is_active: true,
+        is_deleted: false,
+      },
+      transaction: t,
+    });
 
-if (!defaultRole) {
-  const error = new Error("Default Employee role not found");
-  error.statusCode = 500;
-  throw error; 
-}
+    if (!defaultRole) {
+      const error = new Error("Default Employee role not found");
+      error.statusCode = 500;
+      throw error;
+    }
 
-// 6️⃣ Assign role to employee
-await EmployeeRole.create(
-  {
-    employee_id: employee.id,
-    role_id: defaultRole.id,
-    organization_id: payload.organization_id,
-    assigned_by: employee.id,
-  },
-  { transaction: t }
-);
+    // 6️⃣ Assign role to employee
+    await EmployeeRole.create(
+      {
+        employee_id: employee.id,
+        role_id: defaultRole.id,
+        organization_id: payload.organization_id,
+        assigned_by: employee.id,
+      },
+      { transaction: t },
+    );
 
     // 5️⃣ Remove password hash from response
     employee.password_hash = undefined;
@@ -119,7 +124,7 @@ await EmployeeRole.create(
     return {
       employee,
       temporaryPassword: defaultPassword,
-    }; 
+    };
   });
 };
 
