@@ -19,7 +19,7 @@ const EmployeeMultiSelect = ({ workOrder, month, selectedEmployees, setSelectedE
       }
 
       try {
-        const url = `/employee?models=EmployeeWorkOrderDeployment.WoDesgnMapping.WorkOrder&modelFilter=${encodeURIComponent(
+        const url = `/employee?models=EmployeeWorkOrderDeployment.WoDesgnMapping&modelFilter=${encodeURIComponent(
           JSON.stringify({
             EmployeeWorkOrderDeployment: {
               required: true,

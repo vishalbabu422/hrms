@@ -77,17 +77,20 @@ const useLeaveMprForm = (mpr = false) => {
       const modelFilter = {
         EmployeeWorkOrderDeployment: {
           is_deleted: false,
+          required: true,
         },
         WoDesgnMapping: {
           work_order_id: workOrder,
+          required: true,
         },
       }
 
-      let models =
-        'EmployeeWorkOrderDeployment.WoDesgnMapping.Designation,employeeWorkOrderLeaves,employeeWorkOrderMprs'
+      let models = 'EmployeeWorkOrderDeployment.WoDesgnMapping.Designation'
 
       // conditionally add MPR filter
       if (mpr) {
+        models += ',employeeWorkOrderLeaves,employeeWorkOrderMprs'
+        
         modelFilter.employeeWorkOrderLeaves = {
           month: monthNum,
           year: year,
