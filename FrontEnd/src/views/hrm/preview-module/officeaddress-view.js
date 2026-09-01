@@ -16,7 +16,6 @@ const OfficeAddressView = () => {
 
     getEmployeeAddresses(employeeId)
       .then((res) => {
-
         const data = res.data?.data || res.data || {}
         const addresses = data.EmployeeAddresses || []
 
@@ -24,21 +23,20 @@ const OfficeAddressView = () => {
           const a = addresses.find((x) => x.address_type === type)
 
           return {
-            address: [a?.address_line1, a?.address_line2]
-              .filter(Boolean)
-              .join(', '),
+            address: [a?.address_line1, a?.address_line2].filter(Boolean).join(', '),
             landmark: a?.landmark || '',
             city: a?.city || '',
             district: a?.district || '',
             state: a?.state || '',
             country: a?.country || '',
             pincode: a?.pin_code || '',
+            hardLocation: a?.hard_location || false,
           }
         }
 
         setAddress({
           office: getAddress('OFFICE'),
-          client: getAddress('CLIENT'),
+          client: getAddress('CLIENT_OFFICE'), // CHANGE THIS
         })
       })
       .catch((err) => {

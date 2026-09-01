@@ -17,7 +17,6 @@ const InsuranceView = () => {
 
     getEmployeeInsurance(employeeId)
       .then((res) => {
-
         const list = res.data?.data || []
         setInsuranceList(list)
       })
@@ -28,20 +27,16 @@ const InsuranceView = () => {
 
   return (
     <div className="row g-4">
-
       {insuranceList.length === 0 ? (
         <div className="text-muted">No insurance data found</div>
       ) : (
         insuranceList.map((item, index) => (
           <div className="col-12" key={index}>
             <CCard className="border-0 shadow-sm">
-              <CCardHeader className="bg-light fw-semibold">
-                Insurance 
-              </CCardHeader>
+              <CCardHeader className="bg-light fw-semibold">Insurance</CCardHeader>
 
               <CCardBody>
                 <div className="row g-4">
-
                   {/* LEFT */}
                   <div className="col-md-6">
                     <Field label="Insurance Company" value={item.insurance_company} />
@@ -53,42 +48,34 @@ const InsuranceView = () => {
                   {/* RIGHT */}
                   <div className="col-md-6">
                     <Field label="Policy Number" value={item.policy_number} />
-                   <Field label="To Date" value={formatDate(item.to_date)} />
+                    <Field label="To Date" value={formatDate(item.to_date)} />
                     <Field label="Policy Premium" value={item.policy_premium} />
-                  </div>
-
-                  {/* DOCUMENT */}
-                  <div className="col-12">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <small className="text-muted">Policy Document</small>
-                        <div className="fw-semibold">
-                          {item.policy_document
-                            ? item.policy_document.split('/').pop()
-                            : 'No document uploaded'}
+                    {/* DOCUMENT */}
+                    <div className="col-12">
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <small className="text-muted">Policy Document</small>
+                          <div className="fw-semibold">
+                            {item.policy_document
+                              ? item.policy_document.split('/').pop()
+                              : 'No document uploaded'}
+                          </div>
                         </div>
-                      </div>
 
-                      {item.policy_document && (
-                        <CButton
-                          size="sm"
-                          variant="outline"
-                          href={item.policy_document}
-                          download
-                        >
-                          <CIcon icon={cilCloudDownload} />
-                        </CButton>
-                      )}
+                        {item.policy_document && (
+                          <CButton size="sm" variant="outline" href={item.policy_document} download>
+                            <CIcon icon={cilCloudDownload} />
+                          </CButton>
+                        )}
+                      </div>
                     </div>
                   </div>
-
                 </div>
               </CCardBody>
             </CCard>
           </div>
         ))
       )}
-
     </div>
   )
 }

@@ -29,7 +29,8 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
 
   const [employeeAddress, setEmployeeAddress] = useState(initialAddressDetails)
 
-  // ================= FETCH =================
+  // ================= FETCH ================= //
+
   useEffect(() => {
     if (!employeeId) return
 
@@ -207,23 +208,25 @@ const OfficeAddress = forwardRef(({ employeeId, isEdit }, ref) => {
                 <div className="invalid-feedback">{errors.client_office[field]}</div>
               </div>
             ))}
-            {/* Location Checkbox */}
-           <div className="col-md-3 d-flex align-items-center">
-  <div className="form-check">
-    <input
-      type="checkbox"
-      className="form-check-input"
-      id="clientHardLocation"
-      name="hard_location"
-      checked={employeeAddress.client_office.hard_location || false}
-      onChange={handleClientChange}
-    />
 
-    <label className="form-check-label" htmlFor="clientHardLocation">
-      Hard Location
-    </label>
-  </div>
-</div>
+            
+            {/* Location Checkbox */}
+            <div className="col-md-3 d-flex align-items-center">
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="clientHardLocation"
+                  name="hard_location"
+                  checked={employeeAddress.client_office.hard_location || false}
+                  onChange={handleClientChange}
+                />
+
+                <label className="form-check-label" htmlFor="clientHardLocation">
+                  Hard Location
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>

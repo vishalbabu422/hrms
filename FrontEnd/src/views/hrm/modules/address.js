@@ -77,7 +77,7 @@ const Address = forwardRef(({ employeeId, isEdit }, ref) => {
         const addresses = [employeeAddress.correspondence, employeeAddress.permanent]
 
         for (const addr of addresses) {
-          // ✅ VALIDATION
+          
           const validationErrors = validateAddressData(addr)
 
           if (Object.keys(validationErrors).length > 0) {

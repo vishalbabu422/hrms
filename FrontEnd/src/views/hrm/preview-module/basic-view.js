@@ -37,14 +37,16 @@ const BasicInfo = ({ employee }) => {
         <Field
           label="Marital Status"
           value={
-            employee.maritalStatus?.toLowerCase().replace(/^./, (char) => char.toUpperCase()) || '-'
+            employee.maritalStatus
+              ? employee.maritalStatus.charAt(0).toUpperCase() +
+                employee.maritalStatus.slice(1).toLowerCase()
+              : ''
           }
         />
         <Field label="Date Of Joining" value={formatDate(employee.joiningDate)} />
         <Field label="Confirmation Date" value={formatDate(employee.confirmationDate)} />
         <Field label="Resignation Date" value={formatDate(employee.resignationDate)} />
         <Field label="Relieving Date" value={formatDate(employee.relievingDate)} />
-        
       </div>
     </div>
   )

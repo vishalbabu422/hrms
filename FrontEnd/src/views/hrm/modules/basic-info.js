@@ -49,7 +49,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     confirmation_date: '',
     resignation_date: '',
     relieving_date: '',
-    retirement_date: '', 
+    retirement_date: '',
     notice_period_days: '',
     groups: '', // ADD
     hr_verified: true,
@@ -77,7 +77,7 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     dob: data.dob || data.date_of_birth || '',
     birth_place: data.birth_place || '',
     gender: data.gender || '',
-    marital_status: data.marital_status || '',
+    marital_status: data.marital_status ? data.marital_status.toUpperCase() : '',
     marriage_date: data.marriage_date || '',
     father_name: data.father_name || '',
     mother_name: data.mother_name || '',
@@ -86,9 +86,6 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     alternate_email: data.alternate_email || '',
     emergency_contact_no: data.emergency_contact_no || '',
     blood_group: data.blood_group || '',
-
-
-    
   })
 
   const mapExtraDetailsToApi = (obj) => {
@@ -109,7 +106,6 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
 
     const val = type === 'checkbox' ? checked : value
 
-   
     const detailFields = [
       'dob',
       'birth_place',
@@ -138,7 +134,6 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
     }
   }
 
- 
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -177,6 +172,20 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
   useEffect(() => {
     if (!employeeId) return
 
+    // const fetchEmployee = async () => {
+    //   try {
+    //     const res = await api.get(`/employee/${employeeId}`)
+    //     const data = res.data?.data
+
+    //     setEmployeeDetails((prev) => ({
+    //       ...prev,
+    //       ...data,
+    //     }))
+    //   } catch (err) {
+    //     console.error(err)
+    //   }
+    // }
+
     const fetchEmployee = async () => {
       try {
         const res = await api.get(`/employee/${employeeId}`)
@@ -185,7 +194,10 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
         setEmployeeDetails((prev) => ({
           ...prev,
           ...data,
-          
+
+          // Map DB/API names → form names
+          retirement_date: data.date_of_retirement || '',
+          groups: data.employee_group || '',
         }))
       } catch (err) {
         console.error(err)
@@ -282,9 +294,9 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           delete employeePayload.groups
         }
         const detailsPayload = mapExtraDetailsToApi(clean(employeeExtraDetails))
-       
+
         // 1. EMPLOYEE SAVE
-       
+
         if (!isEdit) {
           const res = await api.post('/employee', employeePayload)
           id = res.data?.data?.id || res.data?.id
@@ -292,9 +304,8 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           await api.patch(`/employee/${employeeId}`, employeePayload)
         }
 
-       
         // 2. EMPLOYEE DETAILS SAVE
-       
+
         if (isEdit) {
           try {
             await api.patch(`/employee/${id}/details`, detailsPayload)
@@ -313,9 +324,8 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
           await api.post(`/employee/${id}/details`, detailsPayload)
         }
 
-       
         // 3. DESIGNATION / DIVISION
-       
+
         const today = new Date().toISOString().split('T')[0]
 
         if (employeeDetails.designation) {
@@ -617,8 +627,11 @@ const BasicInfo = forwardRef(({ employeeId, isEdit }, ref) => {
                 onChange={handleChange}
               >
                 <option value="">Select</option>
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
+                <option value="SINGLE">Single</option>
+                <option value="MARRIED">Married</option>
+                <option value="DIVORCED">Divorced</option>
+                <option value="WIDOWED">Widowed</option>
+                <option value="SEPARATED">Separated</option>
               </CFormSelect>
             </CCol>
 
