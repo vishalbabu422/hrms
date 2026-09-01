@@ -405,11 +405,12 @@ exports.generateMonthlySalary = async (data) => {
   const leaveGranted =
     leaveTaken === 0 ? 0 : Number(leaveData?.leave_granted || 0);
 
+
   // Per day salary
   const perDaySalary = gross / totalDays;
 
   // Leave deduction
-  const leaveDeduction = perDaySalary * leaveGranted;
+  const leaveDeduction = perDaySalary * Math.abs(leaveGranted);
 
   // Total deduction me add karo
   deduction += leaveDeduction;
