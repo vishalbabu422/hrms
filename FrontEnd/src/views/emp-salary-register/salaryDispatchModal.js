@@ -31,6 +31,7 @@ const SalaryDispatchModal = ({
   const [salaryData, setSalaryData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [transactionDate, setTransactionDate] = useState('')
+  const [submitted, setSubmitted] = useState(false) //added
   const [showAddonDropdown, setShowAddonDropdown] = useState('')
   const [selectedAddons, setSelectedAddons] = useState([])
 
@@ -229,11 +230,16 @@ const SalaryDispatchModal = ({
 
   // final form submission
   const handleSubmit = async () => {
+    setSubmitted(true) //added
     try {
       if (!txnNo.trim()) {
         toast.error('Transaction Number is required')
         return
       }
+
+      if (!transactionDate) {
+        return
+      } //added
 
       if (!salaryData) {
         toast.error('Salary data not found')
@@ -802,29 +808,33 @@ const SalaryDispatchModal = ({
               Kindly verify the above details before submission.
             </p>
 
-            {/* TRANSACTION */}
+            {/* TRANSACTION  updated filleds*/}
 
             <div className="mt-3">
               <label>
-                <strong>Transaction Number</strong>
+                <strong>Transaction Number</strong> <span className="text-danger">*</span>
               </label>
 
-              <input
-                className="form-control"
+              <CFormInput
                 value={txnNo}
                 onChange={(e) => setTxnNo(e.target.value)}
+                invalid={submitted && !txnNo.trim()}
+                feedback="Fill this Transaction Number"
+                placeholder="Add Transaction Number"
               />
             </div>
 
             <div className="mt-3">
               <label>
-                <strong>Transaction Date</strong>
+                <strong>Transaction Date</strong> <span className="text-danger">*</span>
               </label>
 
               <CFormInput
                 type="date"
                 value={transactionDate}
                 onChange={(e) => setTransactionDate(e.target.value)}
+                invalid={submitted && !transactionDate}
+                feedback="Fill this Transaction Date"
               />
             </div>
           </>

@@ -30,7 +30,7 @@ exports.generateMonthlySalary = async (data) => {
   const { employee_id, month, year, salary_structure_id } = data;
 
   const requestedDate = new Date(year, month - 1, 1);
-  // 1️⃣ Check existing
+  // Check existing
   const existing = await EmployeeSalaryRegister.findOne({
     where: { employee_id, month, year, is_deleted: false },
     include: [
@@ -107,7 +107,7 @@ exports.generateMonthlySalary = async (data) => {
       gross_earnings: Number(existing.gross_earnings || 0),
       total_deductions: Number(existing.total_deductions || 0),
       net_salary: Number(existing.net_salary || 0),
-
+      leave_deduction: Number(existing.leave_deduction || 0),
       status: existing.status,
       transaction_number: existing.transaction_number,
 
@@ -405,7 +405,6 @@ exports.generateMonthlySalary = async (data) => {
   const leaveGranted =
     leaveTaken === 0 ? 0 : Number(leaveData?.leave_granted || 0);
 
-
   // Per day salary
   const perDaySalary = gross / totalDays;
 
@@ -459,6 +458,7 @@ exports.dispatchSalary = async (data, transaction) => {
       year,
       gross_earnings,
       total_deductions,
+      leave_deduction,
       net_salary,
       components,
       addons = [],
@@ -494,6 +494,7 @@ exports.dispatchSalary = async (data, transaction) => {
         dispatched_at: new Date(),
         transaction_number,
         transaction_date,
+        leave_deduction,
       },
       { transaction },
     );
@@ -624,10 +625,7 @@ exports.generateSalarySlip = async (register_id, transaction) => {
 
     leave_taken: Number(leaveData?.leave_taken || 0),
 
-    leave_deduction:
-      Number(leaveData?.leave_taken || 0) *
-      (Number(register.gross_earnings) /
-        getDaysInMonth(register.month, register.year)),
+    leave_deduction: Number(register?.leave_deduction || 0),
 
     components: snapshots
       .filter((item) => item.source_type === "STRUCTURE")

@@ -31,33 +31,6 @@ const SalaryFilterSection = () => {
 
   const [structureSearch, setStructureSearch] = useState('')
 
-  /* ================= DUMMY DATA ================= */
-
-  const workOrders = [
-    'WO-2026-1001',
-    'WO-2026-1002',
-    'WO-2026-1003',
-    'WO-2026-1004',
-    'WO-2026-1005',
-    'WO-2026-1006',
-    'WO-2026-1007',
-    'WO-2026-1008',
-    'WO-2026-1009',
-    'WO-2026-1010',
-  ]
-
-  const salaryStructures = [
-    'Senior Management Compensation',
-    'Executive Pay Structure',
-    'Organisation Structure',
-    'Payroll Structure',
-    'Corporate Salary Plan',
-    'Leadership Compensation',
-    'Project Based Salary',
-    'Consultant Salary Structure',
-    'Operations Salary Structure',
-    'IT Salary Structure',
-  ]
 
   return (
     <CRow className="g-3 align-items-end justify-content-between">

@@ -17,10 +17,7 @@ class SalarySlipPdf {
     } = data;
 
     // Folder path
-    const folderPath = path.join(
-      __dirname,
-      "../uploads/salary-slips"
-    );
+    const folderPath = path.join(__dirname, "../uploads/salary-slips");
 
     if (!fs.existsSync(folderPath)) {
       fs.mkdirSync(folderPath, { recursive: true });
@@ -55,20 +52,13 @@ class SalarySlipPdf {
     // --------------------------
     // Header
     // --------------------------
-    doc
-     .font("Helvetica-Bold")
-     .fontSize(20)
-     .text("SALARY SLIP", 0, 40, {
-    align: "center",
-  });
+    doc.font("Helvetica-Bold").fontSize(20).text("SALARY SLIP", 0, 40, {
+      align: "center",
+    });
     doc
       .fontSize(12)
       .font("Helvetica-Bold")
-      .text(
-        `Date: ${new Date().toLocaleDateString("en-IN")}`,
-        400,
-        40
-      );
+      .text(`Date: ${new Date().toLocaleDateString("en-IN")}`, 400, 40);
 
     doc.moveDown(2);
 
@@ -81,12 +71,12 @@ class SalarySlipPdf {
       .text(` ${employee_name}`);
 
     doc
-  .font("Helvetica-Bold")
-  .text("Total Leaves:", 40, 115, {
-    continued: true,
-  })
-  .font("Helvetica")
-  .text(` ${leave_taken || 0}`);
+      .font("Helvetica-Bold")
+      .text("Total Leaves:", 40, 115, {
+        continued: true,
+      })
+      .font("Helvetica")
+      .text(` ${leave_taken || 0}`);
     // --------------------------
     // Main Table
     // --------------------------
@@ -106,11 +96,7 @@ class SalarySlipPdf {
     doc
       .font("Helvetica-Bold")
       .fontSize(13)
-      .text(
-        "PAYSLIP DETAILS",
-        startX + 10,
-        startY + 12
-      );
+      .text("PAYSLIP DETAILS", startX + 10, startY + 12);
 
     // Components Header
     let y = startY + rowHeight;
@@ -123,14 +109,13 @@ class SalarySlipPdf {
       .fontSize(12)
       .text("Components", startX + 10, y + 12);
 
-    doc
-      .text("Monthly", startX + col1 + 10, y + 12);
+    doc.text("Monthly", startX + col1 + 10, y + 12);
 
     y += rowHeight;
 
     // Earnings Components Only
     const earningComponents = components.filter(
-      (item) => item.type === "EARNING"
+      (item) => item.type === "EARNING",
     );
 
     earningComponents.forEach((item) => {
@@ -142,62 +127,41 @@ class SalarySlipPdf {
         .fontSize(11)
         .text(item.name, startX + 10, y + 12);
 
-      doc.text(
-        formatAmount(item.amount),
-        startX + col1 + 10,
-        y + 12
-      );
+      doc.text(formatAmount(item.amount), startX + col1 + 10, y + 12);
 
       y += rowHeight;
     });
     // Addons Section
-if (addons.length) {
-  // Section Header
-  drawBox(startX, y, col1, rowHeight);
-  drawBox(startX + col1, y, col2, rowHeight);
+    if (addons.length) {
+      // Section Header
+      drawBox(startX, y, col1, rowHeight);
+      drawBox(startX + col1, y, col2, rowHeight);
 
-  doc
-    .font("Helvetica-Bold")
-    .text("Addons", startX + 10, y + 12);
+      doc.font("Helvetica-Bold").text("Addons", startX + 10, y + 12);
 
-  y += rowHeight;
+      y += rowHeight;
 
-  addons.forEach((item) => {
+      addons.forEach((item) => {
+        drawBox(startX, y, col1, rowHeight);
+        drawBox(startX + col1, y, col2, rowHeight);
 
-    drawBox(startX, y, col1, rowHeight);
-    drawBox(startX + col1, y, col2, rowHeight);
+        doc
+          .font("Helvetica")
+          .fontSize(11)
+          .text(`${item.name} (${item.type})`, startX + 10, y + 12);
 
-    doc
-      .font("Helvetica")
-      .fontSize(11)
-      .text(
-        `${item.name} (${item.type})`,
-        startX + 10,
-        y + 12
-      );
+        doc.text(formatAmount(item.amount), startX + col1 + 10, y + 12);
 
-    doc.text(
-      formatAmount(item.amount),
-      startX + col1 + 10,
-      y + 12
-    );
-
-    y += rowHeight;
-  });
-}
+        y += rowHeight;
+      });
+    }
     // Gross Earnings Row
     drawBox(startX, y, col1, rowHeight);
     drawBox(startX + col1, y, col2, rowHeight);
 
-    doc
-      .font("Helvetica-Bold")
-      .text("Gross Earnings", startX + 10, y + 12);
+    doc.font("Helvetica-Bold").text("Gross Earnings", startX + 10, y + 12);
 
-    doc.text(
-      formatAmount(gross_earnings),
-      startX + col1 + 10,
-      y + 12
-    );
+    doc.text(formatAmount(gross_earnings), startX + col1 + 10, y + 12);
 
     y += rowHeight;
 
@@ -205,40 +169,26 @@ if (addons.length) {
     drawBox(startX, y, col1, rowHeight);
     drawBox(startX + col1, y, col2, rowHeight);
 
-    doc
-      .font("Helvetica-Bold")
-      .text("Deductions", startX + 10, y + 12);
+    doc.font("Helvetica-Bold").text("Deductions", startX + 10, y + 12);
 
     y += rowHeight;
 
     // Leave Deduction Row
-drawBox(startX, y, col1, rowHeight);
-drawBox(startX + col1, y, col2, rowHeight);
+    drawBox(startX, y, col1, rowHeight);
+    drawBox(startX + col1, y, col2, rowHeight);
 
-doc
-  .font("Helvetica")
-  .text("Leave Deduction", startX + 10, y + 12);
+    doc.font("Helvetica").text("Leave Deduction", startX + 10, y + 12);
 
-doc.text(
-  formatAmount(leave_deduction),
-  startX + col1 + 10,
-  y + 12
-);
+    doc.text(leave_deduction, startX + col1 + 10, y + 12);
 
-y += rowHeight;
+    y += rowHeight;
     // Total Deductions Row
     drawBox(startX, y, col1, rowHeight);
     drawBox(startX + col1, y, col2, rowHeight);
 
-    doc
-      .font("Helvetica")
-      .text("Total Deductions", startX + 10, y + 12);
+    doc.font("Helvetica").text("Total Deductions", startX + 10, y + 12);
 
-    doc.text(
-      formatAmount(total_deductions),
-      startX + col1 + 10,
-      y + 12
-    );
+    doc.text(formatAmount(total_deductions), startX + col1 + 10, y + 12);
 
     y += rowHeight;
 
@@ -251,11 +201,7 @@ y += rowHeight;
       .fontSize(13)
       .text("Net Pay", startX + 10, y + 12);
 
-    doc.text(
-      formatAmount(net_salary),
-      startX + col1 + 10,
-      y + 12
-    );
+    doc.text(formatAmount(net_salary), startX + col1 + 10, y + 12);
 
     // --------------------------
     // Footer
@@ -263,11 +209,7 @@ y += rowHeight;
     doc
       .font("Helvetica")
       .fontSize(10)
-      .text(
-        "This is a system generated payslip.",
-        40,
-        y + 60
-      );
+      .text("This is a system generated payslip.", 40, y + 60);
 
     doc.end();
 

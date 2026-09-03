@@ -256,9 +256,8 @@ const SalaryRegister = () => {
 
         const notRelievedBeforeMonth = !relievingDate || relievingDate >= monthStart
 
-        if (joinedBeforeMonthEnd && notRelievedBeforeMonth) 
-
-        return joinedBeforeMonthEnd && notRelievedBeforeMonth
+        if (joinedBeforeMonthEnd && notRelievedBeforeMonth)
+          return joinedBeforeMonthEnd && notRelievedBeforeMonth
       })
 
       const formattedEmployees = filteredEmployees.map((employee) => {
@@ -813,7 +812,7 @@ const SalaryRegister = () => {
                                     color: '#475569',
                                   }}
                                 >
-                                  {workOrder.work_order_no}
+                                  {`${workOrder.work_order_no} - ${workOrder.project_name}`}
                                 </span>
                               </label>
                             ))}

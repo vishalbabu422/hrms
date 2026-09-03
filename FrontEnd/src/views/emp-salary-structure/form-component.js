@@ -309,7 +309,7 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
                     <option value="">Select</option>
                     {workOrder.map((item) => (
                       <option key={item.id} value={item.id}>
-                        {item.work_order_no}
+                        {`${item.work_order_no} - ${item.project_name}`}
                       </option>
                     ))}
                   </CFormSelect>
