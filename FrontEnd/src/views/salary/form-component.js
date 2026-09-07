@@ -27,7 +27,6 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
   const fetchComponentOptions = async () => {
     try {
       const res = await api.get('/salary-component?fields=id%2Ccode')
-
       setComponentOptions(res.data?.data || [])
     } catch (error) {
       console.error(error)
@@ -106,6 +105,7 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
     if (!payload.is_pf) {
       payload.pf_percentage = null
       payload.pf_upper_limit = null
+      payload.employer_pf_deduction_component_id = null
     }
 
     onSubmit(payload)
@@ -205,11 +205,13 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
                     invalid={!!errors.base_component_id}
                   >
                     <option value="">Select Component</option>
-                    {componentOptions.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.code}
-                      </option>
-                    ))}
+                    {componentOptions
+                      .filter((item) => String(item.id) !== String(formData.id))
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.code}
+                        </option>
+                      ))}
                   </CFormSelect>
                 </CCol>
               )}
@@ -288,7 +290,7 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
               </CCol>
 
               {/* Mandatory */}
-              <CCol md={6} className="d-flex align-items-end">
+              <CCol md={3} className="d-flex align-items-end">
                 <CFormCheck
                   label="Is Mandatory"
                   name="is_mandatory"
@@ -302,7 +304,7 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
                 />
               </CCol>
 
-              <CCol md={6} className="d-flex align-items-end">
+              <CCol md={3} className="d-flex align-items-end">
                 <CFormCheck
                   label="Is PF"
                   name="is_pf"
@@ -314,6 +316,9 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
                       ...prev,
                       is_pf: isPf,
                       pf_upper_limit: isPf ? (prev.pf_upper_limit ?? 1800) : null,
+                      employer_pf_deduction_component_id: isPf
+                        ? prev.employer_pf_deduction_component_id
+                        : null,
                     }))
                   }}
                 />
@@ -321,6 +326,7 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
 
               {formData.is_pf && (
                 <>
+                  {/* PF Upper Limit */}
                   <CCol md={6}>
                     <CFormLabel>
                       PF Upper Limit <span className="text-danger">*</span>
@@ -339,6 +345,38 @@ const SalaryComponentForm = ({ initialData, mode, onSubmit }) => {
 
                     {errors.pf_upper_limit && (
                       <div className="invalid-feedback d-block">{errors.pf_upper_limit}</div>
+                    )}
+                  </CCol>
+
+                  {/* Employer PF Deduction Component */}
+                  <CCol md={6}>
+                    <CFormLabel>Employer PF Deduction Component</CFormLabel>
+
+                    <CFormSelect
+                      name="employer_pf_deduction_component_id"
+                      value={formData.employer_pf_deduction_component_id || ''}
+                      onChange={handleChange}
+                      invalid={!!errors.employer_pf_deduction_component_id}
+                    >
+                      <option value="">Select Component</option>
+
+                      {componentOptions
+                        .filter(
+                          (item) =>
+                            String(item.id) !== String(formData.id) &&
+                            String(item.id) !== String(formData.base_component_id),
+                        )
+                        .map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.code}
+                          </option>
+                        ))}
+                    </CFormSelect>
+
+                    {errors.employer_pf_deduction_component_id && (
+                      <div className="invalid-feedback d-block">
+                        {errors.employer_pf_deduction_component_id}
+                      </div>
                     )}
                   </CCol>
                 </>

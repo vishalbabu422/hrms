@@ -96,6 +96,10 @@ const SalaryComponent = sequelize.define(
       type: DataTypes.DECIMAL(12, 2),
       allowNull: true,
     },
+    employer_pf_deduction_component_id: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
   },
   {
     tableName: "salary_component",

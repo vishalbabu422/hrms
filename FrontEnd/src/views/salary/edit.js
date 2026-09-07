@@ -25,7 +25,8 @@ const Edit = () => {
   }, [id])
 
   const mapApiToForm = (data) => ({
-    org_id: data.org_id ?? null, // <-- Add this
+    id: data.id,
+    org_id: data.org_id ?? null,
     name: data.name ?? '',
     code: data.code ?? '',
     type: data.type ?? '',
@@ -40,6 +41,7 @@ const Edit = () => {
     is_pf: data.is_pf ?? false,
     pf_upper_limit: data.pf_upper_limit ?? 1800,
     is_active: data.is_active ?? true,
+    employer_pf_deduction_component_id: data.employer_pf_deduction_component_id ?? '',
   })
 
   const handleUpdate = async (payload) => {

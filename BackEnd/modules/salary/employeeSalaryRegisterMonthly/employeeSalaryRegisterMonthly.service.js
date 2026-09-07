@@ -289,6 +289,7 @@ exports.generateMonthlySalary = async (data) => {
       },
     ],
   });
+
   if (!components.length) {
     throw new AppError("No components found for structure", 404);
   }
@@ -300,6 +301,7 @@ exports.generateMonthlySalary = async (data) => {
   const breakdown = [];
   const addonsBreakdown = [];
   const componentValues = {};
+  const employerPfDeductions = {};
 
   const prorationFactor = payableDays / totalDays;
 
@@ -339,9 +341,17 @@ exports.generateMonthlySalary = async (data) => {
       }
 
       // PF upper limit
-      if (comp.code === "PF" && comp.pf_upper_limit != null) {
+      if (comp.is_pf === true && comp.pf_upper_limit != null) {
         baseAmount = Math.min(baseAmount, Number(comp.pf_upper_limit));
       }
+    }
+
+    if (comp.is_pf === true && comp.employer_pf_deduction_component_id) {
+      const employerPfAmount = baseAmount * prorationFactor;
+
+      employerPfDeductions[comp.employer_pf_deduction_component_id] =
+        (employerPfDeductions[comp.employer_pf_deduction_component_id] || 0) +
+        employerPfAmount;
     }
 
     // Prorate ONLY ONCE
@@ -364,6 +374,22 @@ exports.generateMonthlySalary = async (data) => {
       type: comp.type,
       amount,
     });
+  }
+
+  for (const [componentId, employerPfDeduction] of Object.entries(
+    employerPfDeductions,
+  )) {
+    const component = breakdown.find(
+      (item) => String(item.component_id) === String(componentId),
+    );
+
+    if (!component) continue;
+
+    component.amount -= employerPfDeduction;
+
+    if (component.type === "EARNING") {
+      gross -= employerPfDeduction;
+    }
   }
 
   //const net = gross - deduction;
@@ -656,6 +682,7 @@ exports.generateSalarySlip = async (register_id, transaction) => {
     filepath: pdf.filepath,
   };
 };
+
 exports.downloadSalarySlip = async (register_id) => {
   return await EmployeeSalaryRegister.findByPk(register_id, {
     attributes: [

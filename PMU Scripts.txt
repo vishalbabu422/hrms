@@ -6037,5 +6037,17 @@ REFERENCES pmu.state_master(id);
 ALTER TABLE pmu.salary_component
 ADD COLUMN pf_upper_limit NUMERIC(12,2);
 
+-- 03/08/2026
+
+ALTER TABLE pmu.salary_component
+ADD COLUMN employer_pf_deduction_component_id bigint;
+
+ALTER TABLE pmu.salary_component
+ADD CONSTRAINT salary_component_employer_pf_deduction_component_id_fkey
+FOREIGN KEY (employer_pf_deduction_component_id)
+REFERENCES pmu.salary_component (id)
+ON UPDATE NO ACTION
+ON DELETE NO ACTION;
+
 COMMIT;
 
