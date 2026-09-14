@@ -136,7 +136,7 @@ const Index = () => {
                 <CTableRow>
                   <SortableHeaderCell
                     label="Designation Name"
-                    sortKey="designation"
+                    sortKey="designation_name"
                     sort={sort}
                     onSort={handleSort}
                   />
