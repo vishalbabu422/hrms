@@ -17,13 +17,11 @@ import {
 
 import CIcon from '@coreui/icons-react'
 import { cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilDescription } from '@coreui/icons'
-
 import SimpleBar from 'simplebar-react'
 import { toast } from 'react-toastify'
 import jsPDF from 'jspdf'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-
 import api from '../../api/axios'
 import SortableHeaderCell from '../components/sort-table-header'
 import AppPagination from '../components/app-pagination'
