@@ -18,7 +18,7 @@ const WoDesignationSelect = ({
   useEffect(() => {
     const fetchDesignation = async () => {
       try {
-        const response = await api.get('/admin/designation/index', {
+        const response = await api.get('/admin/designation/index?sort=designation', {
           params: {
             fields: 'id,designation,qualification,exp_in_years',
           },
