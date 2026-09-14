@@ -5,7 +5,7 @@ const {
   Employee,
   EmpSalaryStructure,
   SalaryStructureComponent,
-  SalaryComponent
+  SalaryComponent,
 } = require("../../../models");
 const AppError = require("../../../utils/appError");
 
@@ -163,9 +163,13 @@ exports.getEmployeeSalaryStructureByWorkOrder = async (
   return Object.values(employeeMap);
 };
 
+const getDaysInMonth = (month, year) => {
+  return new Date(year, month, 0).getDate();
+};
+
 exports.getEmployeeSalaryBreakdownByEmployee = async (
   salary_structure_id,
-  employee_id
+  employee_id,
 ) => {
   // Employee fetch
   const employee = await Employee.findOne({
@@ -227,17 +231,18 @@ exports.getEmployeeSalaryBreakdownByEmployee = async (
 
   const componentValues = {};
   const breakdown = [];
+  const employerPfDeductions = {};
 
   for (const item of components) {
     const comp = item.salaryComponent;
     if (!comp) continue;
 
     const value_type = item.value_type || comp.value_type;
-    let amount = 0;
+    let baseAmount = 0;
 
     // FIXED
     if (value_type === "FIXED") {
-      amount = Number(item.amount ?? comp.amount ?? 0);
+      baseAmount = Number(item.amount ?? comp.amount ?? 0);
     }
 
     // PERCENTAGE
@@ -245,7 +250,7 @@ exports.getEmployeeSalaryBreakdownByEmployee = async (
       const percentage = Number(item.percentage ?? comp.percentage ?? 0);
 
       if (comp.base_type === "CTC") {
-        amount = (percentage / 100) * monthly_ctc;
+        baseAmount = (percentage / 100) * monthly_ctc;
       }
 
       if (comp.base_type === "COMPONENT") {
@@ -254,15 +259,33 @@ exports.getEmployeeSalaryBreakdownByEmployee = async (
         if (baseVal === undefined) {
           throw new AppError(
             `Base component not calculated for ${comp.name}`,
-            400
+            400,
           );
         }
 
-        amount = (percentage / 100) * baseVal;
+        baseAmount = (percentage / 100) * baseVal;
+      }
+
+      // PF upper limit
+      if (comp.is_pf === true && comp.pf_upper_limit != null) {
+        baseAmount = Math.min(baseAmount, Number(comp.pf_upper_limit));
       }
     }
 
-    componentValues[comp.id] = amount;
+    // Employer PF deduction
+    if (comp.is_pf === true && comp.employer_pf_deduction_component_id) {
+      employerPfDeductions[comp.employer_pf_deduction_component_id] =
+        (employerPfDeductions[comp.employer_pf_deduction_component_id] || 0) +
+        baseAmount;
+    }
+
+    // No proration in generic salary breakdown
+    const amount = baseAmount;
+
+    // IMPORTANT:
+    // Dependencies use the full monthly/base amount,
+    // not the prorated amount.
+    componentValues[comp.id] = baseAmount;
 
     if (comp.type === "EARNING") {
       gross += amount;
@@ -275,10 +298,26 @@ exports.getEmployeeSalaryBreakdownByEmployee = async (
       name: comp.name,
       code: comp.code,
       type: comp.type,
-
       monthly_amount: amount,
       yearly_amount: amount * 12,
     });
+  }
+
+  for (const [componentId, employerPfDeduction] of Object.entries(
+    employerPfDeductions,
+  )) {
+    const component = breakdown.find(
+      (item) => String(item.component_id) === String(componentId),
+    );
+
+    if (!component) continue;
+
+    component.monthly_amount -= employerPfDeduction;
+    component.yearly_amount = component.monthly_amount * 12;
+
+    if (component.type === "EARNING") {
+      gross -= employerPfDeduction;
+    }
   }
 
   const net_salary = gross - deduction;
