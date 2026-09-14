@@ -11,6 +11,10 @@ const MyDetails = React.lazy(() => import('./views/my-details'))
 
 //----------------------------------------------------------//
 
+const SalarySlip = React.lazy(() => import('./views/salary-slip/salaryslip'))
+
+//----------------------------------------------------------//
+
 const Colors = React.lazy(() => import('./views/theme/colors/Colors'))
 const Typography = React.lazy(() => import('./views/theme/typography/Typography'))
 
@@ -200,13 +204,18 @@ const routes = [
     element: UserDashboard,
   },
 
-
   //My Details//
 
   {
     path: '/home/my-details',
     name: 'My Details',
     element: MyDetails,
+  },
+
+  {
+    path: '/home/salaryslip',
+    name: 'Salary Slip',
+    element: SalarySlip,
   },
   {
     path: '/home/my-details/edit',
@@ -262,7 +271,7 @@ const routes = [
   { path: '/hrm', name: 'HRM', element: hrmIndex },
   { path: '/hrm/add', name: 'Add', element: hrmAdd },
   { path: '/hrm/:employeeId', name: 'Edit', element: hrmAdd },
-  { path: '/hrm/:employeeId/more-details',  element: hrmMore },
+  { path: '/hrm/:employeeId/more-details', element: hrmMore },
   { path: '/hrm/:employeeId/preview', name: 'Preview', element: hrmPreview },
 
   // Salary Component

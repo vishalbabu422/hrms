@@ -23,6 +23,7 @@ import {
   cilSpeedometer,
   cilAddressBook,
   cilFingerprint,
+  cilDescription,
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -42,13 +43,21 @@ const _nav = [
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
 
-
   {
     component: CNavItem,
     name: 'My Details',
     to: '/home/my-details',
     icon: <CIcon icon={cilAddressBook} customClassName="nav-icon" />,
   },
+
+
+ {
+    component: CNavItem,
+    name: 'Salary Slip',
+    to: '/home/salaryslip',
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
+  },
+
 
   {
     component: CNavItem,
