@@ -693,3 +693,57 @@ exports.downloadSalarySlip = async (register_id) => {
     ],
   });
 };
+
+exports.getGeneratedSalarySlips = async (year, employee_id) => {
+  const registers = await EmployeeSalaryRegister.findAll({
+    where: {
+      year,
+      employee_id,
+      mon_salaryslip_generated: true,
+      is_deleted: false,
+    },
+    include: [
+      {
+        model: Employee,
+        as: "employee",
+        attributes: ["id", "first_name", "middle_name", "last_name"],
+      },
+    ],
+    order: [["id", "ASC"]],
+  });
+
+  if (!registers.length) {
+    throw new AppError(
+      `No generated salary slips found for this employee in year ${year}`,
+      404,
+    );
+  }
+  return registers.map((register) => {
+    const employee = register.employee;
+
+    const employee_name = [
+      employee?.first_name,
+      employee?.middle_name,
+      employee?.last_name,
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return {
+      register_id: register.id,
+      employee_id: register.employee_id,
+      employee_name,
+      month: register.month,
+      year: register.year,
+      gross_earnings: Number(register.gross_earnings || 0),
+      total_deductions: Number(register.total_deductions || 0),
+      net_salary: Number(register.net_salary || 0),
+      status: register.status,
+      mon_salaryslip_generated: register.mon_salaryslip_generated,
+      mon_salaryslip_filename: register.mon_salaryslip_filename,
+      mon_salaryslip_filepath: register.mon_salaryslip_filepath,
+      transaction_number: register.transaction_number,
+      transaction_date: register.transaction_date,
+    };
+  });
+};

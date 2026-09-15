@@ -30,6 +30,12 @@ router.get(
   checkPermission("EMP_SALARY.READ"),
   Controller.downloadSalarySlip
 );
+router.get(
+  "/generated-slips",
+  restrictTo(...ROLES),
+  checkPermission("EMP_SALARY.READ"),
+  Controller.getGeneratedSalarySlips
+);
 
 module.exports = router;
 

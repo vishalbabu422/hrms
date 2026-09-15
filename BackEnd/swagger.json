@@ -11653,6 +11653,65 @@
         }
       }
     },
+    "/employee-salary-register-monthly/generated-slips": {
+      "get": {
+        "security": [
+          {
+            "Authorization": []
+          }
+        ],
+        "tags": ["Employee Salary Monthly"],
+        "summary": "Get Generated Salary Slips",
+        "description": "Returns salary register data for the specified month and year where the monthly salary slip has been generated.",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "example": 2026,
+            "description": "Salary year"
+          },
+          {
+            "name": "employee_id",
+            "in": "query",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "example": 10,
+            "description": "Employee ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Generated salary slips retrieved successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "success"
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/GeneratedSalarySlip"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Month and year are required",
+            "schema": {
+              "$ref": "#/definitions/InvalidResponse"
+            }
+          }
+        }
+      }
+    },
     "/employee-salary-structure/{id}/emp/{emp_id}": {
       "get": {
         "security": [
@@ -16539,7 +16598,71 @@
         }
       }
     },
-
+    "GeneratedSalarySlip": {
+      "type": "object",
+      "properties": {
+        "register_id": {
+          "type": "integer",
+          "example": 25
+        },
+        "employee_id": {
+          "type": "integer",
+          "example": 101
+        },
+        "employee_name": {
+          "type": "string",
+          "example": "Rahul Kumar"
+        },
+        "month": {
+          "type": "integer",
+          "example": 8
+        },
+        "year": {
+          "type": "integer",
+          "example": 2026
+        },
+        "gross_earnings": {
+          "type": "number",
+          "format": "double",
+          "example": 50000
+        },
+        "total_deductions": {
+          "type": "number",
+          "format": "double",
+          "example": 5000
+        },
+        "net_salary": {
+          "type": "number",
+          "format": "double",
+          "example": 45000
+        },
+        "status": {
+          "type": "string",
+          "example": "DISPATCHED"
+        },
+        "mon_salaryslip_generated": {
+          "type": "boolean",
+          "example": true
+        },
+        "mon_salaryslip_filename": {
+          "type": "string",
+          "example": "salary_slip_101_08_2026.pdf"
+        },
+        "mon_salaryslip_filepath": {
+          "type": "string",
+          "example": "/uploads/salary-slips/salary_slip_101_08_2026.pdf"
+        },
+        "transaction_number": {
+          "type": "string",
+          "example": "TXN1001"
+        },
+        "transaction_date": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-08-31"
+        }
+      }
+    },
     "InvalidResponse": {
       "type": "object",
       "properties": {

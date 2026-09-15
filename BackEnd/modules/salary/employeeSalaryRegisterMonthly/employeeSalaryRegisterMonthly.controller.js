@@ -5,7 +5,6 @@ const path = require("path");
 const fs = require("fs");
 
 const generateMonthlySalary = catchAsync(async (req, res) => {
-    
   const result = await Service.generateMonthlySalary(req.body);
 
   res.status(200).json({
@@ -26,15 +25,10 @@ const dispatchSalary = catchAsync(async (req, res) => {
 });
 
 const generateSalarySlip = catchAsync(async (req, res) => {
-
   const { register_id } = req.params;
 
   const result = await sequelize.transaction(async (t) => {
-
-    return await Service.generateSalarySlip(
-      register_id,
-      t
-    );
+    return await Service.generateSalarySlip(register_id, t);
   });
 
   res.status(200).json({
@@ -44,7 +38,6 @@ const generateSalarySlip = catchAsync(async (req, res) => {
 });
 
 const downloadSalarySlip = catchAsync(async (req, res) => {
-
   const { register_id } = req.params;
 
   const register = await Service.downloadSalarySlip(register_id);
@@ -56,10 +49,7 @@ const downloadSalarySlip = catchAsync(async (req, res) => {
     });
   }
 
-  if (
-    !register.mon_salaryslip_generated ||
-    !register.mon_salaryslip_filepath
-  ) {
+  if (!register.mon_salaryslip_generated || !register.mon_salaryslip_filepath) {
     return res.status(404).json({
       status: "fail",
       message: "Salary slip not generated",
@@ -68,7 +58,7 @@ const downloadSalarySlip = catchAsync(async (req, res) => {
 
   const filePath = path.join(
     process.cwd(),
-    register.mon_salaryslip_filepath.replace(/^\/+/, "")
+    register.mon_salaryslip_filepath.replace(/^\/+/, ""),
   );
 
   if (!fs.existsSync(filePath)) {
@@ -78,10 +68,28 @@ const downloadSalarySlip = catchAsync(async (req, res) => {
     });
   }
 
-  return res.download(
-    filePath,
-    register.mon_salaryslip_filename
+  return res.download(filePath, register.mon_salaryslip_filename);
+});
+
+const getGeneratedSalarySlips = catchAsync(async (req, res) => {
+  const {  year, employee_id } = req.query;
+
+  if ( !year || !employee_id) {
+    return res.status(400).json({
+      status: "fail",
+      message: "employee id and year are required",
+    });
+  }
+
+  const result = await Service.getGeneratedSalarySlips(
+    Number(year),
+    Number(employee_id),
   );
+
+  res.status(200).json({
+    status: "success",
+    data: result,
+  });
 });
 
 module.exports = {
@@ -89,4 +97,5 @@ module.exports = {
   dispatchSalary,
   generateSalarySlip,
   downloadSalarySlip,
+  getGeneratedSalarySlips,
 };
