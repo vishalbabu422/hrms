@@ -93,7 +93,6 @@ exports.createEmployee = async (payload) => {
     const defaultRole = await RoleMaster.findOne({
       where: {
         role_code: "EMPLOYEE",
-        organization_id: payload.organization_id,
         is_active: true,
         is_deleted: false,
       },
