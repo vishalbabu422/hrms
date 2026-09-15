@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const upload = require("../middlewares/empanelmentUpload");
+const woUpload = require("../middlewares/workorderUpload");
 const validate = require("../middlewares/validate");
 const {
   protect,
@@ -238,6 +239,7 @@ router.route("/workorder/create").post(
   // authController.protect,
   // authController.restrictTo("Manager/Admin", "System Admin"),
   // validate(workOrderCreateSchema, "body"),
+  woUpload.single("doc_path"),
   checkPermission("WORKORDER.CREATE"),
   WorkOrderController.create,
 );
@@ -246,6 +248,7 @@ router.route("/workorder/edit/:id").patch(
   // authController.protect,
   // authController.restrictTo("Manager/Admin", "System Admin"),
   // validate(workOrderUpdateSchema, "body"),
+  woUpload.single("doc_path"),
   checkPermission("WORKORDER.UPDATE"),
   WorkOrderController.edit,
 );
@@ -256,6 +259,14 @@ router.route("/workorder/delete/:id").delete(
   checkPermission("WORKORDER.DELETE"),
   WorkOrderController.deleteById,
 );
+
+router
+  .route("/workorder/:id/downloads")
+  .get(
+    injectOrgScope(),
+    checkPermission("WORKORDER.READ"),
+    WorkOrderController.download,
+  );
 
 router.route("/workorder-desgn").get(
   // authController.protect,

@@ -8,12 +8,22 @@ const Add = () => {
 
   const handleSubmit = async (payload) => {
     try {
-      console.log('first')
       const normalizedPayload = {
         ...payload,
       }
 
-      await api.post('/admin/workorder/create', normalizedPayload)
+      const formData = new FormData()
+      Object.entries(normalizedPayload).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, value)
+        }
+      })
+
+      await api.post('/admin/workorder/create', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
       toast.success('Work Order created successfully')
       navigate('/work-order')
     } catch (error) {
@@ -49,6 +59,7 @@ const Add = () => {
     doc_path: '',
     remarks: '',
     is_active: true,
+    doc_path: '',
   }
 
   return <WorkOrderFormComponent initialData={initialData} mode="create" onSubmit={handleSubmit} />

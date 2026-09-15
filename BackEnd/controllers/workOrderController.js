@@ -1,5 +1,7 @@
 const catchAsync = require("../utils/catchAsync");
 const APIFeatures = require("../utils/apiFeature");
+const path = require("path");
+const fs = require("fs");
 
 // Model
 const WorkOrder = require("../models/workOrder");
@@ -109,6 +111,14 @@ const create = catchAsync(async (req, res, next) => {
     });
   }
 
+  if (!req.isSuperAdmin) {
+    req.body.organization_id = req.user.organization_id;
+  }
+
+  if (req.file) {
+    payload.doc_path = `/uploads/workorder/${req.file.filename}`;
+  }
+
   const workOrder = await WorkOrder.create({
     ...payload,
     is_active: true,
@@ -127,6 +137,10 @@ const edit = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const updates = req.body;
 
+  if (req.file) {
+    updates.doc_path = `/uploads/workorder/${req.file.filename}`;
+  }
+
   const workOrder = await WorkOrder.findByPk(id);
 
   if (!workOrder) {
@@ -134,6 +148,15 @@ const edit = catchAsync(async (req, res, next) => {
       status: "fail",
       message: "Work Order not found",
     });
+  }
+
+  const whereCondition = {
+    empanelment_no: updates.empanelment_no,
+    is_active: true,
+  };
+
+  if (!req.isSuperAdmin) {
+    whereCondition.organization_id = req.user.organization_id;
   }
 
   // Duplicate check only if work_order_no changing
@@ -198,10 +221,48 @@ const deleteById = catchAsync(async (req, res, next) => {
   });
 });
 
+const download = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+
+  const workorder = await WorkOrder.findByPk(id, {
+    attributes: ["id", "doc_path"],
+  });
+
+  if (!workorder) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Work Order not found",
+    });
+  }
+
+  if (!workorder.doc_path) {
+    return res.status(404).json({
+      status: "fail",
+      message: "No document uploaded for this work order",
+    });
+  }
+
+  // to absolute server path
+  const filePath = path.join(
+    process.cwd(),
+    workorder.doc_path.replace(/^\/+/, ""),
+  );
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({
+      status: "fail",
+      message: "File not found",
+    });
+  }
+
+  return res.download(filePath, path.basename(filePath));
+});
+
 module.exports = {
   index,
   dataById,
   create,
   edit,
   deleteById,
+  download,
 };

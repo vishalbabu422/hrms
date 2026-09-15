@@ -125,7 +125,6 @@ const WorkOrder = sequelize.define(
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
     },
-
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -138,6 +137,9 @@ const WorkOrder = sequelize.define(
           ["MANPOWER", "MILESTONES_PROJECT_BASIS", "MANPOWER_PROJECT_BASIS"],
         ],
       },
+    },
+    doc_path: {
+      type: DataTypes.STRING(255),
     },
   },
   {

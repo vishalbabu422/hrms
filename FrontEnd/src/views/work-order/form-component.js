@@ -68,11 +68,50 @@ const WorkOrderFormComponent = ({ initialData, mode, onSubmit }) => {
     const validationErrors = validateWorkOrder(formData)
     setErrors(validationErrors)
 
-    if (Object.keys(validationErrors).length) {
-      return
-    }
+    if (Object.keys(validationErrors).length) return
 
-    onSubmit(formData)
+    const cleanedData = Object.fromEntries(
+      Object.entries(formData).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v]),
+    )
+
+    const finalData = Object.fromEntries(Object.entries(cleanedData).filter(([_, v]) => v !== ''))
+
+    onSubmit(finalData)
+  }
+
+  const handleDownload = async () => {
+    try {
+      const response = await api.get(`/admin/workorder/${formData.id}/downloads`, {
+        responseType: 'blob',
+      })
+
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+
+      // Get filename from response header if available
+      const disposition = response.headers['content-disposition']
+      let filename = getFileName(formData.doc_path)
+
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/)
+        if (match) filename = match[1]
+      }
+
+      link.href = url
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  const getFileName = (path) => {
+    if (!path) return ''
+    return path.split('/').pop()
   }
 
   return (
@@ -205,6 +244,38 @@ const WorkOrderFormComponent = ({ initialData, mode, onSubmit }) => {
                   <option value="MILESTONES_PROJECT_BASIS">Project Milestone</option>
                   <option value="MANPOWER_PROJECT_BASIS">Project Manpower</option>
                 </CFormSelect>
+              </CCol>
+
+              <CCol md={6}>
+                <CFormInput
+                  type="file"
+                  name="doc_path"
+                  label="Upload Work Orders"
+                  accept=".pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0]
+                    setFormData((prev) => ({
+                      ...prev,
+                      doc_path: file,
+                    }))
+                  }}
+                />
+
+                {mode === 'edit' && formData.doc_path && typeof formData.doc_path === 'string' && (
+                  <div className="mt-2">
+                    <small className="text-muted">Current File:</small>
+                    <br />
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleDownload()
+                      }}
+                    >
+                      {getFileName(formData.doc_path)}
+                    </a>
+                  </div>
+                )}
               </CCol>
 
               <InFormLabel labelName="Issued To" icon="cilBuilding">

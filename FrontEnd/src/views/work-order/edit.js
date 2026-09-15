@@ -28,6 +28,7 @@ const edit = () => {
   }, [id])
 
   const mapApiToForm = (data) => ({
+    id: data.id ?? '',
     empanelment_id_fk: data.empanelment_id_fk ?? '',
     work_order_no: data.work_order_no ?? '',
     work_order_date: data.work_order_date ?? null,
@@ -58,11 +59,28 @@ const edit = () => {
 
   const handleUpdate = async (payload) => {
     try {
-      const normalizedPayload = {
-        ...payload,
+      const formData = new FormData()
+
+      Object.entries(payload).forEach(([key, value]) => {
+        if (
+          value !== null &&
+          value !== undefined &&
+          !(key === 'doc_path' && value instanceof File)
+        ) {
+          formData.append(key, value)
+        }
+      })
+
+      if (payload.doc_path instanceof File) {
+        formData.set('doc_path', payload.doc_path)
       }
 
-      await api.patch(`/admin/workorder/edit/${id}`, normalizedPayload)
+      await api.patch(`/admin/workorder/edit/${id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
       toast.success('Work Order updated successfully')
       navigate('/work-order')
     } catch (error) {
