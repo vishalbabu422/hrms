@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+
 import {
   CButton,
   CCard,
@@ -17,11 +19,17 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilCloudDownload, cilSearch } from '@coreui/icons'
 
-import './SalarySlip.css'
+import api from '../../api/axios'
+
+import './salarySlip.css'
 
 const SalarySlip = () => {
   const currentYear = new Date().getFullYear()
-  const currentMonth = new Date().getMonth()
+
+  const user = useSelector((state) => state.auth.user)
+
+
+  const employeeId = user?.employee_id || user?.id
 
   const years = [2026, 2025, 2024, 2023, 2022]
 
@@ -40,75 +48,138 @@ const SalarySlip = () => {
     'December',
   ]
 
-  const salaryHistory = [
-    {
-      id: 1,
-      month: 'September',
-      monthNumber: '09',
-      year: 2026,
-      transactionNumber: 'SAL-2026-09-001',
-      transactionDate: '30 Sep 2026',
-    },
-    {
-      id: 2,
-      month: 'August',
-      monthNumber: '08',
-      year: 2026,
-      transactionNumber: 'SAL-2026-08-001',
-      transactionDate: '31 Aug 2026',
-    },
-    {
-      id: 3,
-      month: 'July',
-      monthNumber: '07',
-      year: 2026,
-      transactionNumber: 'SAL-2026-07-001',
-      transactionDate: '31 Jul 2026',
-    },
-    {
-      id: 4,
-      month: 'June',
-      monthNumber: '06',
-      year: 2026,
-      transactionNumber: 'SAL-2026-06-001',
-      transactionDate: '30 Jun 2026',
-    },
-    {
-      id: 5,
-      month: 'May',
-      monthNumber: '05',
-      year: 2026,
-      transactionNumber: 'SAL-2026-05-001',
-      transactionDate: '31 May 2026',
-    },
-    {
-      id: 6,
-      month: 'April',
-      monthNumber: '04',
-      year: 2026,
-      transactionNumber: 'SAL-2026-04-001',
-      transactionDate: '30 Apr 2026',
-    },
-  ]
-
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
-  const [selectedMonth, setSelectedMonth] = useState(months[currentMonth] || 'September')
+  const [salaryHistory, setSalaryHistory] = useState([])
 
   const [searched, setSearched] = useState(false)
 
-  const filteredHistory = useMemo(() => {
-    if (!searched) {
-      return []
+  const [loading, setLoading] = useState(false)
+
+  const [downloadingId, setDownloadingId] = useState(null)
+
+  const [error, setError] = useState('')
+
+  const getSalarySlips = async (year) => {
+    if (!employeeId) {
+      setSalaryHistory([])
+      setSearched(true)
+      setError('Employee information is not available.')
+      return
     }
 
-    return salaryHistory.filter(
-      (item) => item.year === Number(selectedYear) && item.month === selectedMonth,
-    )
-  }, [searched, selectedYear, selectedMonth])
+    try {
+      setLoading(true)
+      setError('')
+
+      const params = {
+        employee_id: employeeId,
+        year,
+      }
+
+      const response = await api.get('/employee-salary-register-monthly/generated-slips', {
+        params,
+      })
+
+      const responseData = response.data?.data || response.data
+
+      setSalaryHistory(responseData?.salarySlips || responseData || [])
+      setSearched(true)
+    } catch (error) { //catch runs when the API call fails/throws an error.
+      setSalaryHistory([])
+      setError('No salary slip records found.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  useEffect(() => {
+    if (employeeId) {
+      getSalarySlips(currentYear)
+    }
+  }, [employeeId])
 
   const handleSearch = () => {
-    setSearched(true)
+    getSalarySlips(selectedYear)
+  }
+
+  const handleDownload = async (salary) => {
+    const registerId = salary?.register_id
+
+    if (!salary?.mon_salaryslip_generated) {
+      setError('Salary slip has not been generated yet.')
+
+      return
+    }
+
+    if (!registerId) {
+      setError('Register ID is not available.')
+
+      return
+    }
+
+    try {
+      setDownloadingId(registerId)
+
+      setError('')
+
+      const response = await api.get(
+        `/employee-salary-register-monthly/download-slip/${registerId}`,
+        {
+          responseType: 'blob',
+        },
+      )
+
+      const blob = new Blob([response.data], {
+        type: 'application/pdf',
+      })
+
+      const url = window.URL.createObjectURL(blob)
+
+      const monthName = getMonthName(salary)
+
+      const fileName = `Salary-Slip-${monthName}-${salary.year}-Register-${registerId}.pdf`
+
+      const link = document.createElement('a')
+
+      link.href = url
+
+      link.download = fileName
+
+      link.style.display = 'none'
+
+      document.body.appendChild(link)
+
+      link.click()
+
+      document.body.removeChild(link)
+
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setError('Unable to download salary slip.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
+  const getMonthName = (salary) => {
+    const monthNumber = Number(salary?.month)
+
+    if (monthNumber >= 1 && monthNumber <= 12) {
+      return months[monthNumber - 1]
+    }
+
+    return '-'
+  }
+
+  const formatDate = (date) => {
+    if (!date) return '-'
+
+    const d = new Date(date)
+
+    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(
+      2,
+      '0',
+    )}/${d.getFullYear()}`
   }
 
   return (
@@ -132,7 +203,7 @@ const SalarySlip = () => {
                   onChange={(e) => {
                     setSelectedYear(e.target.value)
 
-                    setSearched(false)
+                    setError('')
                   }}
                   className="salary-select"
                 >
@@ -146,40 +217,24 @@ const SalarySlip = () => {
             </CCol>
 
             <CCol xs={12} md={4}>
-              <div className="salary-form-group">
-                <label htmlFor="salaryMonth">Month</label>
-
-                <CFormSelect
-                  id="salaryMonth"
-                  value={selectedMonth}
-                  onChange={(e) => {
-                    setSelectedMonth(e.target.value)
-
-                    setSearched(false)
-                  }}
-                  className="salary-select"
-                >
-                  {months.map((month) => (
-                    <option key={month} value={month}>
-                      {month}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-            </CCol>
-
-            <CCol xs={12} md={4}>
               <div className="salary-search-button-wrapper">
-                <CButton type="button" className="salary-search-button" onClick={handleSearch}>
+                <CButton
+                  type="button"
+                  className="salary-search-button"
+                  onClick={handleSearch}
+                  disabled={loading}
+                >
                   <CIcon icon={cilSearch} className="salary-search-button-icon" />
 
-                  <span>Search</span>
+                  <span>{loading ? 'Searching...' : 'Search'}</span>
                 </CButton>
               </div>
             </CCol>
           </CRow>
         </CCardBody>
       </CCard>
+
+      {error && <div className="text-danger mt-2">{error}</div>}
 
       {searched && (
         <CCard className="history-card">
@@ -188,17 +243,15 @@ const SalarySlip = () => {
               <div>
                 <h5 className="section-title mb-1">Salary Slip History</h5>
 
-                <p className="history-subtitle">Salary slip for the selected period</p>
+                <p className="history-subtitle">Salary slips for {selectedYear}</p>
               </div>
             </div>
 
             <div className="salary-table-wrapper">
               <CTable hover responsive className="salary-history-table mb-0">
-                {/* TABLE HEADER */}
-
                 <CTableHead>
                   <CTableRow>
-                    <CTableHeaderCell className="serial-column">#</CTableHeaderCell>
+                    <CTableHeaderCell className="serial-column">S.No</CTableHeaderCell>
 
                     <CTableHeaderCell>Month</CTableHeaderCell>
 
@@ -212,19 +265,23 @@ const SalarySlip = () => {
                   </CTableRow>
                 </CTableHead>
 
-                {/* TABLE BODY */}
-
                 <CTableBody>
-                  {filteredHistory.length > 0 ? (
-                    filteredHistory.map((salary, index) => (
-                      <CTableRow key={salary.id}>
-                        {/* NUMBER */}
+                  {loading ? (
+                    <CTableRow>
+                      <CTableDataCell colSpan={6} className="no-data">
+                        Loading salary slips...
+                      </CTableDataCell>
+                    </CTableRow>
+                  ) : salaryHistory.length > 0 ? (
+                    salaryHistory.map((salary, index) => (
+                      <CTableRow key={salary.register_id || salary.id}>
+                        {/* S.NO */}
 
                         <CTableDataCell>{index + 1}</CTableDataCell>
 
                         {/* MONTH */}
 
-                        <CTableDataCell>{salary.month}</CTableDataCell>
+                        <CTableDataCell>{getMonthName(salary)}</CTableDataCell>
 
                         {/* YEAR */}
 
@@ -232,11 +289,11 @@ const SalarySlip = () => {
 
                         {/* TRANSACTION NUMBER */}
 
-                        <CTableDataCell>{salary.transactionNumber}</CTableDataCell>
+                        <CTableDataCell>{salary.transaction_number || '-'}</CTableDataCell>
 
                         {/* TRANSACTION DATE */}
 
-                        <CTableDataCell>{salary.transactionDate}</CTableDataCell>
+                        <CTableDataCell>{formatDate(salary.transaction_date)}</CTableDataCell>
 
                         {/* DOWNLOAD */}
 
@@ -245,10 +302,20 @@ const SalarySlip = () => {
                             type="button"
                             className="download-table-btn"
                             onClick={() => handleDownload(salary)}
+                            disabled={
+                              !salary.mon_salaryslip_generated ||
+                              downloadingId === salary.register_id
+                            }
                           >
                             <CIcon icon={cilCloudDownload} className="table-download-icon" />
 
-                            <span>Download</span>
+                            <span>
+                              {downloadingId === salary.register_id
+                                ? 'Downloading...'
+                                : salary.mon_salaryslip_generated
+                                  ? 'Download'
+                                  : 'Not generated'}
+                            </span>
                           </CButton>
                         </CTableDataCell>
                       </CTableRow>
@@ -256,7 +323,7 @@ const SalarySlip = () => {
                   ) : (
                     <CTableRow>
                       <CTableDataCell colSpan={6} className="no-data">
-                        No salary slip found for {selectedMonth} {selectedYear}.
+                        No salary slip found for {selectedYear}.
                       </CTableDataCell>
                     </CTableRow>
                   )}
