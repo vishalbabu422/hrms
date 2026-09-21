@@ -298,6 +298,7 @@ exports.generateMonthlySalary = async (data) => {
   let deduction = 0;
   let addonEarning = 0;
   let addonDeduction = 0;
+
   const breakdown = [];
   const addonsBreakdown = [];
   const componentValues = {};
@@ -339,27 +340,38 @@ exports.generateMonthlySalary = async (data) => {
 
         baseAmount = (percentage / 100) * baseVal;
       }
-
-      // PF upper limit
-      if (comp.is_pf === true && comp.pf_upper_limit != null) {
-        baseAmount = Math.min(baseAmount, Number(comp.pf_upper_limit));
-      }
     }
 
+    let amount;
+
+    if (value_type === "FIXED") {
+      amount = baseAmount;
+    } else if (comp.is_pf === true) {
+      const pfUpperLimit =
+        comp.pf_upper_limit != null ? Number(comp.pf_upper_limit) : null;
+
+      if (pfUpperLimit != null) {
+        if (baseAmount >= pfUpperLimit) {
+          amount = pfUpperLimit;
+        } else {
+          amount = baseAmount * prorationFactor;
+        }
+      } else {
+        amount = baseAmount * prorationFactor;
+      }
+    } else {
+      amount = baseAmount * prorationFactor;
+    }
+
+    componentValues[comp.id] = baseAmount;
+
     if (comp.is_pf === true && comp.employer_pf_deduction_component_id) {
-      const employerPfAmount = baseAmount * prorationFactor;
+      const employerPfAmount = amount;
 
       employerPfDeductions[comp.employer_pf_deduction_component_id] =
         (employerPfDeductions[comp.employer_pf_deduction_component_id] || 0) +
         employerPfAmount;
     }
-
-    // Prorate ONLY ONCE
-    const amount = baseAmount * prorationFactor;
-
-    // IMPORTANT:
-    // Store FULL monthly value for component dependency
-    componentValues[comp.id] = baseAmount;
 
     if (comp.type === "EARNING") {
       gross += amount;
