@@ -28,7 +28,6 @@ const SalarySlip = () => {
 
   const user = useSelector((state) => state.auth.user)
 
-
   const employeeId = user?.employee_id || user?.id
 
   const years = [2026, 2025, 2024, 2023, 2022]
