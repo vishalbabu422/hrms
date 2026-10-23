@@ -30,5 +30,9 @@ router.use(
   "/employee-salary-register-financial/",
   require("./employeeSalaryRegisterFinancial/employeeSalaryRegisterFinancial.routes"),
 );
+router.use(
+  "/emp-salary-statement/",
+  require("./employeeSalaryStatement/empSalaryStatement.routes"),
+)
 
 module.exports = router;

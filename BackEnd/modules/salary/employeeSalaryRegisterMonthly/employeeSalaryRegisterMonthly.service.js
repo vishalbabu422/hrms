@@ -27,18 +27,47 @@ const getDateOnlyUTC = (date) => {
 };
 
 exports.generateMonthlySalary = async (data) => {
-  const { employee_id, month, year, salary_structure_id } = data;
+  const { employee_id, month, year } = data;
 
-  const requestedDate = new Date(year, month - 1, 1);
-  // Check existing
+  const requestedDate = new Date(Date.UTC(year, month - 1, 1));
+  const totalDays = getDaysInMonth(month, year);
+
+  const monthStart = Date.UTC(year, month - 1, 1);
+  const monthEnd = Date.UTC(year, month, 0);
+
+  const DAY_MS = 24 * 60 * 60 * 1000;
+
+  // Normalize a date to UTC midnight.
+  const toTimestamp = (value) => {
+    if (!value) return null;
+
+    const date = new Date(value);
+
+    return Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+    );
+  };
+
+  const formatDate = (timestamp) =>
+    new Date(timestamp).toISOString().slice(0, 10);
+
+  const employeeName = (employee) =>
+    [employee?.first_name, employee?.middle_name, employee?.last_name]
+      .filter(Boolean)
+      .join(" ");
+
+  /*
+   * 1. Check existing salary register.
+   */
   const existing = await EmployeeSalaryRegister.findOne({
-    where: { employee_id, month, year, is_deleted: false },
-    include: [
-      {
-        model: Employee,
-        as: "employee",
-      },
-    ],
+    where: {
+      employee_id,
+      month,
+      year,
+      is_deleted: false,
+    },
   });
 
   if (existing) {
@@ -49,14 +78,6 @@ exports.generateMonthlySalary = async (data) => {
       },
       attributes: ["first_name", "middle_name", "last_name"],
     });
-
-    const employee_name = [
-      employee?.first_name,
-      employee?.middle_name,
-      employee?.last_name,
-    ]
-      .filter(Boolean)
-      .join(" ");
 
     const snapshots = await EmployeeSalaryRegisterSnapshot.findAll({
       where: {
@@ -71,23 +92,12 @@ exports.generateMonthlySalary = async (data) => {
         employee_id,
         is_deleted: false,
         is_active: true,
-
-        effective_from: {
-          [Op.lte]: requestedDate,
-        },
-
+        effective_from: { [Op.lte]: requestedDate },
         [Op.or]: [
-          {
-            effective_to: {
-              [Op.gte]: requestedDate,
-            },
-          },
-          {
-            effective_to: null,
-          },
+          { effective_to: { [Op.gte]: requestedDate } },
+          { effective_to: null },
         ],
       },
-
       include: [
         {
           model: SalaryAddonMaster,
@@ -100,7 +110,7 @@ exports.generateMonthlySalary = async (data) => {
       register_id: existing.id,
       is_existing: true,
       employee_id: existing.employee_id,
-      employee_name,
+      employee_name: employeeName(employee),
       month: existing.month,
       year: existing.year,
 
@@ -108,11 +118,10 @@ exports.generateMonthlySalary = async (data) => {
       total_deductions: Number(existing.total_deductions || 0),
       net_salary: Number(existing.net_salary || 0),
       leave_deduction: Number(existing.leave_deduction || 0),
+
       status: existing.status,
       transaction_number: existing.transaction_number,
-
       salaryslip_generated: existing.mon_salaryslip_generated || false,
-
       salaryslip_filename: existing.mon_salaryslip_filename || null,
 
       components: snapshots.map((item) => ({
@@ -121,6 +130,7 @@ exports.generateMonthlySalary = async (data) => {
         type: item.component_type,
         amount: Number(item.final_amount || 0),
       })),
+
       addons: employeeAddons.map((addon) => ({
         addon_id: addon.id,
         salary_addon_master_id: addon.salaryAddonMaster?.id,
@@ -133,6 +143,9 @@ exports.generateMonthlySalary = async (data) => {
     };
   }
 
+  /*
+   * 2. Fetch and validate employee.
+   */
   const employee = await Employee.findOne({
     where: {
       id: employee_id,
@@ -145,55 +158,23 @@ exports.generateMonthlySalary = async (data) => {
     throw new AppError("Employee not found", 404);
   }
 
-  // full name
-  const employee_name = [
-    employee.first_name,
-    employee.middle_name,
-    employee.last_name,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const employee_name = employeeName(employee);
 
-  // 2️⃣ Get employee salary structure (CTC)
-  const empSalary = await EmpSalaryStructure.findOne({
+  /*
+   * 3. Fetch all deployments that started on or before month-end.
+   *
+   * IMPORTANT:
+   * relieving_date is deliberately NOT used.
+   * A deployment ends the day before the next deployment starts.
+   */
+  const deployments = await EmployeeWorkOrderDeployment.findAll({
     where: {
       employee_id,
       is_deleted: false,
-    },
-    order: [["id", "DESC"]],
-  });
-
-  if (!empSalary) {
-    throw new AppError("Employee salary structure not found", 404);
-  }
-
-  const yearlyCTC = Number(empSalary.ctc);
-
-  if (!yearlyCTC) {
-    throw new AppError("CTC not found", 404);
-  }
-
-  const monthlyCTC = yearlyCTC / 12;
-
-  const totalDays = getDaysInMonth(month, year);
-
-  const monthStart = new Date(Date.UTC(year, month - 1, 1));
-
-  const monthEnd = new Date(Date.UTC(year, month, 0));
-
-  const deployment = await EmployeeWorkOrderDeployment.findOne({
-    where: {
-      employee_id,
-      is_deleted: false,
-
-      joining_date: {
-        [Op.lte]: monthEnd,
-      },
-
       [Op.or]: [
         {
           relieving_date: {
-            [Op.gte]: monthStart,
+            [Op.gte]: new Date(monthStart),
           },
         },
         {
@@ -201,61 +182,378 @@ exports.generateMonthlySalary = async (data) => {
         },
       ],
     },
-
-    order: [["joining_date", "DESC"]],
+    order: [["joining_date", "ASC"]],
   });
 
-  if (!deployment) {
+  if (!deployments.length) {
     throw new AppError(
       "Employee work order deployment not found for salary month",
       404,
     );
   }
 
-  const joiningDate = getDateOnlyUTC(deployment.joining_date);
+  /*
+   * Build deployment periods for the selected month.
+   *
+   * Example:
+   * WO-1: 01-Oct to 12-Oct
+   * WO-2: 13-Oct to 31-Oct
+   */
+  const deploymentPeriods = [];
 
-  const relievingDate = deployment.relieving_date
-    ? getDateOnlyUTC(deployment.relieving_date)
-    : null;
+  for (let i = 0; i < deployments.length; i++) {
+    const deployment = deployments[i];
+    console.log(deployment);
 
-  const effectiveStartDate = Math.max(joiningDate, monthStart.getTime());
+    const joiningTimestamp = toTimestamp(deployment.joining_date);
 
-  const effectiveEndDate =
-    relievingDate !== null
-      ? Math.min(relievingDate, monthEnd.getTime())
-      : monthEnd.getTime();
+    const relievingTimestamp = deployment.relieving_date
+      ? toTimestamp(deployment.relieving_date)
+      : null;
 
-  let payableDays = 0;
+    const nextDeployment = deployments[i + 1];
 
-  if (effectiveStartDate <= effectiveEndDate) {
-    payableDays =
-      Math.floor(
-        (effectiveEndDate - effectiveStartDate) / (1000 * 60 * 60 * 24),
-      ) + 1;
+    const nextJoiningTimestamp = nextDeployment
+      ? toTimestamp(nextDeployment.joining_date)
+      : null;
+
+    let deploymentEnd;
+
+    if (relievingTimestamp !== null) {
+      deploymentEnd = relievingTimestamp;
+    } else if (nextJoiningTimestamp !== null) {
+      deploymentEnd = nextJoiningTimestamp - DAY_MS;
+    } else {
+      deploymentEnd = monthEnd;
+    }
+
+    const periodStart = Math.max(joiningTimestamp, monthStart);
+    const periodEnd = Math.min(deploymentEnd, monthEnd);
+
+    // Ignore deployments that do not overlap the selected month.
+    if (periodStart > periodEnd) continue;
+
+    deploymentPeriods.push({
+      deployment_id: deployment.id,
+      deployment,
+      start: periodStart,
+      end: periodEnd,
+      payable_days: Math.floor((periodEnd - periodStart) / DAY_MS) + 1,
+    });
   }
 
-  // Get structure components
-  const components = await SalaryStructureComponent.findAll({
-    where: {
-      salary_structure_id,
-      is_deleted: false,
-    },
-    include: [
-      {
-        model: SalaryComponent,
-        as: "salaryComponent",
-      },
-    ],
-    order: [
-      ["calculation_priority", "ASC"],
-      [
-        { model: SalaryComponent, as: "salaryComponent" },
-        "calculation_priority",
-        "ASC",
-      ],
-    ],
-  });
+  if (!deploymentPeriods.length) {
+    throw new AppError(
+      "Employee work order deployment not found for salary month",
+      404,
+    );
+  }
 
+  /*
+   * 4. Fetch salary structures applicable to each deployment period.
+   *
+   * Salary structure effective dates determine which structure
+   * applies during each part of the deployment.
+   */
+  const salaryPeriods = [];
+
+  for (const deploymentPeriod of deploymentPeriods) {
+    const structures = await EmpSalaryStructure.findAll({
+      where: {
+        employee_id,
+        is_deleted: false,
+
+        effective_from: {
+          [Op.lte]: new Date(deploymentPeriod.end),
+        },
+
+        [Op.or]: [
+          {
+            effective_to: {
+              [Op.gte]: new Date(deploymentPeriod.start),
+            },
+          },
+          {
+            effective_to: null,
+          },
+        ],
+      },
+      order: [
+        ["effective_from", "ASC"],
+        ["id", "ASC"],
+      ],
+    });
+
+    if (!structures.length) {
+      throw new AppError(
+        `Employee salary structure not found for deployment period ${formatDate(
+          deploymentPeriod.start,
+        )} to ${formatDate(deploymentPeriod.end)}`,
+        404,
+      );
+    }
+
+    /*
+     * Split deployment period wherever the salary structure changes.
+     */
+    let cursor = deploymentPeriod.start;
+
+    for (const structure of structures) {
+      const structureStart = toTimestamp(structure.effective_from);
+
+      const structureEnd = structure.effective_to
+        ? toTimestamp(structure.effective_to)
+        : monthEnd;
+
+      const periodStart = Math.max(deploymentPeriod.start, structureStart);
+
+      const periodEnd = Math.min(deploymentPeriod.end, structureEnd);
+
+      if (periodStart > periodEnd) continue;
+
+      // Prevent salary from being calculated twice for overlapping
+      // salary structures.
+      if (periodStart < cursor) {
+        throw new AppError(
+          `Overlapping salary structures found for employee ${employee_id}`,
+          400,
+        );
+      }
+
+      // Do not silently leave a period without an applicable structure.
+      if (periodStart > cursor) {
+        throw new AppError(
+          `No salary structure covers ${formatDate(cursor)} to ${formatDate(
+            periodStart - DAY_MS,
+          )}`,
+          400,
+        );
+      }
+
+      salaryPeriods.push({
+        deployment_id: deploymentPeriod.deployment_id,
+        salary_structure_id: structure.salary_structure_id,
+        ctc: Number(structure.ctc),
+        start: periodStart,
+        end: periodEnd,
+        payable_days: Math.floor((periodEnd - periodStart) / DAY_MS) + 1,
+      });
+
+      cursor = periodEnd + DAY_MS;
+
+      if (cursor > deploymentPeriod.end) break;
+    }
+
+    if (cursor <= deploymentPeriod.end) {
+      throw new AppError(
+        `No salary structure covers ${formatDate(cursor)} to ${formatDate(
+          deploymentPeriod.end,
+        )}`,
+        400,
+      );
+    }
+  }
+
+
+  /*
+   * 5. Initialize aggregate totals.
+   *
+   * Component totals are grouped by component ID across all periods.
+   */
+  let gross = 0;
+  let deduction = 0;
+  let addonEarning = 0;
+  let addonDeduction = 0;
+
+  const componentTotals = new Map();
+  const addonsBreakdown = [];
+  const periodBreakdown = [];
+
+  /*
+   * 6. Calculate salary independently for each salary sub-period.
+   */
+  for (const period of salaryPeriods) {
+    const yearlyCTC = Number(period.ctc);
+
+    if (!yearlyCTC || !Number.isFinite(yearlyCTC)) {
+      throw new AppError(
+        `Invalid CTC for salary structure ${period.salary_structure_id}`,
+        400,
+      );
+    }
+
+    const monthlyCTC = yearlyCTC / 12;
+
+    const prorationFactor = period.payable_days / totalDays;
+
+    const components = await SalaryStructureComponent.findAll({
+      where: {
+        salary_structure_id: period.salary_structure_id,
+        is_deleted: false,
+      },
+      include: [
+        {
+          model: SalaryComponent,
+          as: "salaryComponent",
+        },
+      ],
+      order: [
+        ["calculation_priority", "ASC"],
+        [
+          { model: SalaryComponent, as: "salaryComponent" },
+          "calculation_priority",
+          "ASC",
+        ],
+      ],
+    });
+
+    if (!components.length) {
+      throw new AppError(
+        `No components found for salary structure ${period.salary_structure_id}`,
+        404,
+      );
+    }
+
+    let periodGross = 0;
+    let periodDeduction = 0;
+
+    const componentValues = {};
+    const employerPfDeductions = {};
+    const periodComponents = [];
+
+    for (const item of components) {
+      const comp = item.salaryComponent;
+
+      if (!comp) continue;
+
+      const valueType = item.value_type || comp.value_type;
+
+      let baseAmount = 0;
+
+      if (valueType === "FIXED") {
+        baseAmount = Number(item.amount ?? comp.amount ?? 0);
+      } else if (valueType === "PERCENTAGE") {
+        const percentage = Number(item.percentage ?? comp.percentage ?? 0);
+
+        if (comp.base_type === "CTC") {
+          baseAmount = (percentage / 100) * monthlyCTC;
+        } else if (comp.base_type === "COMPONENT") {
+          const baseValue = componentValues[comp.base_component_id];
+
+          if (baseValue === undefined) {
+            throw new AppError(
+              `Base component not calculated for ${comp.name}`,
+              400,
+            );
+          }
+
+          baseAmount = (percentage / 100) * baseValue;
+        }
+      }
+
+      let amount;
+
+      if (valueType === "FIXED") {
+        amount = baseAmount;
+      } else if (comp.is_pf === true) {
+        const pfUpperLimit =
+          comp.pf_upper_limit != null ? Number(comp.pf_upper_limit) : null;
+
+        if (pfUpperLimit != null && baseAmount >= pfUpperLimit) {
+          amount = pfUpperLimit;
+        } else {
+          amount = baseAmount * prorationFactor;
+        }
+      } else {
+        amount = baseAmount * prorationFactor;
+      }
+
+      componentValues[comp.id] = baseAmount;
+
+      if (comp.is_pf === true && comp.employer_pf_deduction_component_id) {
+        const targetId = comp.employer_pf_deduction_component_id;
+
+        employerPfDeductions[targetId] =
+          (employerPfDeductions[targetId] || 0) + amount;
+      }
+
+      if (comp.type === "EARNING") {
+        periodGross += amount;
+      } else {
+        periodDeduction += amount;
+      }
+
+      periodComponents.push({
+        component_id: comp.id,
+        name: comp.name,
+        code: comp.code,
+        type: comp.type,
+        amount,
+      });
+    }
+
+    /*
+     * Apply employer PF deductions to the configured target component
+     * within this sub-period, preserving the existing calculation rule.
+     */
+    for (const [componentId, employerPfAmount] of Object.entries(
+      employerPfDeductions,
+    )) {
+      const targetComponent = periodComponents.find(
+        (item) => String(item.component_id) === String(componentId),
+      );
+
+      if (!targetComponent) continue;
+
+      targetComponent.amount -= employerPfAmount;
+
+      if (targetComponent.type === "EARNING") {
+        periodGross -= employerPfAmount;
+      }
+    }
+
+    /*
+     * Aggregate components across salary sub-periods.
+     */
+    for (const component of periodComponents) {
+      const key = String(component.component_id);
+
+      if (!componentTotals.has(key)) {
+        componentTotals.set(key, {
+          component_id: component.component_id,
+          name: component.name,
+          code: component.code,
+          type: component.type,
+          amount: 0,
+        });
+      }
+
+      componentTotals.get(key).amount += component.amount;
+    }
+
+    gross += periodGross;
+    deduction += periodDeduction;
+
+    periodBreakdown.push({
+      deployment_id: period.deployment_id,
+      salary_structure_id: period.salary_structure_id,
+      ctc: yearlyCTC,
+      monthly_ctc: monthlyCTC,
+      start_date: formatDate(period.start),
+      end_date: formatDate(period.end),
+      payable_days: period.payable_days,
+      components: periodComponents,
+      gross_earnings: periodGross,
+      total_deductions: periodDeduction,
+    });
+  }
+
+  /*
+   * 7. Fetch applicable addons for the selected month.
+   *
+   * Addons are processed once for the month, not once per sub-period,
+   * to avoid duplicating a monthly addon when multiple structures exist.
+   */
   const employeeAddons = await EmployeeSalaryAddon.findAll({
     where: {
       employee_id,
@@ -263,13 +561,13 @@ exports.generateMonthlySalary = async (data) => {
       is_active: true,
 
       effective_from: {
-        [Op.lte]: requestedDate,
+        [Op.lte]: new Date(monthEnd),
       },
 
       [Op.or]: [
         {
           effective_to: {
-            [Op.gte]: requestedDate,
+            [Op.gte]: new Date(monthStart),
           },
         },
         {
@@ -277,7 +575,6 @@ exports.generateMonthlySalary = async (data) => {
         },
       ],
     },
-
     include: [
       {
         model: SalaryAddonMaster,
@@ -290,133 +587,17 @@ exports.generateMonthlySalary = async (data) => {
     ],
   });
 
-  if (!components.length) {
-    throw new AppError("No components found for structure", 404);
-  }
-
-  let gross = 0;
-  let deduction = 0;
-  let addonEarning = 0;
-  let addonDeduction = 0;
-
-  const breakdown = [];
-  const addonsBreakdown = [];
-  const componentValues = {};
-  const employerPfDeductions = {};
-
-  const prorationFactor = payableDays / totalDays;
-
-  for (const item of components) {
-    const comp = item.salaryComponent;
-
-    if (!comp) continue;
-
-    const value_type = item.value_type || comp.value_type;
-
-    let baseAmount = 0;
-
-    // FIXED
-    if (value_type === "FIXED") {
-      baseAmount = Number(item.amount ?? comp.amount ?? 0);
-    }
-
-    // PERCENTAGE
-    if (value_type === "PERCENTAGE") {
-      const percentage = Number(item.percentage ?? comp.percentage ?? 0);
-
-      if (comp.base_type === "CTC") {
-        baseAmount = (percentage / 100) * monthlyCTC;
-      }
-
-      if (comp.base_type === "COMPONENT") {
-        const baseVal = componentValues[comp.base_component_id];
-
-        if (baseVal === undefined) {
-          throw new AppError(
-            `Base component not calculated for component ${comp.name}`,
-            400,
-          );
-        }
-
-        baseAmount = (percentage / 100) * baseVal;
-      }
-    }
-
-    let amount;
-
-    if (value_type === "FIXED") {
-      amount = baseAmount;
-    } else if (comp.is_pf === true) {
-      const pfUpperLimit =
-        comp.pf_upper_limit != null ? Number(comp.pf_upper_limit) : null;
-
-      if (pfUpperLimit != null) {
-        if (baseAmount >= pfUpperLimit) {
-          amount = pfUpperLimit;
-        } else {
-          amount = baseAmount * prorationFactor;
-        }
-      } else {
-        amount = baseAmount * prorationFactor;
-      }
-    } else {
-      amount = baseAmount * prorationFactor;
-    }
-
-    componentValues[comp.id] = baseAmount;
-
-    if (comp.is_pf === true && comp.employer_pf_deduction_component_id) {
-      const employerPfAmount = amount;
-
-      employerPfDeductions[comp.employer_pf_deduction_component_id] =
-        (employerPfDeductions[comp.employer_pf_deduction_component_id] || 0) +
-        employerPfAmount;
-    }
-
-    if (comp.type === "EARNING") {
-      gross += amount;
-    } else {
-      deduction += amount;
-    }
-
-    breakdown.push({
-      component_id: comp.id,
-      name: comp.name,
-      code: comp.code,
-      type: comp.type,
-      amount,
-    });
-  }
-
-  for (const [componentId, employerPfDeduction] of Object.entries(
-    employerPfDeductions,
-  )) {
-    const component = breakdown.find(
-      (item) => String(item.component_id) === String(componentId),
-    );
-
-    if (!component) continue;
-
-    component.amount -= employerPfDeduction;
-
-    if (component.type === "EARNING") {
-      gross -= employerPfDeduction;
-    }
-  }
-
-  //const net = gross - deduction;
   for (const addon of employeeAddons) {
     const master = addon.salaryAddonMaster;
 
     if (!master) continue;
 
-    const addonAmount = Number(addon.amount || 0);
+    const amount = Number(addon.amount || 0);
 
     if (master.addon_type === "DEDUCTION") {
-      addonDeduction += addonAmount;
-    }
-    if (master.addon_type === "EARNING") {
-      addonEarning += addonAmount;
+      addonDeduction += amount;
+    } else if (master.addon_type === "EARNING") {
+      addonEarning += amount;
     }
 
     addonsBreakdown.push({
@@ -425,11 +606,14 @@ exports.generateMonthlySalary = async (data) => {
       name: master.name,
       code: master.code,
       type: master.addon_type,
-      amount: addonAmount,
+      amount,
       recurrence_type: addon.recurrence_type,
     });
   }
-  // Leave data fetch
+
+  /*
+   * 8. Calculate leave deduction once for the month.
+   */
   const leaveData = await EmployeeWorkOrderLeave.findOne({
     where: {
       employee_id,
@@ -443,36 +627,50 @@ exports.generateMonthlySalary = async (data) => {
   const leaveGranted =
     leaveTaken === 0 ? 0 : Number(leaveData?.leave_granted || 0);
 
-  // Per day salary
   const perDaySalary = gross / totalDays;
 
-  // Leave deduction
   const leaveDeduction = perDaySalary * Math.abs(leaveGranted);
 
-  // Total deduction me add karo
   deduction += leaveDeduction;
 
-  // Final net salary
+  /*
+   * 9. Calculate final salary.
+   */
   const net = gross - deduction + addonEarning - addonDeduction;
-  // 5️⃣ Final response
+
+  const breakdown = Array.from(componentTotals.values());
+
   return {
     is_existing: false,
     employee_id,
     employee_name,
     month,
     year,
-    ctc: yearlyCTC,
-    yearly_ctc: yearlyCTC,
-    monthly_ctc: monthlyCTC,
-    joining_date: deployment.joining_date,
-    relieving_date: deployment.relieving_date,
+
+    // Multiple salary structures may have different CTCs.
+    yearly_ctc: null,
+    monthly_ctc: null,
+
     total_days: totalDays,
-    payable_days: payableDays,
+
+    deployment_periods: deploymentPeriods.map((period) => ({
+      deployment_id: period.deployment_id,
+      start_date: formatDate(period.start),
+      end_date: formatDate(period.end),
+      payable_days: period.payable_days,
+    })),
+
+    salary_periods: periodBreakdown,
+
     gross_earnings: gross,
     total_deductions: deduction,
+    addon_earnings: addonEarning,
+    addon_deductions: addonDeduction,
     net_salary: net,
+
     leaveTaken,
     lop: leaveDeduction,
+
     components: breakdown,
     addons: addonsBreakdown,
   };
@@ -590,6 +788,7 @@ exports.dispatchSalary = async (data, transaction) => {
     registers: createdRegisters,
   };
 };
+
 exports.generateSalarySlip = async (register_id, transaction) => {
   // register
   const register = await EmployeeSalaryRegister.findByPk(register_id, {

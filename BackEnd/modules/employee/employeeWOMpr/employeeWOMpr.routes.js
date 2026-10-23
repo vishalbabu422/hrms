@@ -2,7 +2,7 @@ const router = require("express").Router({ mergeParams: true });
 
 const controller = require("./employeeWOMpr.controller");
 const { protect, checkPermission ,restrictTo } = require("../../../middlewares/authMiddleware");
-const upload = require("../../../middlewares/mprdocumentUpload.middleware");
+const uploadMpr = require("../../../middlewares/mprdocumentUpload.middleware");
 
 const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
 
@@ -22,7 +22,7 @@ router
   .route("/upload")
   .post(
     checkPermission("MPR.CREATE"),
-    upload.single("file"), 
+    uploadMpr,
     controller.uploadEmployeeWOMpr);
 
 router

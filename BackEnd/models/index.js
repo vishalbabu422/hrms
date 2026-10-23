@@ -56,6 +56,11 @@ const EmployeeSalaryAddon = require("./employeeSalaryAddon");
 const ResourceRate = require("./resourceRate");
 const WoMilestone = require("./milestone");
 const AppSettings = require("./appSettings");
+const PbgMaster = require("./pbgMaster");
+const WorkorderPbg = require("./workorderPbg");
+const EmpSalaryStatement = require("./employeeSalaryStatement");
+const BillingSubmission = require("./billingSubmission");
+const VendorMaster = require("./vendorMaster");
 
 // Put all models inside object
 const models = {
@@ -117,6 +122,11 @@ const models = {
   ResourceRate,
   WoMilestone,
   AppSettings,
+  PbgMaster,
+  WorkorderPbg,
+  EmpSalaryStatement,
+  BillingSubmission,
+  VendorMaster,
 };
 
 // Run associate method if exists

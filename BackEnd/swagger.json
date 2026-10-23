@@ -11654,64 +11654,64 @@
       }
     },
     "/employee-salary-register-monthly/generated-slips": {
-      "get": {
-        "security": [
-          {
-            "Authorization": []
-          }
-        ],
-        "tags": ["Employee Salary Monthly"],
-        "summary": "Get Generated Salary Slips",
-        "description": "Returns salary register data for the specified month and year where the monthly salary slip has been generated.",
-        "produces": ["application/json"],
-        "parameters": [
-          {
-            "name": "year",
-            "in": "query",
-            "required": true,
-            "type": "integer",
-            "format": "int32",
-            "example": 2026,
-            "description": "Salary year"
-          },
-          {
-            "name": "employee_id",
-            "in": "query",
-            "required": true,
-            "type": "integer",
-            "format": "int32",
-            "example": 10,
-            "description": "Employee ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Generated salary slips retrieved successfully",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "example": "success"
-                },
-                "data": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/definitions/GeneratedSalarySlip"
-                  }
-                }
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee Salary Monthly"],
+    "summary": "Get Generated Salary Slips",
+    "description": "Returns salary register data for the specified month and year where the monthly salary slip has been generated.",
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "month",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "format": "int32",
+        "example": 8,
+        "description": "Salary month (1-12)"
+      },
+      {
+        "name": "year",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "format": "int32",
+        "example": 2026,
+        "description": "Salary year"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Generated salary slips retrieved successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GeneratedSalarySlip"
               }
-            }
-          },
-          "400": {
-            "description": "Month and year are required",
-            "schema": {
-              "$ref": "#/definitions/InvalidResponse"
             }
           }
         }
+      },
+      "400": {
+        "description": "Month and year are required",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
       }
-    },
+    }
+  }
+},
     "/employee-salary-structure/{id}/emp/{emp_id}": {
       "get": {
         "security": [
@@ -12765,7 +12765,1544 @@
           }
         }
       }
+    },
+    "/pbg-master/index": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["PBG Master"],
+    "summary": "Get PBG Master List",
+    "description": "Get all PBG master records",
+    "produces": ["application/json"],
+
+    "parameters": [
+      {
+        "name": "is_active",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Filter by active status",
+        "example": true
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search PBG records"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Sort fields (Ex: id desc)",
+        "example": "id desc"
+      },
+      {
+        "name": "fields",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Select specific fields"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "example": 1
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "example": 10
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "PBG Master list fetched successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "total": {
+              "type": "integer",
+              "example": 2
+            },
+            "page": {
+              "type": "integer",
+              "example": 1
+            },
+            "limit": {
+              "type": "integer",
+              "example": 10
+            },
+            "totalPages": {
+              "type": "integer",
+              "example": 1
+            },
+            "results": {
+              "type": "integer",
+              "example": 2
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "pbgList": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/PbgMasterResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
     }
+  }
+    },
+    "/pbg-master/{pbg_id}": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+
+    "tags": ["PBG Master"],
+
+    "summary": "Get  PBG by PBG ID",
+
+    "description": "Get work orders linked with a PBG along with PBG master details",
+
+    "produces": [
+      "application/json"
+    ],
+
+    "parameters": [
+      {
+        "name": "pbg_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "PBG Master ID",
+        "example": 101
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "Workorder PBG details fetched successfully",
+
+        "schema": {
+          "type": "object",
+
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+
+            "results": {
+              "type": "integer",
+              "example": 2
+            },
+
+            "data": {
+              "type": "object",
+
+              "properties": {
+                "workorderPbgList": {
+                  "type": "array",
+
+                  "items": {
+                    "$ref": "#/definitions/WorkorderPbgResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+
+      "400": {
+        "description": "Invalid PBG ID",
+
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+
+      "404": {
+        "description": " PBG not found",
+
+        "schema": {
+          "$ref": "#/definitions/NotFoundResponse"
+        }
+      }
+    }
+  },
+   "patch": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+
+    "tags": [
+      "PBG Master"
+    ],
+
+    "summary": "Update PBG Master",
+
+    "description": "Update PBG master details by PBG ID",
+
+    "consumes": [
+      "application/json"
+    ],
+
+    "produces": [
+      "application/json"
+    ],
+
+    "parameters": [
+      {
+        "name": "pbg_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "PBG Master ID",
+        "example": 1
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "$ref": "#/definitions/UpdatePbgRequest"
+        }
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "PBG updated successfully",
+        "schema": {
+          "$ref": "#/definitions/UpdatePbgResponse"
+        }
+      },
+
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+
+      "404": {
+        "description": "PBG not found",
+        "schema": {
+          "$ref": "#/definitions/NotFoundResponse"
+        }
+      }
+    }
+  },
+   "delete": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+
+    "tags": [
+      "PBG Master"
+    ],
+
+    "summary": "Delete PBG Master",
+
+    "description": "Soft delete PBG master and its workorder mappings by PBG ID",
+
+    "produces": [
+      "application/json"
+    ],
+
+    "parameters": [
+      {
+        "name": "pbg_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "PBG Master ID",
+        "example": 1
+      }
+    ],
+
+    "responses": {
+      "200": {
+        "description": "PBG deleted successfully",
+
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "PBG deleted successfully"
+            }
+          }
+        }
+      },
+
+    "404": {
+  "description": "PBG not found",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "example": "fail"
+      },
+      "message": {
+        "type": "string",
+        "example": "PBG not found"
+      }
+    }
+  }
+},
+
+      "400": {
+        "description": "Invalid PBG ID",
+
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+    },
+    "/pbg-master/": {
+  "post": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "PBG Master"
+    ],
+    "summary": "Create PBG Master",
+    "description": "Create PBG master record and map it with a work order",
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "$ref": "#/definitions/CreatePbgRequest"
+        }
+      }
+    ],
+    "responses": {
+      "201": {
+        "description": "PBG created successfully",
+        "schema": {
+          "$ref": "#/definitions/CreatePbgResponse"
+        }
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "409": {
+  "description": "PBG number already exists",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string",
+        "example": "fail"
+      },
+      "message": {
+        "type": "string",
+        "example": "PBG number already exists"
+      }
+    }
+  }
+}
+    }
+  }
+    },
+    "/pbg-master/calculate-total": {
+  "post": {
+    "tags": [
+      "PBG Master"
+    ],
+    "summary": "Calculate total amount of multiple Work Orders",
+    "description": "Accepts multiple Work Order IDs, fetches their total_amt values from the Work Order table.",
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "$ref": "#/definitions/CalculateWorkOrderTotalRequest"
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Work Order total amount calculated successfully",
+        "schema": {
+          "$ref": "#/definitions/CalculateWorkOrderTotalResponse"
+        }
+      },
+      "400": {
+        "description": "Invalid request body",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "work_order_ids is required"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "One or more Work Orders not found or inactive",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "Work Order not found: 999"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "Unauthorized"
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "You do not have permission to perform this action"
+            }
+          }
+        }
+      }
+    }
+  }
+    },
+    "/pbg-master/{pbg_id}/upload": {
+  "post": {
+    "tags": [
+      "PBG Master"
+    ],
+    "summary": "Upload PBG Document",
+    "description": "Upload a PDF document for a specific PBG ID",
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "consumes": [
+      "multipart/form-data"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "pbg_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "PBG Master ID",
+        "example": 1
+      },
+      {
+        "name": "file",
+        "in": "formData",
+        "required": true,
+        "type": "file",
+        "description": "PBG document in PDF format"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "PBG document uploaded successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "PBG document uploaded successfully"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "pbg_id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "pbg_no": {
+                  "type": "string",
+                  "example": "PBG-2026-001"
+                },
+                "pbg_upload_path": {
+                  "type": "string",
+                  "example": "uploads/pbg/1/PBG_1727000000000.pdf"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid PBG ID or PDF file missing",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "404": {
+        "description": "PBG not found",
+        "schema": {
+          "$ref": "#/definitions/NotFoundResponse"
+        }
+      }
+    }
+  }
+    },
+    "/pbg-master/{pbg_id}/download": {
+  "get": {
+    "tags": [
+      "PBG Master"
+    ],
+    "summary": "Download PBG Document",
+    "description": "Download the uploaded PDF document for a specific PBG ID",
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "produces": [
+      "application/pdf"
+    ],
+    "parameters": [
+      {
+        "name": "pbg_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "PBG Master ID",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "PBG PDF document downloaded successfully",
+        "schema": {
+          "type": "file"
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "404": {
+        "description": "PBG or uploaded document not found",
+        "schema": {
+          "$ref": "#/definitions/NotFoundResponse"
+        }
+      }
+    }
+  }
+    },
+     "/emp-salary-statement/": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Employee Salary Statement"
+    ],
+    "summary": "Get employee salary statements",
+    "description": "Get employee salary statement details for a specific month and year, including statement path, employee name, gross earnings and net salary from the dispatched salary register.",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "month",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 12,
+        "example": 9,
+        "description": "Salary month (1-12)"
+      },
+      {
+        "name": "year",
+        "in": "query",
+        "required": true,
+        "type": "integer",
+        "example": 2026,
+        "description": "Salary year"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Salary statements fetched successfully",
+        "schema": {
+          "$ref": "#/definitions/SalaryStatementResponse"
+        }
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "Month and year are required"
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Salary statements not found",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "No salary statements found for the given month and year"
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "Unauthorized"
+            }
+          }
+        }
+      },
+      "403": {
+        "description": "Forbidden",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "fail"
+            },
+            "message": {
+              "type": "string",
+              "example": "You do not have permission to perform this action"
+            }
+          }
+        }
+      }
+    }
+  }  
+    },
+    "/emp-salary-statement/{empId}": {
+  "post": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee Salary Statement"],
+    "summary": "Create Employee Salary Statement",
+    "description": "Create a salary statement record and upload its PDF file",
+    "consumes": ["multipart/form-data"],
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "empId",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "format": "int64",
+        "description": "Employee ID",
+        "example": 1
+      },
+      {
+        "name": "month",
+        "in": "formData",
+        "required": true,
+        "type": "integer",
+        "description": "Salary month (1-12)",
+        "example": 2
+      },
+      {
+        "name": "year",
+        "in": "formData",
+        "required": true,
+        "type": "integer",
+        "description": "Salary year",
+        "example": 2026
+      },
+      {
+        "name": "file",
+        "in": "formData",
+        "required": true,
+        "type": "file",
+        "description": "Salary statement PDF"
+      }
+    ],
+    "responses": {
+      "201": {
+        "description": "Salary statement created successfully"
+      },
+      "400": {
+        "description": "Invalid request or missing PDF"
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "Employee or dispatched salary register not found"
+      },
+      "409": {
+        "description": "Salary statement already exists"
+      }
+    }
+  },
+   "delete": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee Salary Statement"],
+    "summary": "Delete Employee Salary Statement(s)",
+    "description": "Delete a single or multiple salary statement records for an employee",
+    "consumes": ["application/json"],
+    "produces": ["application/json"],
+    "parameters": [
+      {
+        "name": "empId",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "format": "int64",
+        "description": "Employee ID",
+        "example": 2
+      },
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "required": ["statementIds"],
+          "properties": {
+            "statementIds": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "example": [1, 2]
+            }
+          }
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Salary statement(s) deleted successfully"
+      },
+      "400": {
+        "description": "Invalid employee ID or statement IDs"
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "No matching salary statements found"
+      }
+    }
+  }
+    },
+    "/emp-salary-statement/{empId}/{statementId}/download": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": ["Employee Salary Statement"],
+    "summary": "Download Employee Salary Statement",
+    "description": "Download the uploaded salary statement PDF",
+    "produces": ["application/pdf"],
+    "parameters": [
+      {
+        "name": "empId",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "format": "int64",
+        "description": "Employee ID"
+      },
+      {
+        "name": "statementId",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "format": "int64",
+        "description": "Salary statement ID"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "PDF downloaded successfully"
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "Salary statement or file not found"
+      }
+    }
+  }
+    },
+    
+    "/billing-submission/work-order/{wo_id}/invoice-preview": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Generate invoice number preview",
+    "description": "Generates an invoice number preview using the selected Work Order, vendor code, billing month and financial year. Does not create a billing submission.",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "wo_id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Work Order ID",
+        "example": 25
+      }
+      
+    ],
+    "responses": {
+      "200": {
+        "description": "Invoice number preview generated successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "Invoice number generated successfully"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "wo_id": {
+                  "type": "integer",
+                  "example": 25
+                },
+                "work_order_no": {
+                  "type": "string",
+                  "example": "WO/2026/001"
+                },
+                "vendor_id": {
+                  "type": "integer",
+                  "example": 10
+                },
+                "vendor_code": {
+                  "type": "string",
+                  "example": "ABC123"
+                },
+                "month": {
+                  "type": "integer",
+                  "example": 9
+                },
+                "year": {
+                  "type": "integer",
+                  "example": 2026
+                },
+                "financial_year": {
+                  "type": "string",
+                  "example": "26-27"
+                },
+                "invoice_no": {
+                  "type": "string",
+                  "example": "ABC123/26-27/09/Sep07"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid input or vendor code missing",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "Work Order or vendor not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+
+        }
+      }
+    }
+  }
+    },
+    "/billing-submission/index": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Get Billing Submission List",
+    "description": "Get all active billing submission records with related PBG details",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "is_active",
+        "in": "query",
+        "required": false,
+        "type": "boolean",
+        "description": "Filter by active status",
+        "example": true
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Search billing submission records"
+      },
+      {
+        "name": "sort",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Sort fields (Ex: id desc)",
+        "example": "id desc"
+      },
+      {
+        "name": "fields",
+        "in": "query",
+        "required": false,
+        "type": "string",
+        "description": "Select specific fields"
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Page number",
+        "example": 1
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "type": "integer",
+        "description": "Number of records per page",
+        "example": 10
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Billing Submission list fetched successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "total": {
+              "type": "integer",
+              "example": 2
+            },
+            "page": {
+              "type": "integer",
+              "example": 1
+            },
+            "limit": {
+              "type": "integer",
+              "example": 10
+            },
+            "totalPages": {
+              "type": "integer",
+              "example": 1
+            },
+            "results": {
+              "type": "integer",
+              "example": 2
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "billingSubmissions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/BillingSubmissionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      }
+    }
+  }
+    },
+    "/billing-submission/{id}": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Get Billing Submission by ID",
+    "description": "Fetch an active billing submission with related PBG details",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Billing Submission ID",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Billing Submission fetched successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "billingSubmission": {
+                  "$ref": "#/definitions/BillingSubmissionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid Billing Submission ID",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "404": {
+        "description": "Billing Submission not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  },
+"patch": {
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "tags": [
+    "Billing Submission"
+  ],
+  "summary": "Update Billing Submission",
+  "description": "Update billing submission details by ID",
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "type": "integer",
+      "description": "Billing Submission ID",
+      "example": 1
+    },
+    {
+      "name": "body",
+      "in": "body",
+      "required": true,
+      "schema": {
+        "type": "object",
+        "properties": {
+          "wo_id": {
+            "type": "integer",
+            "example": 10
+          },
+          "month": {
+            "type": "integer",
+            "example": 9
+          },
+          "year": {
+            "type": "integer",
+            "example": 2026
+          },
+          "invoice_no": {
+            "type": "string",
+            "example": "VEND001/26-27/Oct13"
+          },
+          "invoice_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-10-13"
+          },
+          "billing_amount": {
+            "type": "number",
+            "example": 10000
+          },
+          "total_amount": {
+            "type": "number",
+            "example": 11800
+          },
+          "pbg_id": {
+            "type": "integer",
+            "x-nullable": true,
+            "example": 5
+          },
+          "pbg_submission_date": {
+            "type": "string",
+            "format": "date",
+            "x-nullable": true,
+            "example": "2026-10-13"
+          },
+          "billing_igst_amt": {
+            "type": "number",
+            "example": 1800
+          },
+          "billing_cgst_amt": {
+            "type": "number",
+            "example": 0
+          },
+          "billing_sgst_amt": {
+            "type": "number",
+            "example": 0
+          }
+        }
+      }
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "Billing Submission updated successfully"
+    },
+    "400": {
+      "description": "Invalid request",
+      "schema": {
+        "$ref": "#/definitions/InvalidResponse"
+      }
+    },
+    "404": {
+      "description": "Billing Submission not found",
+      "schema": {
+        "$ref": "#/definitions/InvalidResponse"
+      }
+    }
+  }
+},
+"delete": {
+  "security": [
+    {
+      "Authorization": []
+    }
+  ],
+  "tags": [
+    "Billing Submission"
+  ],
+  "summary": "Soft Delete Billing Submission",
+  "description": "Mark a billing submission inactive by ID",
+  "produces": [
+    "application/json"
+  ],
+  "parameters": [
+    {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "type": "integer",
+      "description": "Billing Submission ID",
+      "example": 1
+    }
+  ],
+  "responses": {
+    "200": {
+      "description": "Billing Submission deleted successfully",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Billing Submission deleted successfully"
+          }
+        }
+      }
+    },
+    "400": {
+      "description": "Invalid Billing Submission ID",
+      "schema": {
+        "$ref": "#/definitions/InvalidResponse"
+      }
+    },
+    "404": {
+      "description": "Billing Submission not found",
+      "schema": {
+        "$ref": "#/definitions/InvalidResponse"
+      }
+    }
+  }
+}
+
+
+
+    },
+    "/billing-submission/": {
+  "post": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Create Billing Submission",
+    "description": "Create a new billing submission record",
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "body",
+        "in": "body",
+        "required": true,
+        "schema": {
+          "type": "object",
+          "required": [
+            "wo_id",
+            "month",
+            "year",
+            "invoice_no",
+            "invoice_date"
+          ],
+          "properties": {
+            "wo_id": {
+              "type": "integer",
+              "example": 10
+            },
+            "month": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12,
+              "example": 9
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "example": 2026
+            },
+            "invoice_no": {
+              "type": "string",
+              "example": "VEND001/26-27/Oct13"
+            },
+            "invoice_date": {
+              "type": "string",
+              "format": "date",
+              "example": "2026-10-13"
+            },
+            "billing_amount": {
+              "type": "number",
+              "format": "decimal",
+              "example": 10000.00
+            },
+            "total_amount": {
+              "type": "number",
+              "format": "decimal",
+              "example": 11800.00
+            },
+            "pbg_id": {
+              "type": "integer",
+              "x-nullable": true,
+              "example": 5
+            },
+            "pbg_submission_date": {
+              "type": "string",
+              "format": "date",
+              "x-nullable": true,
+              "example": "2026-10-13"
+            },
+            "billing_igst_amt": {
+              "type": "number",
+              "format": "decimal",
+              "example": 1800.00
+            },
+            "billing_cgst_amt": {
+              "type": "number",
+              "format": "decimal",
+              "example": 0
+            },
+            "billing_sgst_amt": {
+              "type": "number",
+              "format": "decimal",
+              "example": 0
+            }
+          }
+        }
+      }
+    ],
+    "responses": {
+      "201": {
+        "description": "Billing Submission created successfully"
+      },
+      "400": {
+        "description": "Invalid request",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      }
+    }
+  }
+    },
+    
+"/billing-submission/{id}/generatePdf": {
+  "post": {
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Generate Billing Submission PDF",
+    "description": "Generates a PDF containing work order, deployment, invoice, NICSI registration and vendor contact details, and downloads the PDF.",
+    "consumes": [
+      "application/json"
+    ],
+    "produces": [
+      "application/pdf"
+    ],
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "format": "int64",
+        "description": "Billing Submission ID",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Billing Submission PDF generated successfully",
+        "schema": {
+          "type": "file"
+        }
+      },
+      "400": {
+        "description": "Invalid Billing Submission ID"
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "Billing Submission, Work Order or Vendor not found"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    }
+  }
+}
+
   },
 
   "definitions": {
@@ -16599,70 +18136,474 @@
       }
     },
     "GeneratedSalarySlip": {
+  "type": "object",
+  "properties": {
+    "register_id": {
+      "type": "integer",
+      "example": 25
+    },
+    "employee_id": {
+      "type": "integer",
+      "example": 101
+    },
+    "employee_name": {
+      "type": "string",
+      "example": "Rahul Kumar"
+    },
+    "month": {
+      "type": "integer",
+      "example": 8
+    },
+    "year": {
+      "type": "integer",
+      "example": 2026
+    },
+    "gross_earnings": {
+      "type": "number",
+      "format": "double",
+      "example": 50000
+    },
+    "total_deductions": {
+      "type": "number",
+      "format": "double",
+      "example": 5000
+    },
+    "net_salary": {
+      "type": "number",
+      "format": "double",
+      "example": 45000
+    },
+    "status": {
+      "type": "string",
+      "example": "DISPATCHED"
+    },
+    "mon_salaryslip_generated": {
+      "type": "boolean",
+      "example": true
+    },
+    "mon_salaryslip_filename": {
+      "type": "string",
+      "example": "salary_slip_101_08_2026.pdf"
+    },
+    "mon_salaryslip_filepath": {
+      "type": "string",
+      "example": "/uploads/salary-slips/salary_slip_101_08_2026.pdf"
+    },
+    "transaction_number": {
+      "type": "string",
+      "example": "TXN1001"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-08-31"
+    }
+  }
+    },
+    "PbgMasterResponse": {
+  "type": "object",
+  "properties": {
+    "pbg_no": {
+      "type": "string",
+      "example": "PBG-001"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-04-01"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2027-03-31"
+    },
+    "nicsi_reg_no": {
+      "type": "string",
+      "example": "NICSI-REG-001"
+    },
+    "is_active": {
+      "type": "boolean",
+      "example": true
+    }
+  }
+    },
+    "WorkorderPbgResponse": {
+  "type": "object",
+
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+
+    "pbg_id": {
+      "type": "integer",
+      "example": 101
+    },
+
+    "wo_id": {
+      "type": "integer",
+      "example": 501
+    },
+
+    "is_active": {
+      "type": "boolean",
+      "example": true
+    },
+
+    "created": {
+      "type": "string",
+      "format": "date-time",
+      "example": "2026-09-25T05:00:00.000Z"
+    },
+
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "example": "2026-09-25T05:00:00.000Z"
+    },
+
+    "pbg": {
+      "$ref": "#/definitions/PbgMasterResponse"
+    }
+  }
+    },
+    "CreatePbgRequest": {
+  "type": "object",
+  "required": [
+    "pbg_no",
+    "start_date",
+    "end_date",
+    "amount",
+    "wo_id"
+  ],
+  "properties": {
+    "pbg_no": {
+      "type": "string",
+      "example": "PBG/2026/001"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-09-01"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2027-08-31"
+    },
+    "amount": {
+      "type": "number",
+      "format": "double",
+      "example": 500000.00
+    },
+    "nicsi_reg_no": {
+      "type": "string",
+      "example": "NICSI/REG/001"
+    },
+    "nicsi_reg_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-09-02"
+    },
+    "bank_charges": {
+      "type": "number",
+      "format": "double",
+      "example": 2500.00
+    },
+    "pbg_upload_path": {
+      "type": "string",
+      "example": "uploads/pbg/PBG_2026_001.pdf"
+    },
+    "is_active": {
+      "type": "boolean",
+      "example": true
+    },
+    "wo_id": {
+      "type": "integer",
+      "example": 101
+    }
+  }
+    },
+    "CreatePbgResponse": {
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "example": "success"
+    },
+    "message": {
+      "type": "string",
+      "example": "PBG created successfully"
+    },
+    "data": {
       "type": "object",
       "properties": {
-        "register_id": {
-          "type": "integer",
-          "example": 25
+        "pbg": {
+          "$ref": "#/definitions/PbgMasterResponse"
         },
-        "employee_id": {
-          "type": "integer",
-          "example": 101
-        },
-        "employee_name": {
-          "type": "string",
-          "example": "Rahul Kumar"
-        },
-        "month": {
-          "type": "integer",
-          "example": 8
-        },
-        "year": {
-          "type": "integer",
-          "example": 2026
-        },
-        "gross_earnings": {
-          "type": "number",
-          "format": "double",
-          "example": 50000
-        },
-        "total_deductions": {
-          "type": "number",
-          "format": "double",
-          "example": 5000
-        },
-        "net_salary": {
-          "type": "number",
-          "format": "double",
-          "example": 45000
-        },
-        "status": {
-          "type": "string",
-          "example": "DISPATCHED"
-        },
-        "mon_salaryslip_generated": {
-          "type": "boolean",
-          "example": true
-        },
-        "mon_salaryslip_filename": {
-          "type": "string",
-          "example": "salary_slip_101_08_2026.pdf"
-        },
-        "mon_salaryslip_filepath": {
-          "type": "string",
-          "example": "/uploads/salary-slips/salary_slip_101_08_2026.pdf"
-        },
-        "transaction_number": {
-          "type": "string",
-          "example": "TXN1001"
-        },
-        "transaction_date": {
-          "type": "string",
-          "format": "date",
-          "example": "2026-08-31"
+        "workorderPbg": {
+          "$ref": "#/definitions/WorkorderPbgResponse"
         }
       }
+    }
+  }
     },
+    "UpdatePbgRequest": {
+  "type": "object",
+  "properties": {
+    "pbg_no": {
+      "type": "string",
+      "example": "PBG/2026/001"
+    },
+
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-09-01"
+    },
+
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2027-08-31"
+    },
+
+    "amount": {
+      "type": "number",
+      "format": "double",
+      "example": 600000.00
+    },
+
+    "nicsi_reg_no": {
+      "type": "string",
+      "example": "NICSI/REG/001"
+    },
+
+    "nicsi_reg_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-09-02"
+    },
+
+    "bank_charges": {
+      "type": "number",
+      "format": "double",
+      "example": 3000.00
+    },
+
+    "pbg_upload_path": {
+      "type": "string",
+      "example": "uploads/pbg/PBG_2026_001.pdf"
+    },
+
+    "is_active": {
+      "type": "boolean",
+      "example": true
+    }
+  }
+    },
+    "UpdatePbgResponse": {
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "example": "success"
+    },
+
+    "message": {
+      "type": "string",
+      "example": "PBG updated successfully"
+    },
+
+    "data": {
+      "type": "object",
+      "properties": {
+        "pbg": {
+          "$ref": "#/definitions/PbgMasterResponse"
+        }
+      }
+    }
+  }
+    },
+    "CalculateWorkOrderTotalRequest": {
+  "type": "object",
+  "required": [
+    "work_order_ids"
+  ],
+  "properties": {
+    "work_order_ids": {
+      "type": "array",
+      "description": "List of Work Order IDs for which total_amt needs to be calculated",
+      "items": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "example": [
+        101,
+        102,
+        105
+      ]
+    }
+  }
+    },
+    "CalculateWorkOrderTotalResponse": {
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "example": "success"
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "work_order_count": {
+          "type": "integer",
+          "example": 3
+        },
+        "grand_total": {
+          "type": "number",
+          "format": "double",
+          "example": 500000.00
+        }
+      }
+    }
+  }
+    },
+    "SalaryStatementResponse": {
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string",
+      "example": "success"
+    },
+    "results": {
+      "type": "integer",
+      "example": 2
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "salaryStatements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "emp_id": {
+                "type": "integer",
+                "format": "int64",
+                "example": 37
+              },
+              "emp_name": {
+                "type": "string",
+                "example": "Saurabh Yadav"
+              },
+              "month": {
+                "type": "integer",
+                "example": 9
+              },
+              "year": {
+                "type": "integer",
+                "example": 2026
+              },
+              "statement_path": {
+                "type": "string",
+                "example": "uploads/salary/37/September_2026.pdf"
+              },
+              "gross_earnings": {
+                "type": "number",
+                "format": "double",
+                "example": 65000.00
+              },
+              "net_salary": {
+                "type": "number",
+                "format": "double",
+                "example": 58000.00
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+    },
+"BillingSubmissionResponse": {
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "integer",
+      "example": 1
+    },
+    "wo_id": {
+      "type": "integer",
+      "example": 10
+    },
+    "month": {
+      "type": "integer",
+      "example": 9
+    },
+    "year": {
+      "type": "integer",
+      "example": 2026
+    },
+    "invoice_no": {
+      "type": "string",
+      "example": "VEND001/26-27/Oct13"
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "example": "2026-10-13"
+    },
+    "billing_amount": {
+      "type": "string",
+      "example": "10000.00"
+    },
+    "total_amount": {
+      "type": "string",
+      "example": "11800.00"
+    },
+    "pbg_id": {
+      "type": "integer",
+      "example": 5,
+      "x-nullable": true
+    },
+    "pbg_submission_date": {
+      "type": "string",
+      "format": "date",
+      "x-nullable": true
+    },
+    "billing_igst_amt": {
+      "type": "string",
+      "example": "1800.00"
+    },
+    "billing_cgst_amt": {
+      "type": "string",
+      "example": "0.00"
+    },
+    "billing_sgst_amt": {
+      "type": "string",
+      "example": "0.00"
+    },
+    "is_active": {
+      "type": "boolean",
+      "example": true
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pbg": {
+      "type": "object",
+      "description": "Related PBG master details or null"
+    }
+  }
+},
+
     "InvalidResponse": {
       "type": "object",
       "properties": {

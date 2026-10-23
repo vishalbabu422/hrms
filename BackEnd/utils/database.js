@@ -15,5 +15,5 @@ const sequelize = new Sequelize(
     minifyAliases: true,
   },
 );
-
+ 
 module.exports = sequelize;

@@ -76,7 +76,7 @@ router.route("/empanelment/create").post(
   //validate(gstCodeCreateSchema, "body"),
   injectOrgScope(),
   checkPermission("EMPANELMENT.CREATE"),
-  upload.single("doc_path"),
+  upload,
   EmpanelmentController.create,
 );
 
@@ -85,7 +85,7 @@ router.route("/empanelment/edit/:id").patch(
   //authController.restrictTo("Manager/Admin", "System Admin"),
   injectOrgScope(),
   checkPermission("EMPANELMENT.UPDATE"),
-  upload.single("doc_path"),
+  upload,
   EmpanelmentController.edit,
 );
 
@@ -239,8 +239,8 @@ router.route("/workorder/create").post(
   // authController.protect,
   // authController.restrictTo("Manager/Admin", "System Admin"),
   // validate(workOrderCreateSchema, "body"),
-  woUpload.single("doc_path"),
   checkPermission("WORKORDER.CREATE"),
+  woUpload,
   WorkOrderController.create,
 );
 
@@ -248,8 +248,8 @@ router.route("/workorder/edit/:id").patch(
   // authController.protect,
   // authController.restrictTo("Manager/Admin", "System Admin"),
   // validate(workOrderUpdateSchema, "body"),
-  woUpload.single("doc_path"),
   checkPermission("WORKORDER.UPDATE"),
+  woUpload,
   WorkOrderController.edit,
 );
 

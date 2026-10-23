@@ -5,7 +5,7 @@ const {
     restrictTo,
     checkPermission
 } = require("../../../middlewares/authMiddleware");
-const upload = require("../../../middlewares/documentUpload.middleware");
+const documentUpload = require("../../../middlewares/mprdocumentUpload.middleware");
 
 const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
 
@@ -21,7 +21,7 @@ router
     .post(
         //restrictTo(...ROLES),
         //checkPermission("DOCUMENT.CREATE"),
-        upload.single("file"),
+        documentUpload,
         controller.createDocument
     );
 

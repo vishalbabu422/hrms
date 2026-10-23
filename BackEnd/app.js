@@ -16,6 +16,8 @@ const moduleRoute = require("./modules/module/module.routes");
 const salaryRoute = require("./modules/salary/index");
 const stateMaster = require("./modules/stateMaster/stateMaster.routes");
 const districtMaster = require("./modules/districtMaster/districtMaster.routes");
+const pbgMaster = require("./modules/pbg/pbgMaster/pbgMaster.routes");
+const billingSubmission = require("./modules/billingSubmission/billingSubmission.routes");
 
 const path = require("path");
 
@@ -91,6 +93,10 @@ app.use("/api/v1/modules", moduleRoute);
 app.use("/api/v1/", salaryRoute);
 app.use("/api/v1/state", stateMaster);
 app.use("/api/v1/district", districtMaster);
+app.use("/api/v1/pbg-Master", pbgMaster);
+app.use("/api/v1/billing-submission", billingSubmission);
+
+
 
 app.use(globalErrorHandler);
 
