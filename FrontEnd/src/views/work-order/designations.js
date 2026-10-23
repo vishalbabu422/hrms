@@ -292,25 +292,6 @@ const WorkOrderDesgnFormComponent = ({ initialData, mode = 'create', onSubmit = 
 
   const grandTotal = Math.round(totalOfTotalAmount + totalIgst + totalCgst + totalSgst)
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault()
-
-  //   const payload = {
-  //     work_order_id: workOrderId,
-  //     deployments: replicas,
-  //      modified_by: 1, // ✅ add this (replace with real user id later)
-  //   }
-
-  //   try {
-  //     await api.post('admin/workorder-desgn/create', payload)
-  //     toast.success(`Designations for Work Order saved successfully`)
-  //     navigate('/work-order')
-  //   } catch (error) {
-  //     console.error(error)
-  //     toast.error(error.response?.data?.message || 'Failed to save Designations')
-  //   }
-  // }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
 

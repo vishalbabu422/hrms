@@ -192,6 +192,50 @@ const vendorAdd = React.lazy(() => import('./views/vendor/add'))
 const vendorEdit = React.lazy(() => import('./views/vendor/edit'))
 const VendorPreview = React.lazy(() => import('./views/vendor/preview'))
 
+
+/* Billing / PBG */
+
+const billingIndex = React.lazy(() =>
+  import('./views/billing/index')
+)
+
+const billingAdd = React.lazy(() =>
+  import('./views/billing/add')
+)
+
+const billingEdit = React.lazy(() =>
+  import('./views/billing/edit')
+)
+
+const billingPreview = React.lazy(() =>
+  import('./views/billing/preview')
+)
+
+
+const salaryAccountStatement = React.lazy(() =>
+  import('./views/salary-account-statement')
+)
+
+
+// Billing Submission Form
+
+const billingSubmissionIndex = React.lazy(() =>
+  import('./views/billing-submission-form/index')
+)
+
+const billingSubmissionAdd = React.lazy(() =>
+  import('./views/billing-submission-form/add')
+)
+
+const billingSubmissionEdit = React.lazy(() =>
+  import('./views/billing-submission-form/edit')
+)
+
+const billingSubmissionPreview = React.lazy(() =>
+  import('./views/billing-submission-form/preview')
+)
+
+
 const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
@@ -236,6 +280,67 @@ const routes = [
     name: 'Emp-Deployment',
     element: WorkOrderEmpDeployment,
   },
+
+// Billing / PBG
+
+{
+  path: '/pbg',
+  name: 'PBG',
+  element: billingIndex,
+},
+{
+  path: '/pbg/add',
+  name: 'Add',
+  element: billingAdd,
+},
+{
+  path: '/pbg/edit/:id',
+  name: 'Edit',
+  element: billingEdit,
+},
+{
+  path: '/pbg/preview/:id',
+  name: 'Preview',
+  element: billingPreview,
+},
+
+
+{
+  path: '/salary-account-statement',
+  name: 'Salary Account Statement',
+  element: salaryAccountStatement,
+},
+
+// Billing Submission Form
+
+
+{
+  path: '/billing-submission-form',
+  name: 'Billing Submission Form',
+  element: billingSubmissionIndex,
+},
+
+{
+  path: '/billing-submission-form/add',
+  name: 'Add Billing Submission',
+  element: billingSubmissionAdd,
+},
+
+{
+  path: '/billing-submission-form/edit/:id',
+  name: 'Edit Billing Submission',
+  element: billingSubmissionEdit,
+},
+
+{
+  path: '/billing-submission-form/preview/:id',
+  name: 'Preview Billing Submission',
+  element: billingSubmissionPreview,
+},
+
+
+
+
 
   //leave record
   { path: '/leave-record', name: 'Leave Record', element: leaverecord },

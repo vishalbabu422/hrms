@@ -60,13 +60,60 @@ const Bank = forwardRef(({ employeeId }, ref) => {
 
   const handleChequeUpload = (e) => {
     const file = e.target.files[0]
+
+    if (!file) {
+      setChequeFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        chequeFile: '',
+      }))
+
+      return
+    }
+
+    // Allowed file types
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png']
+
+    if (!allowedTypes.includes(file.type)) {
+      setChequeFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        chequeFile: 'Only PDF, JPG, JPEG or PNG files are allowed.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Maximum file size: 5 MB
+    const maxSize = 5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setChequeFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        chequeFile: 'File size must not exceed 5 MB.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Valid file
+    setErrors((prev) => ({
+      ...prev,
+      chequeFile: '',
+    }))
+
     setChequeFile(file)
   }
 
   // ================= SUBMIT =================
   useImperativeHandle(ref, () => ({
     submit: async () => {
-
       try {
         setLoading(true)
 
@@ -252,15 +299,18 @@ const Bank = forwardRef(({ employeeId }, ref) => {
           </div>
 
           {/* Cheque Upload */}
+          {/* Cheque Upload */}
           <div className="col-md-12">
             <label className="form-label">Cancelled Cheque</label>
 
             <input
               type="file"
-              className="form-control"
+              className={`form-control ${errors.chequeFile ? 'is-invalid' : ''}`}
               accept=".pdf,.jpg,.jpeg,.png"
               onChange={handleChequeUpload}
             />
+
+            {errors.chequeFile && <div className="invalid-feedback">{errors.chequeFile}</div>}
 
             {/* Existing document */}
             {!chequeFile && chequeDoc && (

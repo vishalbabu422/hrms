@@ -83,7 +83,70 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
       toast.error('Failed to delete experience')
     }
   }
+  const handleFile = (e, index) => {
+    const file = e.target.files[0]
 
+    if (!file) {
+      handleChange(index, 'document', null)
+
+      setErrors((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          document: '',
+        }
+        return updated
+      })
+
+      return
+    }
+
+    // PDF validation
+    const isPDF = file.type === 'application/pdf' && file.name.toLowerCase().endsWith('.pdf')
+
+    if (!isPDF) {
+      setErrors((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          document: 'Only PDF files are allowed.',
+        }
+        return updated
+      })
+
+      e.target.value = ''
+      return
+    }
+
+    // Maximum file size: 5 MB
+    const maxSize = 5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setErrors((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          document: 'File size must not exceed 5 MB.',
+        }
+        return updated
+      })
+
+      e.target.value = ''
+      return
+    }
+
+    // Valid file
+    handleChange(index, 'document', file)
+
+    setErrors((prev) => {
+      const updated = [...prev]
+      updated[index] = {
+        ...updated[index],
+        document: '',
+      }
+      return updated
+    })
+  }
   // ================= SUBMIT =================
   useImperativeHandle(ref, () => ({
     submit: async () => {
@@ -241,16 +304,22 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
               </div>
 
               {/* File Upload */}
+              {/* File Upload */}
               <div className="col-md-6">
                 <label className="form-label">Experience Certificate</label>
 
                 <input
                   type="file"
-                  className="form-control"
-                  onChange={(e) => handleChange(index, 'document', e.target.files[0])}
+                  className={`form-control ${errors[index]?.document ? 'is-invalid' : ''}`}
+                  accept="application/pdf"
+                  onChange={(e) => handleFile(e, index)}
                 />
 
-                {/* existing */}
+                {errors[index]?.document && (
+                  <div className="invalid-feedback">{errors[index].document}</div>
+                )}
+
+                {/* Existing */}
                 {!exp.document && existingDoc && (
                   <div className="mt-2">
                     <a href={existingDoc.file_url} target="_blank" rel="noreferrer">
@@ -259,8 +328,10 @@ const Experience = forwardRef(({ employeeId, isEdit }, ref) => {
                   </div>
                 )}
 
-                {/* new */}
-                {exp.document && <small className="text-success">{exp.document.name}</small>}
+                {/* New */}
+                {exp.document && (
+                  <small className="text-success d-block mt-2">{exp.document.name}</small>
+                )}
               </div>
             </div>
 

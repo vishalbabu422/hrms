@@ -251,9 +251,54 @@ const WorkOrderFormComponent = ({ initialData, mode, onSubmit }) => {
                   type="file"
                   name="doc_path"
                   label="Upload Work Orders"
-                  accept=".pdf"
+                  accept="application/pdf"
+                  invalid={!!errors.doc_path}
+                  feedback={errors.doc_path}
                   onChange={(e) => {
                     const file = e.target.files[0]
+
+                    if (!file) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        doc_path: '',
+                      }))
+                      return
+                    }
+
+                    // STRICT PDF VALIDATION
+                    const isPDF =
+                      file.type === 'application/pdf' && file.name.toLowerCase().endsWith('.pdf')
+
+                    if (!isPDF) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        doc_path: 'Only PDF files are allowed.',
+                      }))
+
+                      // Clear selected file
+                      e.target.value = ''
+                      return
+                    }
+
+                    // 5 MB validation
+                    const maxSize = 5 * 1024 * 1024
+
+                    if (file.size > maxSize) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        doc_path: 'File size must not exceed 5 MB.',
+                      }))
+
+                      e.target.value = ''
+                      return
+                    }
+
+                    // Valid PDF
+                    setErrors((prev) => ({
+                      ...prev,
+                      doc_path: '',
+                    }))
+
                     setFormData((prev) => ({
                       ...prev,
                       doc_path: file,
@@ -265,6 +310,7 @@ const WorkOrderFormComponent = ({ initialData, mode, onSubmit }) => {
                   <div className="mt-2">
                     <small className="text-muted">Current File:</small>
                     <br />
+
                     <a
                       href="#"
                       onClick={(e) => {

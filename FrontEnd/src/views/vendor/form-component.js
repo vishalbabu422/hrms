@@ -20,10 +20,58 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
   const [formData, setFormData] = useState(initialData)
   const [errors, setErrors] = useState({})
 
-  useEffect(() => {
-    setFormData(initialData)
-  }, [initialData])
+  const emptyAddress = {
+    address_line1: '',
+    address_line2: '',
+    city: '',
+    state: '',
+    country: '',
+    pincode: '',
+  }
 
+  const emptyBankAccount = {
+    bank_name: '',
+    account_number: '',
+    ifsc_code: '',
+    branch_name: '',
+  }
+
+  const [addresses, setAddresses] = useState([{ ...emptyAddress }])
+
+  const [bankAccounts, setBankAccounts] = useState([{ ...emptyBankAccount }])
+  useEffect(() => {
+    if (!initialData) return
+
+    setFormData(initialData)
+
+    setAddresses(
+      initialData.addresses?.length
+        ? initialData.addresses
+        : [
+            {
+              address_line1: initialData.address_line1 || '',
+              address_line2: initialData.address_line2 || '',
+              city: initialData.city || '',
+              state: initialData.state || '',
+              country: initialData.country || '',
+              pincode: initialData.pincode || '',
+            },
+          ],
+    )
+
+    setBankAccounts(
+      initialData.bank_accounts?.length
+        ? initialData.bank_accounts
+        : [
+            {
+              bank_name: initialData.bank_name || '',
+              account_number: initialData.account_number || '',
+              ifsc_code: initialData.ifsc_code || '',
+              branch_name: initialData.branch_name || '',
+            },
+          ],
+    )
+  }, [initialData])
   if (!formData) return null
 
   const handleChange = (e) => {
@@ -35,10 +83,47 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
     }))
   }
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault()
-  //   onSubmit(formData)
-  // }
+  const handleAddressChange = (index, field, value) => {
+    setAddresses((prev) =>
+      prev.map((address, i) =>
+        i === index
+          ? {
+              ...address,
+              [field]: value,
+            }
+          : address,
+      ),
+    )
+  }
+
+  const addAddress = () => {
+    setAddresses((prev) => [...prev, { ...emptyAddress }])
+  }
+
+  const removeAddress = (index) => {
+    setAddresses((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleBankChange = (index, field, value) => {
+    setBankAccounts((prev) =>
+      prev.map((bank, i) =>
+        i === index
+          ? {
+              ...bank,
+              [field]: value,
+            }
+          : bank,
+      ),
+    )
+  }
+
+  const addBankAccount = () => {
+    setBankAccounts((prev) => [...prev, { ...emptyBankAccount }])
+  }
+
+  const removeBankAccount = (index) => {
+    setBankAccounts((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -204,131 +289,191 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
               </CCol>
 
               {/* ================= Address ================= */}
-              <CCol md={6}>
-                <CFormLabel>Address Line 1</CFormLabel>
-                <CFormTextarea
-                  name="address_line1"
-                  placeholder="Enter Address"
-                  rows={2}
-                  value={formData.address_line1 || ''}
-                  onChange={handleChange}
-                />
+              {/* ================= Address ================= */}
+
+              <CCol xs={12}>
+                <h6 className="fw-semibold mb-3">Address Details</h6>
+
+                {addresses.map((address, index) => (
+                  <div key={index} className="border rounded p-3 mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6 className="mb-0">Address {index + 1}</h6>
+
+                      {addresses.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => removeAddress(index)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <CFormLabel>Address Line 1</CFormLabel>
+
+                        <CFormTextarea
+                          rows={2}
+                          placeholder="Enter Address"
+                          value={address.address_line1 || ''}
+                          onChange={(e) =>
+                            handleAddressChange(index, 'address_line1', e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>Address Line 2</CFormLabel>
+
+                        <CFormTextarea
+                          rows={2}
+                          value={address.address_line2 || ''}
+                          onChange={(e) =>
+                            handleAddressChange(index, 'address_line2', e.target.value)
+                          }
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>City</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter City"
+                          value={address.city || ''}
+                          onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
+                          maxLength={100}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>State</CFormLabel>
+
+                        <StateSelect
+                          name={`state_${index}`}
+                          value={address.state || ''}
+                          onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
+                          colSize={12}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>Country</CFormLabel>
+
+                        <CFormInput
+                          value={address.country || ''}
+                          onChange={(e) => handleAddressChange(index, 'country', e.target.value)}
+                          maxLength={100}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>Pincode</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter pincode"
+                          value={address.pincode || ''}
+                          onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)}
+                          maxLength={15}
+                          pattern="[0-9]{4,10}"
+                          title="Enter valid pincode"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button type="button" className="btn btn-outline-primary" onClick={addAddress}>
+                  + Add Address
+                </button>
               </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>Address Line 2</CFormLabel>
-                <CFormTextarea
-                  name="address_line2"
-                  rows={2}
-                  value={formData.address_line2 || ''}
-                  onChange={handleChange}
-                />
-              </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>City</CFormLabel>
-                <CFormInput
-                  name="city"
-                  placeholder="Enter City"
-                  value={formData.city || ''}
-                  onChange={handleChange}
-                  maxLength={100}
-                />
-              </CCol>
-
-              {/* <StateSelect
-                name="state"
-                value={formData?.state}
-                onChange={(name, value) =>
-                  handleChange({
-                    target: {
-                      name,
-                      value,
-                    },
-                  })
-                }
-                colSize={6}
-              /> */}
-
-              <StateSelect
-                name="state"
-                value={formData?.state}
-                onChange={handleChange}
-                colSize={6}
-              />
-
-              <CCol md={6}>
-                <CFormLabel>Country</CFormLabel>
-                <CFormInput
-                  name="country"
-                  value={formData.country || ''}
-                  onChange={handleChange}
-                  maxLength={100}
-                />
-              </CCol>
-
-              <CCol md={6}>
-                <CFormLabel>Pincode</CFormLabel>
-                <CFormInput
-                  name="pincode"
-                  value={formData.pincode || ''}
-                  onChange={handleChange}
-                  placeholder="Enter pincode"
-                  maxLength={15}
-                  pattern="[0-9]{4,10}"
-                  title="Enter valid pincode"
-                />
-              </CCol>
-
               {/* ================= Bank Details ================= */}
-              <CCol md={6}>
-                <CFormLabel>Bank Name</CFormLabel>
-                <CFormInput
-                  name="bank_name"
-                  placeholder="Enter Bank Name"
-                  value={formData.bank_name || ''}
-                  onChange={handleChange}
-                  maxLength={150}
-                />
-              </CCol>
+              {/* ================= Bank Details ================= */}
 
-              <CCol md={6}>
-                <CFormLabel>Account Number</CFormLabel>
-                <CFormInput
-                  name="account_number"
-                  placeholder="Enter Account Number"
-                  value={formData.account_number || ''}
-                  onChange={handleChange}
-                  maxLength={50}
-                  pattern="[0-9]{9,18}"
-                  title="Enter valid account number"
-                />
-              </CCol>
+              <CCol xs={12}>
+                <h6 className="fw-semibold mb-3">Bank Details</h6>
 
-              <CCol md={6}>
-                <CFormLabel>IFSC Code</CFormLabel>
-                <CFormInput
-                  name="ifsc_code"
-                  placeholder="Enter IFSC Code"
-                  value={formData.ifsc_code || ''}
-                  onChange={handleChange}
-                  maxLength={20}
-                  pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
-                  title="Enter valid IFSC code"
-                />
-              </CCol>
+                {bankAccounts.map((bank, index) => (
+                  <div key={index} className="border rounded p-3 mb-3">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6 className="mb-0">Bank Account {index + 1}</h6>
 
-              <CCol md={6}>
-                <CFormLabel>Branch Name</CFormLabel>
-                <CFormInput
-                  name="branch_name"
-                  placeholder="Enter Branch Name"
-                  value={formData.branch_name || ''}
-                  onChange={handleChange}
-                  maxLength={150}
-                />
-              </CCol>
+                      {bankAccounts.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => removeBankAccount(index)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
 
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <CFormLabel>Bank Name</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter Bank Name"
+                          value={bank.bank_name || ''}
+                          onChange={(e) => handleBankChange(index, 'bank_name', e.target.value)}
+                          maxLength={150}
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>Account Number</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter Account Number"
+                          value={bank.account_number || ''}
+                          onChange={(e) =>
+                            handleBankChange(
+                              index,
+                              'account_number',
+                              e.target.value.replace(/\D/g, ''),
+                            )
+                          }
+                          maxLength={50}
+                          pattern="[0-9]{9,18}"
+                          title="Enter valid account number"
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>IFSC Code</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter IFSC Code"
+                          value={bank.ifsc_code || ''}
+                          onChange={(e) =>
+                            handleBankChange(index, 'ifsc_code', e.target.value.toUpperCase())
+                          }
+                          maxLength={20}
+                          pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
+                          title="Enter valid IFSC code"
+                        />
+                      </div>
+
+                      <div className="col-md-6">
+                        <CFormLabel>Branch Name</CFormLabel>
+
+                        <CFormInput
+                          placeholder="Enter Branch Name"
+                          value={bank.branch_name || ''}
+                          onChange={(e) => handleBankChange(index, 'branch_name', e.target.value)}
+                          maxLength={150}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button type="button" className="btn btn-outline-primary" onClick={addBankAccount}>
+                  + Add Bank Account
+                </button>
+              </CCol>
               {/* ================= Onboarding ================= */}
               <CCol md={6}>
                 <CFormLabel>Onboarding Date</CFormLabel>

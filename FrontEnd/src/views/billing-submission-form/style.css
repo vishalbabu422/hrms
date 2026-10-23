@@ -1,0 +1,265 @@
+.billing-submission-page {
+  padding: 20px;
+}
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.page-header h4 {
+  font-weight: 600;
+  color: #002266;
+}
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.section-header {
+  background: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  padding: 16px 20px;
+}
+
+.section-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: #002266;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-right: 12px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.section-subtitle {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+
+.required {
+  color: #dc3545;
+}
+
+.billing-submission-page .form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #343a40;
+}
+
+.billing-submission-page .form-control,
+.billing-submission-page .form-select {
+  min-height: 40px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.billing-submission-page .form-control:focus,
+.billing-submission-page .form-select:focus {
+  border-color: #002266;
+  box-shadow: 0 0 0 0.15rem rgba(0, 34, 102, 0.1);
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* =========================================================
+   PREVIEW
+========================================================= */
+
+.preview-card {
+  border: 1px solid #dfe4ea;
+}
+
+.preview-header {
+  background: #f8f9fa;
+  padding: 18px;
+}
+
+.preview-header h5 {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #002266;
+}
+
+.preview-section {
+  padding: 8px 0;
+}
+
+.preview-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #002266;
+  margin-bottom: 18px;
+}
+
+.preview-grid {
+  row-gap: 20px;
+}
+
+.preview-label {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.preview-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+.total-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #002266;
+}
+
+.preview-divider {
+  height: 1px;
+  background: #e9ecef;
+  margin: 20px 0;
+}
+
+.preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 25px;
+  margin-top: 25px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.billing-submission-page .card {
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.billing-submission-page .card-body {
+  padding: 22px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .billing-submission-page {
+    padding: 12px;
+  }
+
+  .page-header {
+    display: block;
+  }
+
+  .section-header {
+    padding: 14px;
+  }
+
+  .billing-submission-page .card-body {
+    padding: 16px;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+
+  .preview-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-actions button {
+    width: 100%;
+    margin-right: 0 !important;
+  }
+}
+
+/* =========================================================
+   PRINT / PDF
+========================================================= */
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+
+  .billing-submission-page {
+    padding: 0 !important;
+  }
+
+  .page-header,
+  .billing-submission-page > .alert,
+  .billing-submission-page form > .card:not(#billing-preview),
+  .form-actions,
+  .preview-actions,
+  .section-header,
+  .required {
+    display: none !important;
+  }
+
+  #billing-preview {
+    display: block !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+
+  #billing-preview .card-header {
+    display: block !important;
+  }
+
+  .preview-header {
+    border-bottom: 1px solid #000 !important;
+  }
+
+  .preview-section-title {
+    color: #000 !important;
+  }
+
+  .preview-value {
+    color: #000 !important;
+  }
+
+  .total-value {
+    color: #000 !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+}

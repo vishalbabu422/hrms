@@ -26,12 +26,6 @@ import './salarySlip.css'
 const SalarySlip = () => {
   const currentYear = new Date().getFullYear()
 
-  const user = useSelector((state) => state.auth.user)
-
-  const employeeId = user?.employee_id || user?.id
-
-  const years = [2026, 2025, 2024, 2023, 2022]
-
   const months = [
     'January',
     'February',
@@ -46,6 +40,16 @@ const SalarySlip = () => {
     'November',
     'December',
   ]
+
+  const user = useSelector((state) => state.auth.user)
+
+  const employeeId = user?.id
+
+  const years = []
+
+  for (let year = currentYear; year >= currentYear - 4; year--) {
+    years.push(year)
+  }
 
   const [selectedYear, setSelectedYear] = useState(currentYear)
 
@@ -84,13 +88,13 @@ const SalarySlip = () => {
 
       setSalaryHistory(responseData?.salarySlips || responseData || [])
       setSearched(true)
-    } catch (error) { //catch runs when the API call fails/throws an error.
+    } catch (error) {
       setSalaryHistory([])
-      setError('No salary slip records found.')
     } finally {
       setLoading(false)
     }
   }
+
   useEffect(() => {
     if (employeeId) {
       getSalarySlips(currentYear)
@@ -106,13 +110,11 @@ const SalarySlip = () => {
 
     if (!salary?.mon_salaryslip_generated) {
       setError('Salary slip has not been generated yet.')
-
       return
     }
 
     if (!registerId) {
       setError('Register ID is not available.')
-
       return
     }
 
@@ -141,9 +143,7 @@ const SalarySlip = () => {
       const link = document.createElement('a')
 
       link.href = url
-
       link.download = fileName
-
       link.style.display = 'none'
 
       document.body.appendChild(link)
@@ -201,7 +201,6 @@ const SalarySlip = () => {
                   value={selectedYear}
                   onChange={(e) => {
                     setSelectedYear(e.target.value)
-
                     setError('')
                   }}
                   className="salary-select"
@@ -272,53 +271,55 @@ const SalarySlip = () => {
                       </CTableDataCell>
                     </CTableRow>
                   ) : salaryHistory.length > 0 ? (
-                    salaryHistory.map((salary, index) => (
-                      <CTableRow key={salary.register_id || salary.id}>
-                        {/* S.NO */}
+                    [...salaryHistory]
+                      .sort((a, b) => Number(a.month) - Number(b.month))
+                      .map((salary, index) => (
+                        <CTableRow key={salary.register_id || salary.id}>
+                          {/* S.NO */}
 
-                        <CTableDataCell>{index + 1}</CTableDataCell>
+                          <CTableDataCell>{index + 1}</CTableDataCell>
 
-                        {/* MONTH */}
+                          {/* MONTH */}
 
-                        <CTableDataCell>{getMonthName(salary)}</CTableDataCell>
+                          <CTableDataCell>{getMonthName(salary)}</CTableDataCell>
 
-                        {/* YEAR */}
+                          {/* YEAR */}
 
-                        <CTableDataCell>{salary.year}</CTableDataCell>
+                          <CTableDataCell>{salary.year}</CTableDataCell>
 
-                        {/* TRANSACTION NUMBER */}
+                          {/* TRANSACTION NUMBER */}
 
-                        <CTableDataCell>{salary.transaction_number || '-'}</CTableDataCell>
+                          <CTableDataCell>{salary.transaction_number || '-'}</CTableDataCell>
 
-                        {/* TRANSACTION DATE */}
+                          {/* TRANSACTION DATE */}
 
-                        <CTableDataCell>{formatDate(salary.transaction_date)}</CTableDataCell>
+                          <CTableDataCell>{formatDate(salary.transaction_date)}</CTableDataCell>
 
-                        {/* DOWNLOAD */}
+                          {/* DOWNLOAD */}
 
-                        <CTableDataCell>
-                          <CButton
-                            type="button"
-                            className="download-table-btn"
-                            onClick={() => handleDownload(salary)}
-                            disabled={
-                              !salary.mon_salaryslip_generated ||
-                              downloadingId === salary.register_id
-                            }
-                          >
-                            <CIcon icon={cilCloudDownload} className="table-download-icon" />
+                          <CTableDataCell>
+                            <CButton
+                              type="button"
+                              className="download-table-btn"
+                              onClick={() => handleDownload(salary)}
+                              disabled={
+                                !salary.mon_salaryslip_generated ||
+                                downloadingId === salary.register_id
+                              }
+                            >
+                              <CIcon icon={cilCloudDownload} className="table-download-icon" />
 
-                            <span>
-                              {downloadingId === salary.register_id
-                                ? 'Downloading...'
-                                : salary.mon_salaryslip_generated
-                                  ? 'Download'
-                                  : 'Not generated'}
-                            </span>
-                          </CButton>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))
+                              <span>
+                                {downloadingId === salary.register_id
+                                  ? 'Downloading...'
+                                  : salary.mon_salaryslip_generated
+                                    ? 'Download'
+                                    : 'Not generated'}
+                              </span>
+                            </CButton>
+                          </CTableDataCell>
+                        </CTableRow>
+                      ))
                   ) : (
                     <CTableRow>
                       <CTableDataCell colSpan={6} className="no-data">

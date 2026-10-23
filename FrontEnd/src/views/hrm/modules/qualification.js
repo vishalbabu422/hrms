@@ -49,7 +49,7 @@ const Qualification = forwardRef(({ employeeId }, ref) => {
     setEmployeeQualification(updated)
   }
 
-  // remove qualification
+ 
 
   const removeQualification = async (exp, index) => {
     try {
@@ -70,41 +70,7 @@ const Qualification = forwardRef(({ employeeId }, ref) => {
     }
   }
 
-  // ================= SUBMIT =================
-  // useImperativeHandle(ref, () => ({
-  //   submit: async () => {
-  //     try {
-  //       setLoading(true)
-
-  //       const baseUrl = `/employee/${employeeId}/qualification`
-
-  //       for (const qual of employeeQualification) {
-  //         // skip empty
-  //         if (!qual.qualification_name) continue
-
-  //         // 🔥 PATCH if id exists
-  //         if (qual.id) {
-  //           await api.patch(`${baseUrl}/${qual.id}`, qual)
-  //         }
-
-  //         // 🔥 POST if new
-  //         else {
-  //           await api.post(baseUrl, qual)
-  //         }
-  //       }
-
-  //       toast.success('Qualification saved')
-  //       return true
-  //     } catch (error) {
-  //       console.error(error)
-  //       toast.error(error.response?.data?.message || 'Failed to save qualification')
-  //       return false
-  //     } finally {
-  //       setLoading(false)
-  //     }
-  //   },
-  // }))
-
+ 
 useImperativeHandle(ref, () => ({
   submit: async () => {
     try {

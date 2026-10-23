@@ -24,6 +24,8 @@ import {
   cilAddressBook,
   cilFingerprint,
   cilDescription,
+  cilCreditCard,
+ cilCloudUpload
 } from '@coreui/icons'
 import { CNavItem, CNavTitle } from '@coreui/react'
 
@@ -50,14 +52,12 @@ const _nav = [
     icon: <CIcon icon={cilAddressBook} customClassName="nav-icon" />,
   },
 
-
- {
+  {
     component: CNavItem,
     name: 'Salary Slip',
     to: '/home/salaryslip',
     icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
   },
-
 
   {
     component: CNavItem,
@@ -163,6 +163,34 @@ const _nav = [
     icon: <CIcon icon={cilChartLine} customClassName="nav-icon" />,
   },
 
+
+  // ================= Billing =================
+
+  {
+    component: CNavTitle,
+    name: 'Billing',
+    section: 'billing',
+  },
+
+ {
+  component: CNavItem,
+  name: 'PBG',
+  to: '/pbg',
+  // permission: 'PBG.MENU',
+  section: 'billing',
+  icon: <CIcon icon={cilCreditCard} className="nav-icon" />,
+},
+
+
+{
+  component: CNavItem,
+  name: 'Billing Submission Form',
+  to: '/billing-submission-form',
+  section: 'billing-submission-form',
+  icon: <CIcon icon={cilCloudUpload} className="nav-icon" />,
+},
+
+
   // ================= HRM =================
 
   {
@@ -207,6 +235,7 @@ const _nav = [
     icon: <CIcon icon={cilChart} className="nav-icon" />,
   },
 
+
   // ================= Salary =================
 
   {
@@ -241,6 +270,17 @@ const _nav = [
     section: 'salary',
     icon: <CIcon icon={cilNotes} className="nav-icon" />,
   },
+
+
+{
+  component: CNavItem,
+  name: 'Salary Account Statement',
+  to: '/salary-account-statement',
+  // permission: 'SALARY_ACCOUNT_STATEMENT_MENU',
+  section: 'salary',
+  icon: <CIcon icon={cilNotes} className="nav-icon" />,
+},
+
 
   {
     component: CNavItem,

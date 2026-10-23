@@ -73,9 +73,56 @@ const Insurance = forwardRef(({ employeeId, isEdit }, ref) => {
 
   const handleFile = (e) => {
     const file = e.target.files[0]
+
+    if (!file) {
+      setPolicyFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        policyFile: '',
+      }))
+
+      return
+    }
+
+    // PDF validation
+    const isPDF = file.type === 'application/pdf' && file.name.toLowerCase().endsWith('.pdf')
+
+    if (!isPDF) {
+      setPolicyFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        policyFile: 'Only PDF files are allowed.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Maximum file size: 5 MB
+    const maxSize = 5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setPolicyFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        policyFile: 'File size must not exceed 5 MB.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Valid file
+    setErrors((prev) => ({
+      ...prev,
+      policyFile: '',
+    }))
+
     setPolicyFile(file)
   }
-
   // ================= SUBMIT =================
   useImperativeHandle(ref, () => ({
     // submit: async () => {
@@ -157,9 +204,8 @@ const Insurance = forwardRef(({ employeeId, isEdit }, ref) => {
           }
         }
 
+        toast.success('Insurance saved successfully')
 
-toast.success('Insurance saved successfully')
-        
         return true
       } catch (error) {
         console.error(error)
@@ -273,7 +319,14 @@ toast.success('Insurance saved successfully')
             <div className="col-md-12">
               <label className="form-label">Policy Document</label>
 
-              <input type="file" className="form-control" onChange={handleFile} />
+              <input
+                type="file"
+                className={`form-control ${errors.policyFile ? 'is-invalid' : ''}`}
+                accept="application/pdf"
+                onChange={handleFile}
+              />
+
+              {errors.policyFile && <div className="invalid-feedback">{errors.policyFile}</div>}
 
               {/* Existing doc */}
               {!policyFile && policyDoc && (

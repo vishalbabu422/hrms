@@ -61,9 +61,56 @@ const Screening = forwardRef(({ employeeId, isEdit }, ref) => {
   }
   const handleFile = (e) => {
     const file = e.target.files[0]
+
+    if (!file) {
+      setScreeningFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        screeningFile: '',
+      }))
+
+      return
+    }
+
+    // PDF validation
+    const isPDF = file.type === 'application/pdf' && file.name.toLowerCase().endsWith('.pdf')
+
+    if (!isPDF) {
+      setScreeningFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        screeningFile: 'Only PDF files are allowed.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Maximum file size: 5 MB
+    const maxSize = 5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      setScreeningFile(null)
+
+      setErrors((prev) => ({
+        ...prev,
+        screeningFile: 'File size must not exceed 5 MB.',
+      }))
+
+      e.target.value = ''
+      return
+    }
+
+    // Valid file
+    setErrors((prev) => ({
+      ...prev,
+      screeningFile: '',
+    }))
+
     setScreeningFile(file)
   }
-
   // ================= SUBMIT =================
   useImperativeHandle(ref, () => ({
     submit: async () => {
@@ -119,127 +166,102 @@ const Screening = forwardRef(({ employeeId, isEdit }, ref) => {
 
   return (
     <div className="step-content">
-  <div className="border rounded p-3 mb-3">
-    <div className="row g-3">
-
-      {/* Test Scheduled Date */}
-      <div className="col-md-6">
-        <label className="form-label">Test Scheduled Date</label>
-        <input
-          type="date"
-          className="form-control"
-          value={screening.test_scheduled_date || ''}
-          onChange={(e) =>
-            handleChange('test_scheduled_date', e.target.value)
-          }
-        />
-      </div>
-
-      {/* Test Given Date */}
-      <div className="col-md-6">
-        <label className="form-label">
-          Test Given Date <span className="text-danger">*</span>
-        </label>
-
-        <input
-          type="date"
-          className={`form-control ${
-            errors.test_given_date ? 'is-invalid' : ''
-          }`}
-          value={screening.test_given_date || ''}
-          onChange={(e) =>
-            handleChange('test_given_date', e.target.value)
-          }
-        />
-
-        <div className="invalid-feedback">
-          {errors.test_given_date}
-        </div>
-      </div>
-
-      {/* Marks Secured */}
-      <div className="col-md-6">
-        <label className="form-label">
-          Marks Secured
-          {screening.result === 'PASS' && (
-            <span className="text-danger"> *</span>
-          )}
-        </label>
-
-        <input
-          type="number"
-          className={`form-control ${
-            errors.marks_secured ? 'is-invalid' : ''
-          }`}
-          value={screening.marks_secured || ''}
-          placeholder="Enter marks"
-          onChange={(e) =>
-            handleChange('marks_secured', e.target.value)
-          }
-        />
-
-        <div className="invalid-feedback">
-          {errors.marks_secured}
-        </div>
-      </div>
-
-      {/* Result */}
-      <div className="col-md-6">
-        <label className="form-label">
-          Result <span className="text-danger">*</span>
-        </label>
-
-        <select
-          className={`form-select ${
-            errors.result ? 'is-invalid' : ''
-          }`}
-          value={screening.result || ''}
-          onChange={(e) =>
-            handleChange('result', e.target.value)
-          }
-        >
-          <option value="">Select Result</option>
-          <option value="PASS">PASS</option>
-          <option value="FAIL">FAIL</option>
-        </select>
-
-        <div className="invalid-feedback">{errors.result}</div>
-      </div>
-
-      {/* File Upload */}
-      <div className="col-md-6">
-        <label className="form-label">Screening Mail Copy</label>
-
-        <input
-          type="file"
-          className="form-control"
-          onChange={handleFile}
-        />
-
-        {/* Existing */}
-        {!screeningFile && screeningDoc && (
-          <div className="mt-2">
-            <a
-              href={screeningDoc.file_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {screeningDoc.file_name}
-            </a>
+      <div className="border rounded p-3 mb-3">
+        <div className="row g-3">
+          {/* Test Scheduled Date */}
+          <div className="col-md-6">
+            <label className="form-label">Test Scheduled Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={screening.test_scheduled_date || ''}
+              onChange={(e) => handleChange('test_scheduled_date', e.target.value)}
+            />
           </div>
-        )}
 
-        {/* New */}
-        {screeningFile && (
-          <small className="text-success">
-            {screeningFile.name}
-          </small>
-        )}
+          {/* Test Given Date */}
+          <div className="col-md-6">
+            <label className="form-label">
+              Test Given Date <span className="text-danger">*</span>
+            </label>
+
+            <input
+              type="date"
+              className={`form-control ${errors.test_given_date ? 'is-invalid' : ''}`}
+              value={screening.test_given_date || ''}
+              onChange={(e) => handleChange('test_given_date', e.target.value)}
+            />
+
+            <div className="invalid-feedback">{errors.test_given_date}</div>
+          </div>
+
+          {/* Marks Secured */}
+          <div className="col-md-6">
+            <label className="form-label">
+              Marks Secured
+              {screening.result === 'PASS' && <span className="text-danger"> *</span>}
+            </label>
+
+            <input
+              type="number"
+              className={`form-control ${errors.marks_secured ? 'is-invalid' : ''}`}
+              value={screening.marks_secured || ''}
+              placeholder="Enter marks"
+              onChange={(e) => handleChange('marks_secured', e.target.value)}
+            />
+
+            <div className="invalid-feedback">{errors.marks_secured}</div>
+          </div>
+
+          {/* Result */}
+          <div className="col-md-6">
+            <label className="form-label">
+              Result <span className="text-danger">*</span>
+            </label>
+
+            <select
+              className={`form-select ${errors.result ? 'is-invalid' : ''}`}
+              value={screening.result || ''}
+              onChange={(e) => handleChange('result', e.target.value)}
+            >
+              <option value="">Select Result</option>
+              <option value="PASS">PASS</option>
+              <option value="FAIL">FAIL</option>
+            </select>
+
+            <div className="invalid-feedback">{errors.result}</div>
+          </div>
+
+          {/* File Upload */}
+          <div className="col-md-6">
+            <label className="form-label">Screening Mail Copy</label>
+
+            <input
+              type="file"
+              className={`form-control ${errors.screeningFile ? 'is-invalid' : ''}`}
+              accept="application/pdf"
+              onChange={handleFile}
+            />
+
+            {errors.screeningFile && <div className="invalid-feedback">{errors.screeningFile}</div>}
+
+            {/* Existing */}
+            {!screeningFile && screeningDoc && (
+              <div className="mt-2">
+                <a href={screeningDoc.file_url} target="_blank" rel="noreferrer">
+                  {screeningDoc.file_name}
+                </a>
+              </div>
+            )}
+
+            {/* New */}
+            {screeningFile && (
+              <small className="text-success d-block mt-2">{screeningFile.name}</small>
+            )}
+          </div>
+        </div>
       </div>
-
     </div>
-  </div>
-</div>
   )
 })
 

@@ -1,0 +1,113 @@
+.sas-card {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent;
+}
+
+.sas-card-body {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.sas-card-body .row {
+  margin-bottom: 10px;
+}
+
+.sas-card-body .form-select:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: #ced4da !important;
+}
+
+.sas-table {
+  margin-top: 15px;
+  width: 100%;
+}
+
+.sas-table table {
+  width: 100%;
+  table-layout: fixed;
+  margin-bottom: 0;
+  vertical-align: middle;
+}
+
+.sas-table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sas-table td,
+.sas-table th {
+  padding: 10px 12px;
+}
+
+/* Checkbox */
+.sas-table th:nth-child(1),
+.sas-table td:nth-child(1) {
+  width: 50px;
+}
+
+/* Employee Name */
+.sas-table th:nth-child(2),
+.sas-table td:nth-child(2) {
+  width: 40%;
+}
+
+/* Net Salary */
+.sas-table th:nth-child(3),
+.sas-table td:nth-child(3) {
+  width: 40%;
+  text-align: center !important;
+}
+
+/* Action */
+.sas-table th:nth-child(4),
+.sas-table td:nth-child(4) {
+  width: 15%;
+  text-align: center !important;
+}
+
+.employee-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sas-table td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.sas-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sas-uploaded {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #e8f8ef;
+  color: #198754;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sas-download-btn {
+  padding: 0 !important;
+  border: none !important;
+  line-height: 1;
+}
+
+.sas-download-btn:hover {
+  background: transparent !important;
+}
+
+.sas-upload-section {
+  margin-top: 18px;
+}

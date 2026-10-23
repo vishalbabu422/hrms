@@ -172,7 +172,7 @@ const SalaryRegister = () => {
     try {
       const params = {
         models:
-          'empSalaryStructure.salaryStructure,employeeSalaryRegisters,employeeWorkOrderDeployment.WoDesgnMapping',
+          'empSalaryStructure.salaryStructure,employeeSalaryRegisters,EmployeeWorkOrderDeployment.WoDesgnMapping',
 
         is_active: true,
         sort: `${sort.key} ${sort.order}`,
@@ -189,13 +189,13 @@ const SalaryRegister = () => {
           },
         }
 
-        modelFilter.employeeWorkOrderDeployment = {
+        modelFilter.EmployeeWorkOrderDeployment = {
           required: true,
           is_deleted: false,
         }
       } else {
         // Always take only the active deployment
-        modelFilter.employeeWorkOrderDeployment = {
+        modelFilter.EmployeeWorkOrderDeployment = {
           required: true,
           is_deleted: false,
         }
@@ -241,15 +241,20 @@ const SalaryRegister = () => {
       const monthEnd = new Date(Number(year), Number(month), 0)
 
       const filteredEmployees = employees.filter((employee) => {
-        const deployment = employee.employeeWorkOrderDeployment
+        const deployment = [...(employee.EmployeeWorkOrderDeployment || [])].sort(
+          (a, b) => new Date(a.joining_date) - new Date(b.joining_date),
+        )
 
         // No deployment = don't show employee
         if (!deployment || deployment.is_deleted) {
           return false
         }
 
-        const joiningDate = new Date(deployment.joining_date)
-        const relievingDate = deployment.relieving_date ? new Date(deployment.relieving_date) : null
+        const latestDeployment = deployment[deployment.length - 1]
+        const joiningDate = new Date(latestDeployment.joining_date)
+        const relievingDate = latestDeployment.relieving_date
+          ? new Date(latestDeployment.relieving_date)
+          : null
 
         // Deployment must overlap the selected salary month
         const joinedBeforeMonthEnd = joiningDate <= monthEnd

@@ -319,9 +319,12 @@ const EmpanelmentFormComponent = ({ initialData, mode, onSubmit }) => {
                   type="file"
                   name="doc_path"
                   label="Upload Empanelment"
-                  accept=".pdf"
+                  accept=".pdf,application/pdf"
+                  invalid={!!errors.doc_path}
+                  feedback={errors.doc_path}
                   onChange={(e) => {
                     const file = e.target.files[0]
+
                     setFormData((prev) => ({
                       ...prev,
                       doc_path: file,

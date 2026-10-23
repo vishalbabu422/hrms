@@ -1,10 +1,6 @@
 export const validateWorkOrder = (data) => {
   const errors = {}
 
-  // ==========================
-  // Basic Information
-  // ==========================
-
   if (!data.empanelment_id_fk) {
     errors.empanelment_id_fk = 'Empanelment is required'
   }
@@ -35,10 +31,6 @@ export const validateWorkOrder = (data) => {
     errors.is_active = 'Status is required'
   }
 
-  // ==========================
-  // Vendor Details
-  // ==========================
-
   if (!data.vendor_id_fk) {
     errors.vendor_id_fk = 'Vendor is required'
   }
@@ -47,10 +39,6 @@ export const validateWorkOrder = (data) => {
   if (!data.issued_to_name || data.issued_to_name.trim() === '') {
     errors.issued_to_name = 'Issued To Name is required'
   }
-
-  // ==========================
-  // Contact Person
-  // ==========================
 
   if (!data.contact_name || data.contact_name.trim() === '') {
     errors.contact_name = 'Contact name is required'
@@ -73,6 +61,23 @@ export const validateWorkOrder = (data) => {
 
     if (!phoneRegex.test(data.contact_number)) {
       errors.contact_number = 'Enter a valid phone number'
+    }
+  }
+
+  if (data.doc_path) {
+    const file = data.doc_path
+
+    // PDF validation
+    const isPDF = file.type === 'application/pdf' || file.name?.toLowerCase().endsWith('.pdf')
+
+    if (!isPDF) {
+      errors.doc_path = 'Only PDF files are allowed.'
+    }
+
+    const maxSize = 5 * 1024 * 1024
+
+    if (file.size > maxSize) {
+      errors.doc_path = 'File size must not exceed 5 MB.'
     }
   }
 
