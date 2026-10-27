@@ -512,13 +512,33 @@ const EmpSalaryStructureForm = ({ onSubmit }) => {
           setIncrementModal(false)
           setSelectedEmployee(null)
         }}
-        onSave={(data) => {
-          console.log('Increment Saved', data)
+        onSave={async (data) => {
+          try {
+            await api.post('employee-salary-structure', [
+              {
+                employee_id: data.employee_id,
+                salary_structure_id: Number(salaryStructureId),
+                ctc: data.new_ctc,
+                effective_from: data.effective_from,
+                created_by: user?.id,
+              },
+            ])
 
-          toast.success('Increment added successfully')
+            toast.success('Increment added successfully')
 
-          setIncrementModal(false)
-          setSelectedEmployee(null)
+            setIncrementModal(false)
+            setSelectedEmployee(null)
+
+            if (selectedWorkOrder) {
+              fetchEmployees(selectedWorkOrder)
+            }
+          } catch (error) {
+            console.error(error)
+
+            const message = error?.response?.data?.message || 'Error adding increment'
+
+            toast.error(message)
+          }
         }}
       />
 

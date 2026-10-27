@@ -6281,6 +6281,29 @@ CREATE OR REPLACE TRIGGER trg_billing_submission_modified
 -- Table owner
 ALTER TABLE pmu.billing_submission
     OWNER TO postgres;
+	
+-- 27/10/2026
+
+
+CREATE OR REPLACE FUNCTION pmu.fn_update_previous_salary_effective_to()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE pmu.employee_salary_structure
+    SET
+        effective_to = NEW.effective_from - 1,
+        updated_at = CURRENT_TIMESTAMP,
+        updated_by = NEW.created_by
+    WHERE employee_id = NEW.employee_id
+      AND id <> NEW.id
+      AND effective_from < NEW.effective_from
+      AND effective_to IS NULL;
+
+    RETURN NEW;
+END;
+$$;
+
 
 COMMIT;
 

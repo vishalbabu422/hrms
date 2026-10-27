@@ -10,6 +10,7 @@ const {
   EmployeeSalaryAddon,
   SalaryAddonMaster,
   EmployeeWorkOrderDeployment,
+  WoDesgnMapping,
 } = require("../../../models");
 
 const AppError = require("../../../utils/appError");
@@ -192,6 +193,28 @@ exports.generateMonthlySalary = async (data) => {
     );
   }
 
+  const deploymentMappingIds = [
+    ...new Set(
+      deployments
+        .map((deployment) => deployment.wo_desgn_id)
+        .filter((id) => id != null),
+    ),
+  ];
+
+  const deploymentMappings = await WoDesgnMapping.findAll({
+    where: {
+      id: { [Op.in]: deploymentMappingIds },
+    },
+    attributes: ["id", "work_order_id"],
+  });
+
+  const workOrderByDeploymentMappingId = new Map(
+    deploymentMappings.map((mapping) => [
+      String(mapping.id),
+      mapping.work_order_id,
+    ]),
+  );
+
   /*
    * Build deployment periods for the selected month.
    *
@@ -203,7 +226,6 @@ exports.generateMonthlySalary = async (data) => {
 
   for (let i = 0; i < deployments.length; i++) {
     const deployment = deployments[i];
-    console.log(deployment);
 
     const joiningTimestamp = toTimestamp(deployment.joining_date);
 
@@ -233,8 +255,20 @@ exports.generateMonthlySalary = async (data) => {
     // Ignore deployments that do not overlap the selected month.
     if (periodStart > periodEnd) continue;
 
+    const workOrderId = workOrderByDeploymentMappingId.get(
+      String(deployment.wo_desgn_id),
+    );
+
+    if (workOrderId == null) {
+      throw new AppError(
+        `Work order mapping not found for deployment ${deployment.id}`,
+        404,
+      );
+    }
+
     deploymentPeriods.push({
       deployment_id: deployment.id,
+      work_order_id: workOrderId,
       deployment,
       start: periodStart,
       end: periodEnd,
@@ -332,6 +366,7 @@ exports.generateMonthlySalary = async (data) => {
 
       salaryPeriods.push({
         deployment_id: deploymentPeriod.deployment_id,
+        work_order_id: deploymentPeriod.work_order_id,
         salary_structure_id: structure.salary_structure_id,
         ctc: Number(structure.ctc),
         start: periodStart,
@@ -353,7 +388,6 @@ exports.generateMonthlySalary = async (data) => {
       );
     }
   }
-
 
   /*
    * 5. Initialize aggregate totals.
@@ -492,6 +526,18 @@ exports.generateMonthlySalary = async (data) => {
       });
     }
 
+    console.log("Calculated period salary:", {
+      work_order_id: period.work_order_id,
+      salary_structure_id: period.salary_structure_id,
+      ctc: yearlyCTC,
+      monthly_ctc: monthlyCTC,
+      payable_days: period.payable_days,
+      prorationFactor,
+      components: periodComponents,
+      gross: periodGross,
+      deductions: periodDeduction,
+    });
+
     /*
      * Apply employer PF deductions to the configured target component
      * within this sub-period, preserving the existing calculation rule.
@@ -536,6 +582,7 @@ exports.generateMonthlySalary = async (data) => {
 
     periodBreakdown.push({
       deployment_id: period.deployment_id,
+      work_order_id: period.work_order_id,
       salary_structure_id: period.salary_structure_id,
       ctc: yearlyCTC,
       monthly_ctc: monthlyCTC,
@@ -612,25 +659,105 @@ exports.generateMonthlySalary = async (data) => {
   }
 
   /*
-   * 8. Calculate leave deduction once for the month.
+   * 8. Calculate leave deductions separately for each work order.
+   *
+   * Normal leave:
+   *   Work-order gross / calendar days in month * leave granted.
+   *
+   * Full deployment-period leave:
+   *   Deduct the entire gross attributable to that work order.
    */
-  const leaveData = await EmployeeWorkOrderLeave.findOne({
-    where: {
-      employee_id,
-      month,
-      year: String(year),
-    },
-  });
 
-  const leaveTaken = Number(leaveData?.leave_taken || 0);
+  const workOrderSalaryTotals = new Map();
 
-  const leaveGranted =
-    leaveTaken === 0 ? 0 : Number(leaveData?.leave_granted || 0);
+  // Aggregate gross salary by work order.
+  for (const period of periodBreakdown) {
+    const key = String(period.work_order_id);
 
-  const perDaySalary = gross / totalDays;
+    if (!workOrderSalaryTotals.has(key)) {
+      workOrderSalaryTotals.set(key, {
+        work_order_id: period.work_order_id,
+        gross: 0,
+        workOrderDays: 0,
+      });
+    }
 
-  const leaveDeduction = perDaySalary * Math.abs(leaveGranted);
+    workOrderSalaryTotals.get(key).gross += Number(period.gross_earnings || 0);
+  }
 
+  // Count deployment days within the selected month for each work order.
+  for (const period of deploymentPeriods) {
+    const key = String(period.work_order_id);
+
+    if (!workOrderSalaryTotals.has(key)) {
+      workOrderSalaryTotals.set(key, {
+        work_order_id: period.work_order_id,
+        gross: 0,
+        workOrderDays: 0,
+      });
+    }
+
+    workOrderSalaryTotals.get(key).workOrderDays += period.payable_days;
+  }
+
+  let leaveTaken = 0;
+  let leaveDeduction = 0;
+
+  const leaveBreakdown = [];
+
+  for (const workOrderTotal of workOrderSalaryTotals.values()) {
+    const leaveData = await EmployeeWorkOrderLeave.findOne({
+      where: {
+        employee_id,
+        wo_id: workOrderTotal.work_order_id,
+        month,
+        year: String(year),
+      },
+    });
+
+    const workOrderLeaveTaken = Number(leaveData?.leave_taken || 0);
+
+    const storedLeaveGranted = Number(leaveData?.leave_granted || 0);
+
+    /*
+     * Preserve the existing leave-granted rule:
+     * - No leave taken: zero leave deduction.
+     * - Otherwise: use the stored leave_granted value,
+     *   except full-period leave is handled separately below.
+     */
+    const workOrderLeaveGranted =
+      workOrderLeaveTaken === 0 ? 0 : storedLeaveGranted;
+
+    let workOrderLeaveDeduction = 0;
+
+    if (
+      workOrderTotal.workOrderDays > 0 &&
+      workOrderLeaveTaken === workOrderTotal.workOrderDays
+    ) {
+      // All deployment days in this work order were taken as leave.
+      // The salary attributable to this work order becomes zero.
+      workOrderLeaveDeduction = workOrderTotal.gross;
+    } else {
+      // Normal leave deduction uses calendar days in the month.
+      const perDaySalary = workOrderTotal.gross / totalDays;
+
+      workOrderLeaveDeduction = perDaySalary * Math.abs(workOrderLeaveGranted);
+    }
+
+    leaveTaken += workOrderLeaveTaken;
+    leaveDeduction += workOrderLeaveDeduction;
+
+    leaveBreakdown.push({
+      work_order_id: workOrderTotal.work_order_id,
+      work_order_days: workOrderTotal.workOrderDays,
+      work_order_gross: workOrderTotal.gross,
+      leaveTaken,
+      lop: leaveDeduction,
+      leave_by_work_order: leaveBreakdown,
+    });
+  }
+
+  // Add the combined leave deductions to the existing deductions.
   deduction += leaveDeduction;
 
   /*

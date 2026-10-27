@@ -30,7 +30,7 @@ const CtcHistoryModal = ({ visible, onClose, employee, workorder }) => {
       const models = 'empSalaryStructure,EmployeeWorkOrderDeployment.WoDesgnMapping'
       const modelFilter = {
         EmployeeWorkOrderDeployment: { is_deleted: false, relieving_date: null },
-        WoDesgnMapping: { work_order_id: Number(workorder) },
+        // WoDesgnMapping: { work_order_id: Number(workorder) },
       }
 
       const url = `employee/${employee?.employee_id}?models=${encodeURIComponent(
