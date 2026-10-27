@@ -368,50 +368,73 @@ doc.y = startY + 50;
     );
     drawFooterNote(doc, "Computer-generated bill submission form");
 
-    // PAGE 2: INVOICE CALCULATION
-    doc.addPage();
-    drawMainHeading(doc, "INVOICE CALCULATION");
-    drawTable(
-      doc,
+    
+  // PAGE 2: INVOICE CALCULATION
+  doc.addPage();
+  drawMainHeading(doc, "INVOICE CALCULATION");
+
+  const resourceRows =
+    Array.isArray(data.resourceDetails) && data.resourceDetails.length
+      ? data.resourceDetails.map((item, index) => [
+          index + 1,
+          textValue(item.experience)
+  ? `${textValue(item.designation)} (${textValue(item.experience)} years Experience)`
+  : textValue(item.designation),
+          textValue(
+                    item.employee_name ??
+                    item.resource_name ??
+                    ""
+                    ),
+          "", // Billing Days
+          money(item.nicsi_rate_margin),
+          textValue(item.current_month),
+          "", // Available Leave Balance
+          textValue(item.current_month_days),
+          "", // MPR Leaves
+          money(item.leave_deduction),
+          "", // Balance After Leave Adjustment
+          "", // Billing Days
+          "", // Invoice Amount
+        ])
+      : [[
+          "1", "", "", "", "", monthYear(data.month, data.year),
+          "", "", "", "", "", "", ""
+        ]];
+
+  drawTable(
+    doc,
+    [
       [
-        [
-          "Sr. No.",
-          "Designation",
-          "Resource Name",
-          "Billing Days",
-          "NICSI Rate Inc. Margin",
-          "Month",
-          "Available Leave Balance",
-          "Total Days",
-          "MPR Leaves",
-          "Leave Deduction",
-          "Balance After Leave Adjustment",
-          "Billing Days",
-          "Invoice Amount",
-        ],
-        ...(Array.isArray(data.deployment_details) && data.deployment_details.length
-          ? data.deployment_details.map((item, index) => [
-              index + 1,
-              textValue(item.designation),
-              textValue(item.resource_name),
-              "",
-              "",
-              monthYear(data.month, data.year),
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-              "",
-            ])
-          : [["1", "", "", "", "", monthYear(data.month, data.year), "", "", "", "", "", "", ""]]),
-        ["", "", "", "", "", "", "", "", "", "", "", "TOTAL", money(data.billing_amount)],
+        "Sr. No.",
+        "Designation",
+        "Resource Name",
+        "Billing Days",
+        "NICSI Rate Inc. Margin",
+        "Month",
+        "Available Leave Balance",
+        "Total Days",
+        "MPR Leaves",
+        "Leave Deduction",
+        "Leave Balance After Leave Adjustment",
+        "Billing Days",
+        "Invoice Amount",
       ],
-      [22, 55, 45, 35, 45, 38, 42, 30, 30, 35, 45, 35, 68],
-      { fontSize: 5.5, minRowHeight: 38, paddingX: 2, paddingY: 3 }
-    );
-    drawFooterNote(doc, "Fields without source data are intentionally left blank.");
+      ...resourceRows,
+      [
+        "", "", "", "", "", "", "", "", "", "", "",
+        "TOTAL",
+        money(data.billing_amount),
+      ],
+    ],
+    [22, 55, 45, 35, 45, 38, 42, 30, 30, 35, 45, 35, 68],
+    { fontSize: 5.5, minRowHeight: 38, paddingX: 2, paddingY: 3 }
+  );
+
+  drawFooterNote(
+    doc,
+    "Fields without source data are intentionally left blank."
+  );
+
 
     // PAGE 3: LEAVE BALANCE REPORT
     doc.addPage();

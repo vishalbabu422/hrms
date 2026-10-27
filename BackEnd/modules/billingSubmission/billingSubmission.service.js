@@ -1,5 +1,13 @@
-
-const { WorkOrder, VendorMaster,WoDesgnMapping, BillingSubmission, PbgMaster} = require("../../models");
+const {WorkOrder,
+  VendorMaster,
+  WoDesgnMapping,
+  BillingSubmission,
+  PbgMaster,
+  Employee,
+  EmployeeWorkOrderDeployment,
+  Designation,
+  ResourceRate,
+  EmployeeSalaryRegister,} = require("../../models");
 
 const buildFinancialYear = (year, month) => {
   const startYear = month >= 4 ? year : year - 1;
@@ -34,6 +42,10 @@ const dateValues = Object.fromEntries(
 const day = dateValues.day;
 const month = Number(dateValues.month);
 const year = Number(dateValues.year);
+const monthName = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Kolkata",
+  month: "short",
+}).format(now).toUpperCase();
 
 const workOrder = await WorkOrder.findOne({
 where: {
@@ -75,6 +87,8 @@ work_order_id: workOrder.id,
 is_active: true,
 },
 attributes: [
+"id",
+"desgn_id_fk",
 "deployment_from",
 "deployment_to",
 "duration_days",
@@ -98,10 +112,89 @@ sgst_amount: item.sgst_amount,
 igst_amount: item.igst_amount,
 }));
 
-  const monthName = new Intl.DateTimeFormat("en-US", {
-  timeZone: "Asia/Kolkata",
-  month: "short",
-}).format(now);
+
+  // Resource-wise employee details using Sequelize models
+  const resourceDetails = [];
+
+  for (const mapping of designationMappings) {
+    const deployments = await EmployeeWorkOrderDeployment.findAll({
+      where: {
+        wo_desgn_id: mapping.id,
+        is_deleted: false,
+      },
+      attributes: ["employee_id", "wo_desgn_id"],
+    });
+
+    for (const deployment of deployments) {
+      const employee = await Employee.findOne({
+        where: {
+          id: deployment.employee_id,
+          is_active: true,
+          is_deleted: false,
+        },
+        attributes: [
+          "id",
+          "first_name",
+          "middle_name",
+          "last_name",
+        ],
+      });
+
+      if (!employee) continue;
+
+      const designation = await Designation.findOne({
+        where: {
+          id: mapping.desgn_id_fk,
+          is_active: true,
+        },
+        attributes: ["id", "designation", "exp_in_years"],
+      });
+
+      const resourceRate = await ResourceRate.findOne({
+        where: {
+          desgn_id_fk: mapping.desgn_id_fk,
+          is_active: true,
+        },
+        attributes: ["nicsi_margin_amount"],
+      });
+
+      const salaryRegister = await EmployeeSalaryRegister.findOne({
+        where: {
+          employee_id: employee.id,
+          month,
+          year,
+          is_deleted: false,
+        },
+        attributes: ["leave_deduction"],
+      });
+
+      resourceDetails.push({
+        employee_id: employee.id,
+        employee_name: [
+          employee.first_name,
+          employee.middle_name,
+          employee.last_name,
+        ]
+          .filter(Boolean)
+          .join(" "),
+
+        designation: designation?.designation || "",
+        experience: designation?.exp_in_years ?? null,
+
+        work_order_id: workOrder.id,
+        work_order_no: workOrder.work_order_no,
+
+        nicsi_rate_margin:
+          resourceRate?.nicsi_margin_amount ?? null,
+
+        current_month: monthName,
+        current_month_days: new Date(year, month, 0).getDate(),
+
+        leave_deduction: salaryRegister?.leave_deduction ?? 0,
+      });
+    }
+  }
+
 
 const financialYear = buildFinancialYear(year, month);
 
@@ -118,6 +211,7 @@ const invoice_no =
     financial_year: financialYear,
     invoice_no,
     deploymentDetails,
+    resourceDetails,
   };
 };
 
@@ -322,17 +416,118 @@ exports.generateBillingSubmissionPdf = async (id) => {
 
   // 4. Get Deployment Details for this Work Order
   const deploymentDetails = await WoDesgnMapping.findAll({
+  where: {
+    work_order_id: workOrder.id,
+    is_active: true,
+  },
+  attributes: [
+    "id",
+    "desgn_id_fk",
+    "deployment_from",
+    "deployment_to",
+    "req_person_count",
+  ],
+  order: [["id", "ASC"]],
+});
+
+// 5. Get resource-wise employee details for the billing month
+const resourceDetails = [];
+
+const billingMonth = Number(billing.month);
+const billingYear = Number(billing.year);
+
+const currentMonthName = new Date(
+  Date.UTC(billingYear, billingMonth - 1, 1)
+)
+  .toLocaleString("en-US", {
+    month: "short",
+    timeZone: "UTC",
+  })
+  .toUpperCase();
+
+const currentMonthDays = new Date(
+  billingYear,
+  billingMonth,
+  0
+).getDate();
+
+for (const mapping of deploymentDetails) {
+  const deployments = await EmployeeWorkOrderDeployment.findAll({
     where: {
-      work_order_id: workOrder.id,
-      is_active: true,
+      wo_desgn_id: mapping.id,
+      is_deleted: false,
     },
-    attributes: [
-      "deployment_from",
-      "deployment_to",
-      "req_person_count",
-    ],
-    order: [["id", "ASC"]],
+    attributes: ["employee_id", "wo_desgn_id"],
   });
+
+  for (const deployment of deployments) {
+    const employee = await Employee.findOne({
+      where: {
+        id: deployment.employee_id,
+        is_active: true,
+        is_deleted: false,
+      },
+      attributes: [
+        "id",
+        "first_name",
+        "middle_name",
+        "last_name",
+      ],
+    });
+
+    if (!employee) continue;
+
+    const designation = await Designation.findOne({
+      where: {
+        id: mapping.desgn_id_fk,
+        is_active: true,
+      },
+      attributes: ["id", "designation", "exp_in_years"],
+    });
+
+    const resourceRate = await ResourceRate.findOne({
+      where: {
+        desgn_id_fk: mapping.desgn_id_fk,
+        is_active: true,
+      },
+      attributes: ["nicsi_margin_amount"],
+    });
+
+    const salaryRegister = await EmployeeSalaryRegister.findOne({
+      where: {
+        employee_id: employee.id,
+        month: billingMonth,
+        year: billingYear,
+        is_deleted: false,
+      },
+      attributes: ["leave_deduction"],
+    });
+
+    resourceDetails.push({
+      employee_id: employee.id,
+
+      resource_name: [
+        employee.first_name,
+        employee.middle_name,
+        employee.last_name,
+      ]
+        .filter(Boolean)
+        .join(" "),
+
+      designation: designation?.designation || "",
+      experience: designation?.exp_in_years ?? null,
+
+      nicsi_rate_margin:
+        resourceRate?.nicsi_margin_amount ?? null,
+
+      current_month: currentMonthName,
+      current_month_days: currentMonthDays,
+
+      leave_deduction:
+        salaryRegister?.leave_deduction ?? 0,
+    });
+  }
+}
 
   // 5. Calculate total required persons
   const totalRequiredPersons = deploymentDetails.reduce(
@@ -418,11 +613,13 @@ const woPeriodTo = validToDates.length
     deployment_to: formatDate(item.deployment_to),
     req_person_count: Number(item.req_person_count || 0),
   })),
-
+  resourceDetails,
+  
   total_required_persons: totalRequiredPersons,
   wo_date: formatDate(workOrder.work_order_date),
   wo_period_from: woPeriodFrom,
   wo_period_to: woPeriodTo,
+  
 };
 };
 
