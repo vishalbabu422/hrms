@@ -6304,6 +6304,48 @@ BEGIN
 END;
 $$;
 
+---------30/10/2026
+
+INSERT INTO pmu.modules(    id, module_name, module_code, description, is_active, created_at, updated_at)
+    VALUES (27, 'Billing Submission', 'BILLING_SUB_DETAILS', null, true, NOW(), NOW());
+
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (134, 27, 'Read', 'BILLING_SUB_DETAILS.READ', NOW());
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (135, 27, 'Create', 'BILLING_SUB_DETAILS.CREATE', NOW());
+
+    INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (136, 27, 'Read', 'BILLING_SUB_DETAILS.UPDATE', NOW());
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (137, 27, 'Read', 'BILLING_SUB_DETAILS.DELETE', NOW());
+
+
+INSERT INTO pmu.modules(    id, module_name, module_code, description, is_active, created_at, updated_at)
+    VALUES (28, 'PBG', 'PBG_DETAILS', null, true, NOW(), NOW());
+
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (138, 28, 'Read', 'PBG_DETAILS.READ', NOW());
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (139, 28, 'Create', 'PBG_DETAILS.CREATE', NOW());
+
+    INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (140, 28, 'Read', 'PBG_DETAILS.UPDATE', NOW());
+
+	INSERT INTO pmu.permissions(
+    id, module_id, action, permission_key, created_at)
+    VALUES (141, 28, 'Read', 'PBG_DETAILS.DELETE', NOW());
 
 COMMIT;
 
