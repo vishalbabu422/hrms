@@ -17,13 +17,7 @@ import {
 
 import CIcon from '@coreui/icons-react'
 
-import {
-  cilPencil,
-  cilTrash,
-  cilCheckCircle,
-  cilXCircle,
-  cilDescription,
-} from '@coreui/icons'
+import { cilPencil, cilTrash, cilCheckCircle, cilXCircle, cilDescription } from '@coreui/icons'
 
 import SimpleBar from 'simplebar-react'
 import { toast } from 'react-toastify'
@@ -45,8 +39,7 @@ import { formatDate } from '../../utils/dateUtils'
 const Index = () => {
   const navigate = useNavigate()
 
-  const LIMIT =
-    Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
+  const LIMIT = Number(import.meta.env.VITE_DEFAULT_LIMIT) || 10
 
   const [pbgList, setPbgList] = useState([])
   const [loading, setLoading] = useState(false)
@@ -80,29 +73,17 @@ const Index = () => {
         params.search = search
       }
 
-      const response = await api.get(
-        '/pbg-master/index',
-        { params },
-      )
+      const response = await api.get('/pbg-master/index', { params })
 
       const data = response.data
-
-      setPbgList(
-        data?.data?.pbgList ||
-          data?.data?.pbgMasterList ||
-          data?.data ||
-          [],
-      )
+      setPbgList(data?.data?.pbgList || [])
 
       setTotalRecords(data?.total ?? 0)
       setTotalPages(data?.totalPages ?? 1)
     } catch (error) {
       console.error(error)
 
-      toast.error(
-        error.response?.data?.message ||
-          'Failed to fetch PBG list',
-      )
+      toast.error(error.response?.data?.message || 'Failed to fetch PBG list')
 
       setPbgList([])
     } finally {
@@ -115,10 +96,7 @@ const Index = () => {
   }, [search, sort])
 
   useEffect(() => {
-    if (
-      search.length === 0 ||
-      search.length >= 3
-    ) {
+    if (search.length === 0 || search.length >= 3) {
       fetchPBGList()
     }
   }, [search, sort, page, limit])
@@ -130,10 +108,7 @@ const Index = () => {
       if (prev.key === key) {
         return {
           key,
-          order:
-            prev.order === 'asc'
-              ? 'desc'
-              : 'asc',
+          order: prev.order === 'asc' ? 'desc' : 'asc',
         }
       }
 
@@ -147,11 +122,7 @@ const Index = () => {
   /* ================= DELETE ================= */
 
   const confirmDelete = (id) => {
-    if (
-      !window.confirm(
-        'Are you sure you want to delete this PBG?',
-      )
-    ) {
+    if (!window.confirm('Are you sure you want to delete this PBG?')) {
       return
     }
 
@@ -168,10 +139,7 @@ const Index = () => {
     } catch (error) {
       console.error(error)
 
-      toast.error(
-        error.response?.data?.message ||
-          'Failed to delete PBG',
-      )
+      toast.error(error.response?.data?.message || 'Failed to delete PBG')
     }
   }
 
@@ -194,17 +162,9 @@ const Index = () => {
           `PBG No: ${item.pbg_no || '-'}`,
           `Start: ${formatDate(item.start_date)}`,
           `End: ${formatDate(item.end_date)}`,
-          `NICSI Reg. No: ${
-            item.nicsi_reg_no || '-'
-          }`,
-          `NICSI Date: ${formatDate(
-            item.nicsi_reg_date,
-          )}`,
-          `Status: ${
-            item.is_active
-              ? 'Active'
-              : 'Inactive'
-          }`,
+          `NICSI Reg. No: ${item.nicsi_reg_no || '-'}`,
+          `NICSI Date: ${formatDate(item.nicsi_reg_date)}`,
+          `Status: ${item.is_active ? 'Active' : 'Inactive'}`,
         ].join(' | ')
 
         doc.text(line, 10, y)
@@ -219,15 +179,11 @@ const Index = () => {
 
       doc.save('pbg-list.pdf')
 
-      toast.success(
-        'PBG PDF exported successfully',
-      )
+      toast.success('PBG PDF exported successfully')
     } catch (error) {
       console.error(error)
 
-      toast.error(
-        'Failed to export PDF',
-      )
+      toast.error('Failed to export PDF')
     }
   }
 
@@ -235,70 +191,38 @@ const Index = () => {
 
   const handleExportExcel = () => {
     try {
-      const formattedData = pbgList.map(
-        (item, index) => ({
-          'Sr No': index + 1,
-          'PBG No': item.pbg_no || '-',
-          'Start Date': formatDate(
-            item.start_date,
-          ),
-          'End Date': formatDate(
-            item.end_date,
-          ),
-          'NICSI Reg. No':
-            item.nicsi_reg_no || '-',
-          'NICSI Date': formatDate(
-            item.nicsi_reg_date,
-          ),
-          Status: item.is_active
-            ? 'Active'
-            : 'Inactive',
-        }),
-      )
+      const formattedData = pbgList.map((item, index) => ({
+        'Sr No': index + 1,
+        'PBG No': item.pbg_no || '-',
+        'Start Date': formatDate(item.start_date),
+        'End Date': formatDate(item.end_date),
+        'NICSI Reg. No': item.nicsi_reg_no || '-',
+        'NICSI Date': formatDate(item.nicsi_reg_date),
+        Status: item.is_active ? 'Active' : 'Inactive',
+      }))
 
-      const worksheet =
-        XLSX.utils.json_to_sheet(
-          formattedData,
-        )
+      const worksheet = XLSX.utils.json_to_sheet(formattedData)
 
-      const workbook =
-        XLSX.utils.book_new()
+      const workbook = XLSX.utils.book_new()
 
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        'PBG',
-      )
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'PBG')
 
-      const excelBuffer = XLSX.write(
-        workbook,
-        {
-          bookType: 'xlsx',
-          type: 'array',
-        },
-      )
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      })
 
-      const fileData = new Blob(
-        [excelBuffer],
-        {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
-        },
-      )
+      const fileData = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8',
+      })
 
-      saveAs(
-        fileData,
-        'pbg-list.xlsx',
-      )
+      saveAs(fileData, 'pbg-list.xlsx')
 
-      toast.success(
-        'PBG Excel exported successfully',
-      )
+      toast.success('PBG Excel exported successfully')
     } catch (error) {
       console.error(error)
 
-      toast.error(
-        'Failed to export Excel',
-      )
+      toast.error('Failed to export Excel')
     }
   }
 
@@ -310,9 +234,7 @@ const Index = () => {
         title="PBG"
         searchValue={search}
         onSearchChange={setSearch}
-        onAddClick={() =>
-          navigate('/pbg/add')
-        }
+        onAddClick={() => navigate('/pbg/add')}
         addLabel="Add PBG"
         showExport
         onExportPDF={handleExportPDF}
@@ -322,15 +244,10 @@ const Index = () => {
       <CCard className="shadow border-0 rounded-4">
         <CCardBody>
           <SimpleBar autoHide>
-            <CTable
-              hover
-              responsive
-              align="middle"
-            >
+            <CTable hover responsive align="middle">
               <CTableHead
                 style={{
-                  backgroundColor:
-                    '#f8f9fc',
+                  backgroundColor: '#f8f9fc',
                 }}
               >
                 <CTableRow>
@@ -376,69 +293,35 @@ const Index = () => {
                     onSort={handleSort}
                   />
 
-                  <CTableHeaderCell className="text-center">
-                    Action
-                  </CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
 
               <CTableBody>
                 {loading ? (
                   <CTableRow>
-                    <CTableDataCell
-                      colSpan={7}
-                      className="text-center py-4"
-                    >
+                    <CTableDataCell colSpan={7} className="text-center py-4">
                       <CSpinner size="sm" />
                     </CTableDataCell>
                   </CTableRow>
                 ) : pbgList.length > 0 ? (
                   pbgList.map((item) => (
-                    <CTableRow
-                      key={item.id}
-                    >
-                      <CTableDataCell>
-                        {item.pbg_no || '-'}
-                      </CTableDataCell>
+                    <CTableRow key={item.id}>
+                      <CTableDataCell>{item.pbg_no || '-'}</CTableDataCell>
 
-                      <CTableDataCell>
-                        {formatDate(
-                          item.start_date,
-                        )}
-                      </CTableDataCell>
+                      <CTableDataCell>{formatDate(item.start_date)}</CTableDataCell>
 
-                      <CTableDataCell>
-                        {formatDate(
-                          item.end_date,
-                        )}
-                      </CTableDataCell>
+                      <CTableDataCell>{formatDate(item.end_date)}</CTableDataCell>
 
-                      <CTableDataCell>
-                        {item.nicsi_reg_no ||
-                          '-'}
-                      </CTableDataCell>
+                      <CTableDataCell>{item.nicsi_reg_no || '-'}</CTableDataCell>
 
-                      <CTableDataCell>
-                        {formatDate(
-                          item.nicsi_reg_date,
-                        )}
-                      </CTableDataCell>
+                      <CTableDataCell>{formatDate(item.nicsi_reg_date)}</CTableDataCell>
 
                       <CTableDataCell>
                         {item.is_active ? (
-                          <CIcon
-                            icon={
-                              cilCheckCircle
-                            }
-                            className="text-success"
-                          />
+                          <CIcon icon={cilCheckCircle} className="text-success" />
                         ) : (
-                          <CIcon
-                            icon={
-                              cilXCircle
-                            }
-                            className="text-danger"
-                          />
+                          <CIcon icon={cilXCircle} className="text-danger" />
                         )}
                       </CTableDataCell>
 
@@ -446,85 +329,42 @@ const Index = () => {
                         <div
                           className="d-flex justify-content-center align-items-center gap-2"
                           style={{
-                            minWidth:
-                              '120px',
+                            minWidth: '120px',
                           }}
                         >
-                          <CTooltip
-                            content="View"
-                            placement="top"
-                          >
+                          <CTooltip content="View" placement="top">
                             <div
                               style={{
-                                display:
-                                  'inline-block',
-                                cursor:
-                                  'pointer',
+                                display: 'inline-block',
+                                cursor: 'pointer',
                               }}
-                              onClick={() =>
-                                navigate(
-                                  `/pbg/preview/${item.id}`,
-                                )
-                              }
+                              onClick={() => navigate(`/pbg/preview/${item.id}`)}
                             >
-                              <ActionButton
-                                color="primary"
-                                icon={
-                                  cilDescription
-                                }
-                              />
+                              <ActionButton color="primary" icon={cilDescription} />
                             </div>
                           </CTooltip>
 
-                          <CTooltip
-                            content="Edit"
-                            placement="top"
-                          >
+                          <CTooltip content="Edit" placement="top">
                             <div
                               style={{
-                                display:
-                                  'inline-block',
-                                cursor:
-                                  'pointer',
+                                display: 'inline-block',
+                                cursor: 'pointer',
                               }}
-                              onClick={() =>
-                                navigate(
-                                  `/pbg/edit/${item.id}`,
-                                )
-                              }
+                              onClick={() => navigate(`/pbg/edit/${item.id}`)}
                             >
-                              <ActionButton
-                                color="primary"
-                                icon={
-                                  cilPencil
-                                }
-                              />
+                              <ActionButton color="primary" icon={cilPencil} />
                             </div>
                           </CTooltip>
 
-                          <CTooltip
-                            content="Delete"
-                            placement="top"
-                          >
+                          <CTooltip content="Delete" placement="top">
                             <div
                               style={{
-                                display:
-                                  'inline-block',
-                                cursor:
-                                  'pointer',
+                                display: 'inline-block',
+                                cursor: 'pointer',
                               }}
-                              onClick={() =>
-                                confirmDelete(
-                                  item.id,
-                                )
-                              }
+                              onClick={() => confirmDelete(item.id)}
                             >
-                              <ActionButton
-                                color="danger"
-                                icon={
-                                  cilTrash
-                                }
-                              />
+                              <ActionButton color="danger" icon={cilTrash} />
                             </div>
                           </CTooltip>
                         </div>
@@ -532,9 +372,7 @@ const Index = () => {
                     </CTableRow>
                   ))
                 ) : (
-                  <TableEmptyState
-                    colSpan={7}
-                  />
+                  <TableEmptyState colSpan={7} />
                 )}
               </CTableBody>
             </CTable>

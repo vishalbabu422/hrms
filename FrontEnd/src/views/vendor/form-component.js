@@ -315,6 +315,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Address Line 1</CFormLabel>
 
                         <CFormTextarea
+                          name="address_line1"
                           rows={2}
                           placeholder="Enter Address"
                           value={address.address_line1 || ''}
@@ -328,6 +329,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Address Line 2</CFormLabel>
 
                         <CFormTextarea
+                          name="address_line2"
                           rows={2}
                           value={address.address_line2 || ''}
                           onChange={(e) =>
@@ -340,6 +342,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>City</CFormLabel>
 
                         <CFormInput
+                          name="city"
                           placeholder="Enter City"
                           value={address.city || ''}
                           onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
@@ -351,7 +354,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>State</CFormLabel>
 
                         <StateSelect
-                          name={`state_${index}`}
+                          name="state"
                           value={address.state || ''}
                           onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
                           colSize={12}
@@ -362,6 +365,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Country</CFormLabel>
 
                         <CFormInput
+                          name="country"
                           value={address.country || ''}
                           onChange={(e) => handleAddressChange(index, 'country', e.target.value)}
                           maxLength={100}
@@ -372,6 +376,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Pincode</CFormLabel>
 
                         <CFormInput
+                          name="pincode"
                           placeholder="Enter pincode"
                           value={address.pincode || ''}
                           onChange={(e) => handleAddressChange(index, 'pincode', e.target.value)}
@@ -415,6 +420,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Bank Name</CFormLabel>
 
                         <CFormInput
+                          name="bank_name"
                           placeholder="Enter Bank Name"
                           value={bank.bank_name || ''}
                           onChange={(e) => handleBankChange(index, 'bank_name', e.target.value)}
@@ -426,6 +432,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Account Number</CFormLabel>
 
                         <CFormInput
+                          name="account_number"
                           placeholder="Enter Account Number"
                           value={bank.account_number || ''}
                           onChange={(e) =>
@@ -445,6 +452,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>IFSC Code</CFormLabel>
 
                         <CFormInput
+                          name="ifsc_code"
                           placeholder="Enter IFSC Code"
                           value={bank.ifsc_code || ''}
                           onChange={(e) =>
@@ -460,6 +468,7 @@ const VendorFormComponent = ({ initialData, mode, onSubmit }) => {
                         <CFormLabel>Branch Name</CFormLabel>
 
                         <CFormInput
+                          name="branch_name"
                           placeholder="Enter Branch Name"
                           value={bank.branch_name || ''}
                           onChange={(e) => handleBankChange(index, 'branch_name', e.target.value)}

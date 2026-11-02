@@ -170,6 +170,8 @@ const generatePdf = catchAsync(async (req, res) => {
   const data =
     await BillingSubmissionService.generateBillingSubmissionPdf(id);
 
+
+    
   // Generate PDF buffer
   const pdfBuffer = await BillingSubmissionPdf.generate(data);
 
@@ -186,7 +188,17 @@ const generatePdf = catchAsync(async (req, res) => {
   return res.status(200).send(pdfBuffer);
 });
 
+const previewPdf = catchAsync(async (req, res) => {
+  const data = await BillingSubmissionService.getBillingSubmissionPreview(
+    req.params.id
+  );
 
+  res.status(200).json({
+    status: "success",
+    message: "Billing Submission preview fetched successfully",
+    data,
+  });
+});
 module.exports = {
   generateInvoicePreview,
   index,
@@ -195,5 +207,5 @@ module.exports = {
   update,
   deleteBillingSubmission,
   generatePdf,
-  
+  previewPdf,
 };

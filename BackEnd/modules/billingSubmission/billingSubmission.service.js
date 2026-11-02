@@ -1,4 +1,5 @@
-const {WorkOrder,
+const {
+  WorkOrder,
   VendorMaster,
   WoDesgnMapping,
   BillingSubmission,
@@ -7,8 +8,17 @@ const {WorkOrder,
   EmployeeWorkOrderDeployment,
   Designation,
   ResourceRate,
-  EmployeeSalaryRegister,} = require("../../models");
-
+  EmployeeWorkOrderLeave,
+  EmpanelmentMaster,
+  CompanyMaster,
+  EmployeeSalaryRegister,
+  EmpSalaryStructure,
+  EmployeeSalaryAddon,
+  SalaryComponent,
+  StateMaster,
+  GstCodeMaster
+} = require("../../models");
+const { Op } = require("sequelize");
 const buildFinancialYear = (year, month) => {
   const startYear = month >= 4 ? year : year - 1;
   const endYear = startYear + 1;
@@ -16,6 +26,80 @@ const buildFinancialYear = (year, month) => {
   return `${String(startYear).slice(-2)}-${String(endYear).slice(-2)}`;
 };
 
+const numberToIndianWords = (amount) => {
+  const number = Number(amount);
+
+  if (!Number.isFinite(number) || number < 0) {
+    return "";
+  }
+
+  const whole = Math.floor(number);
+  const paise = Math.round((number - whole) * 100);
+
+  const ones = [
+    "",
+    "One", "Two", "Three", "Four", "Five",
+    "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen",
+    "Fifteen", "Sixteen", "Seventeen", "Eighteen",
+    "Nineteen",
+  ];
+
+  const tens = [
+    "", "", "Twenty", "Thirty", "Forty",
+    "Fifty", "Sixty", "Seventy", "Eighty", "Ninety",
+  ];
+
+  const belowThousand = (n) => {
+    let words = [];
+
+    if (n >= 100) {
+      words.push(ones[Math.floor(n / 100)], "Hundred");
+      n %= 100;
+    }
+
+    if (n >= 20) {
+      words.push(tens[Math.floor(n / 10)]);
+      n %= 10;
+    }
+
+    if (n > 0) {
+      words.push(ones[n]);
+    }
+
+    return words.join(" ");
+  };
+
+  const indianNumberWords = (n) => {
+    if (n === 0) return "Zero";
+
+    const parts = [];
+
+    const crore = Math.floor(n / 10000000);
+    n %= 10000000;
+
+    const lakh = Math.floor(n / 100000);
+    n %= 100000;
+
+    const thousand = Math.floor(n / 1000);
+    n %= 1000;
+
+    if (crore) parts.push(`${belowThousand(crore)} Crore`);
+    if (lakh) parts.push(`${belowThousand(lakh)} Lakh`);
+    if (thousand) parts.push(`${belowThousand(thousand)} Thousand`);
+    if (n) parts.push(belowThousand(n));
+
+    return parts.join(" ");
+  };
+
+  let result = `INR ${indianNumberWords(whole)}`;
+
+  if (paise > 0) {
+    result += ` and ${indianNumberWords(paise)} Paise`;
+  }
+
+  return `${result} Only`;
+};
 // Invoice Number Preview
 exports.generateInvoicePreview = async (wo_id) => {
   if (!wo_id || !Number.isInteger(Number(wo_id)) || Number(wo_id) <= 0) 
@@ -167,6 +251,21 @@ igst_amount: item.igst_amount,
         },
         attributes: ["leave_deduction"],
       });
+      
+      const employeeLeave = await EmployeeWorkOrderLeave.findOne({
+  where: {
+    wo_id: billing.wo_id,
+    employee_id: employee.id,
+    month: Number(billing.month),
+    year: String(billing.year),
+  },
+});
+  const empanelment = await EmpanelmentMaster.findOne({
+      where: {
+        is_active: true,
+      },
+      attributes: ["leaves_per_month"],
+    });
 
       resourceDetails.push({
         employee_id: employee.id,
@@ -180,7 +279,7 @@ igst_amount: item.igst_amount,
 
         designation: designation?.designation || "",
         experience: designation?.exp_in_years ?? null,
-
+        leaves_per_month: empanelment?.leaves_per_month ?? 0,
         work_order_id: workOrder.id,
         work_order_no: workOrder.work_order_no,
 
@@ -190,7 +289,7 @@ igst_amount: item.igst_amount,
         current_month: monthName,
         current_month_days: new Date(year, month, 0).getDate(),
 
-        leave_deduction: salaryRegister?.leave_deduction ?? 0,
+        leave_deduction: employeeLeave?.leave_granted ?? 0,
       });
     }
   }
@@ -400,6 +499,29 @@ exports.generateBillingSubmissionPdf = async (id) => {
     throw error;
   }
 
+  const gstEffectiveDate = billing.invoice_date
+  ? new Date(billing.invoice_date).toISOString().slice(0, 10)
+  : `${billing.year}-${String(billing.month).padStart(2, "0")}-01`;
+
+const gstDetails = await GstCodeMaster.findOne({
+  where: {
+    code_type: "SAC",
+    is_active: true,
+    effective_from: {
+      [Op.lte]: gstEffectiveDate,
+    },
+    [Op.or]: [
+      { effective_to: null },
+      {
+        effective_to: {
+          [Op.gte]: gstEffectiveDate,
+        },
+      },
+    ],
+  },
+  attributes: ["code", "gst_rate", "effective_from"],
+  order: [["effective_from", "DESC"]],
+});
   // 3. Get Vendor Details
   const vendor = await VendorMaster.findOne({
     where: {
@@ -413,6 +535,25 @@ exports.generateBillingSubmissionPdf = async (id) => {
     error.statusCode = 404;
     throw error;
   }
+  const vendorState = vendor.state
+  ? await StateMaster.findOne({
+      where: {
+        state_name: {
+          [Op.iLike]: vendor.state.trim(),
+        },
+        is_active: true,
+      },
+      attributes: ["state_name", "state_code", "lgd_code"],
+    })
+  : null;
+
+const vendorAddress = [
+  vendor.address_line1,
+  vendor.address_line2,
+  [vendor.city, vendor.state].filter(Boolean).join(", "),
+]
+  .filter(Boolean)
+  .join("\n");
 
   // 4. Get Deployment Details for this Work Order
   const deploymentDetails = await WoDesgnMapping.findAll({
@@ -429,6 +570,7 @@ exports.generateBillingSubmissionPdf = async (id) => {
   ],
   order: [["id", "ASC"]],
 });
+
 
 // 5. Get resource-wise employee details for the billing month
 const resourceDetails = [];
@@ -451,6 +593,72 @@ const currentMonthDays = new Date(
   0
 ).getDate();
 
+const reportEmpanelment = await EmpanelmentMaster.findOne({
+  where: {
+    is_active: true,
+    effective_from: {
+      [Op.lte]: `${billingYear}-${String(billingMonth).padStart(2, "0")}-01`,
+    },
+    [Op.or]: [
+      { effective_to: null },
+      {
+        effective_to: {
+          [Op.gte]: `${billingYear}-${String(billingMonth).padStart(2, "0")}-01`,
+        },
+      },
+    ],
+  },
+  attributes: [
+    "category",
+    "empanelment_no",
+    "leaves_per_month",
+  ],
+  include: [
+  {
+    model: CompanyMaster,
+   attributes: [
+  "company_name",
+  "address_line1",
+  "address_line2",
+  "city",
+  "state",
+  "pincode",
+],
+    required: false,
+  },
+],
+  order: [["effective_from", "DESC"]],
+});
+const buyerCompany = reportEmpanelment?.CompanyMaster;
+
+const buyerState = buyerCompany?.state
+  ? await StateMaster.findOne({
+      where: {
+        state_name: {
+          [Op.iLike]: buyerCompany.state.trim(),
+        },
+        is_active: true,
+      },
+      attributes: ["state_name", "state_code", "lgd_code"],
+    })
+  : null;
+
+
+const buyerAddress = [
+  buyerCompany?.address_line1,
+  buyerCompany?.address_line2,
+  [
+    buyerCompany?.city,
+    buyerCompany?.state,
+    buyerCompany?.pincode,
+  ]
+    .filter(Boolean)
+    .join(", "),
+]
+  .filter(Boolean)
+  .join("\n");
+
+  
 for (const mapping of deploymentDetails) {
   const deployments = await EmployeeWorkOrderDeployment.findAll({
     where: {
@@ -493,15 +701,82 @@ for (const mapping of deploymentDetails) {
       attributes: ["nicsi_margin_amount"],
     });
 
-    const salaryRegister = await EmployeeSalaryRegister.findOne({
-      where: {
-        employee_id: employee.id,
-        month: billingMonth,
-        year: billingYear,
-        is_deleted: false,
-      },
-      attributes: ["leave_deduction"],
-    });
+   const employeeLeave = await EmployeeWorkOrderLeave.findOne({
+  where: {
+    wo_id: billing.wo_id,
+    employee_id: employee.id,
+    month: billingMonth,
+    year: String(billingYear),
+  },
+  attributes: ["leave_taken", "leave_granted"],
+});
+
+// Employee salary register for billing month
+const salaryRegister = await EmployeeSalaryRegister.findOne({
+  where: {
+    employee_id: employee.id,
+    month: billingMonth,
+    year: billingYear,
+    is_deleted: false,
+  },
+  attributes: [
+    "net_salary",
+    "gross_earnings",
+    "total_deductions",
+    "leave_deduction",
+    "paid_days",
+    "lop_days",
+  ],
+});
+
+// Salary structure CTC effective during billing month
+const monthStart = `${billingYear}-${String(billingMonth).padStart(2, "0")}-01`;
+const monthEnd = new Date(
+  billingYear,
+  billingMonth,
+  0
+).toISOString().slice(0, 10);
+
+const salaryStructure = await EmpSalaryStructure.findOne({
+  where: {
+    employee_id: employee.id,
+    is_deleted: false,
+    is_active: true,
+    effective_from: { [Op.lte]: monthEnd },
+    [Op.or]: [
+      { effective_to: null },
+      { effective_to: { [Op.gte]: monthStart } },
+    ],
+  },
+  attributes: ["ctc", "effective_from", "effective_to"],
+  order: [["effective_from", "DESC"]],
+});
+
+// Employee salary addons effective during billing month
+const salaryAddons = await EmployeeSalaryAddon.findAll({
+  where: {
+    employee_id: employee.id,
+    is_active: true,
+    is_deleted: false,
+    effective_from: { [Op.lte]: monthEnd },
+    [Op.or]: [
+      { effective_to: null },
+      { effective_to: { [Op.gte]: monthStart } },
+    ],
+  },
+  attributes: ["amount", "recurrence_type"],
+});
+
+const totalAddonAmount = salaryAddons.reduce(
+  (sum, addon) => sum + Number(addon.amount || 0),
+  0
+);
+
+const netSalary = Number(salaryRegister?.net_salary || 0);
+const totalSalaryReleased = netSalary + totalAddonAmount;
+
+const grantedLeaves = Number(employeeLeave?.leave_granted || 0);
+const payDays = Math.max(0, currentMonthDays - grantedLeaves);
 
     resourceDetails.push({
       employee_id: employee.id,
@@ -516,15 +791,41 @@ for (const mapping of deploymentDetails) {
 
       designation: designation?.designation || "",
       experience: designation?.exp_in_years ?? null,
-
+      leaves_per_month: reportEmpanelment?.leaves_per_month ?? 0,
       nicsi_rate_margin:
         resourceRate?.nicsi_margin_amount ?? null,
 
       current_month: currentMonthName,
       current_month_days: currentMonthDays,
+      
+       leave_taken: employeeLeave?.leave_taken ?? 0,
+       final_unpaid_leave: employeeLeave?.leave_granted ?? 0,
+       leave_deduction: employeeLeave?.leave_granted ?? 0,
 
-      leave_deduction:
-        salaryRegister?.leave_deduction ?? 0,
+       resource_ctc: Number(salaryStructure?.ctc || 0),
+
+available_leave_balance: "",
+
+month_days: currentMonthDays,
+
+mpr_leaves: Number(reportEmpanelment?.leaves_per_month || 0),
+
+leave_deduction_leave_in_month: "",
+
+leave_balance_after_adjustment: "",
+
+pay_days: payDays,
+
+tds: "",
+pt_tax: "",
+pf: "",
+other_deductions: "",
+
+net_pay: netSalary,
+
+total_salary_released_incl: totalSalaryReleased,
+
+utr_amount: totalSalaryReleased,    
     });
   }
 }
@@ -578,6 +879,25 @@ const woPeriodTo = validToDates.length
     });
   }
 
+  const descriptionOfServices = [
+  ...new Set(
+    resourceDetails
+      .map((item) => {
+        const designation = item.designation?.trim();
+        if (!designation) return "";
+
+        const experience =
+          item.experience !== null &&
+          item.experience !== undefined &&
+          item.experience !== ""
+            ? ` (${item.experience} years Experience)`
+            : "";
+
+        return `${designation}${experience}`;
+      })
+      .filter(Boolean)
+  ),
+].join("\n");
   // 7. Prepare PDF data
   return {
   vendor_name: vendor.vendor_name || "",
@@ -595,9 +915,7 @@ const woPeriodTo = validToDates.length
 
   billing_amount: Number(billing.billing_amount || 0),
   igst_amount: Number(billing.billing_igst_amt || 0),
-  cgst_amount: Number(billing.billing_cgst_amt || 0),
-  sgst_amount: Number(billing.billing_sgst_amt || 0),
-  total_amount: Number(billing.total_amount || 0),
+total_amount: Number(billing.total_amount || 0),
 
   pbg_submission_date: formatDate(billing.pbg_submission_date),
 
@@ -619,7 +937,105 @@ const woPeriodTo = validToDates.length
   wo_date: formatDate(workOrder.work_order_date),
   wo_period_from: woPeriodFrom,
   wo_period_to: woPeriodTo,
-  
+
+  // Leave Balance Report Details
+category: reportEmpanelment?.category || "",
+department: reportEmpanelment?.CompanyMaster?.company_name || "",
+empanelment_no: reportEmpanelment?.empanelment_no || "",
+
+// Vendor details for Tax Invoice
+vendor_address: vendorAddress,
+vendor_state: vendorState?.state_name || vendor.state || "",
+vendor_state_code: vendorState?.state_code || "",
+vendor_email: vendor.contact_email || "",
+
+// Buyer details from CompanyMaster
+buyer_company_name: buyerCompany?.company_name || "",
+buyer_address: buyerAddress,
+buyer_state: buyerState?.state_name || buyerCompany?.state || "",
+buyer_state_code: buyerState?.lgd_code || "",
+
+// Project name from WorkOrder
+project_name: workOrder.project_name || "",  
+
+description_of_services: descriptionOfServices,
+hsn_sac: gstDetails?.code || "",
+gst_rate: gstDetails?.gst_rate ?? "",
+billing_amount: Number(billing.billing_amount || 0),
+
+// Tax Invoice details from database
+hsn_sac: gstDetails?.code ?? "",
+
+taxable_value: Number(billing.billing_amount || 0),
+
+gst_rate: gstDetails?.gst_rate ?? "",
+
+igst_amount: Number(billing.billing_igst_amt || 0),
+
+total_tax_amount: Number(
+  billing.billing_igst_amt || 0
+),
+
+amount_in_words: numberToIndianWords(
+  Number(billing.total_amount || 0)
+),
+
+bank_name: vendor?.bank_name || "",
+account_number: vendor?.account_number || "",
+branch_name: vendor?.branch_name || "",
+ifsc_code: vendor?.ifsc_code || "",
 };
+};
+
+// Preview Billing Submission PDF Data
+exports.getBillingSubmissionPreview = async (id) => {
+  const pdfData = await exports.generateBillingSubmissionPdf(id);
+
+  return {
+    generalDetails: {
+      vendor_name: pdfData.vendor_name,
+      project_no: pdfData.project_no,
+      work_order_no: pdfData.work_order_no,
+      milestone_based: pdfData.milestone_based,
+      wo_date: pdfData.wo_date,
+      wo_period_from: pdfData.wo_period_from,
+      wo_period_to: pdfData.wo_period_to,
+      project_name: pdfData.project_name,
+      total_required_persons: pdfData.total_required_persons,
+    },
+
+    invoiceDetails: {
+      invoice_no: pdfData.invoice_no,
+      invoice_date: pdfData.invoice_date,
+      month: pdfData.month,
+      year: pdfData.year,
+      billing_amount: pdfData.billing_amount,
+      igst_amount: pdfData.igst_amount,
+      total_amount: pdfData.total_amount,
+    },
+
+    pbgSubmissionDetails: {
+      pbg_submission_date: pdfData.pbg_submission_date,
+      nicsi_reg_no: pdfData.nicsi_reg_no,
+      nicsi_reg_date: pdfData.nicsi_reg_date,
+    },
+
+    invoiceCalculation: {
+      deployment_details: pdfData.deployment_details,
+      resource_details: pdfData.resourceDetails,
+      total_required_persons: pdfData.total_required_persons,
+    },
+
+    leaveBalanceReport: {
+      category: pdfData.category,
+      department: pdfData.department,
+      empanelment_no: pdfData.empanelment_no,
+      resource_details: pdfData.resourceDetails,
+    },
+
+    salaryCalculation: {
+      resource_details: pdfData.resourceDetails,
+    },
+  };
 };
 

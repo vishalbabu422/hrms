@@ -48,9 +48,6 @@ const PBGFormComponent = ({ initialData, mode, onSubmit }) => {
 
         setWorkOrders(list)
       } catch (error) {
-        console.error('WORK ORDER FETCH ERROR:', error)
-        console.error('SERVER RESPONSE:', error.response?.data)
-
         toast.error(error.response?.data?.message || 'Failed to load Work Orders')
       } finally {
         setLoadingWorkOrders(false)
@@ -248,10 +245,6 @@ const PBGFormComponent = ({ initialData, mode, onSubmit }) => {
         }
       } catch (error) {
         if (cancelled) return
-
-        console.error('CALCULATE TOTAL ERROR:', error)
-        console.error('SERVER RESPONSE:', error.response?.data)
-
         toast.error(error.response?.data?.message || 'Failed to calculate Work Order amount')
       } finally {
         if (!cancelled) {
@@ -318,8 +311,6 @@ const PBGFormComponent = ({ initialData, mode, onSubmit }) => {
 
       work_order_ids: selectedWorkOrders.map(Number),
     }
-
-    console.log('PBG PAYLOAD:', payload)
 
     onSubmit(payload)
   }
@@ -448,7 +439,6 @@ const PBGFormComponent = ({ initialData, mode, onSubmit }) => {
                         </div>
                       ) : (
                         <>
-
                           {/* SELECT ALL / UNSELECT ALL */}
 
                           <div

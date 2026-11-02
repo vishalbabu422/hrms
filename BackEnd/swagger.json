@@ -14248,7 +14248,7 @@
   }
     },
     
-"/billing-submission/{id}/generatePdf": {
+    "/billing-submission/{id}/generatePdf": {
   "post": {
     "tags": [
       "Billing Submission"
@@ -14295,6 +14295,231 @@
       },
       "404": {
         "description": "Billing Submission, Work Order or Vendor not found"
+      },
+      "500": {
+        "description": "Internal Server Error"
+      }
+    }
+  }
+  },
+  "/billing-submission/{id}/previewPdf": {
+  "get": {
+    "security": [
+      {
+        "Authorization": []
+      }
+    ],
+    "tags": [
+      "Billing Submission"
+    ],
+    "summary": "Get Billing Submission PDF Preview",
+    "description": "Fetches all details required for the Billing Submission PDF, including General Details, Invoice Details, PBG Submission Details, Invoice Calculation, Leave Balance Report and Salary Calculation. Does not generate or download the PDF.",
+    "produces": [
+      "application/json"
+    ],
+    "parameters": [
+      {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "type": "integer",
+        "description": "Billing Submission ID",
+        "example": 1
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Billing Submission preview fetched successfully",
+        "schema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "example": "success"
+            },
+            "message": {
+              "type": "string",
+              "example": "Billing Submission preview fetched successfully"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "generalDetails": {
+                  "type": "object",
+                  "properties": {
+                    "vendor_name": {
+                      "type": "string",
+                      "example": "ABC Technologies"
+                    },
+                    "project_no": {
+                      "type": "string",
+                      "example": "PRJ/2026/001"
+                    },
+                    "work_order_no": {
+                      "type": "string",
+                      "example": "WO/2026/001"
+                    },
+                    "milestone_based": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "wo_date": {
+                      "type": "string",
+                      "example": "2026-04-01"
+                    },
+                    "wo_period_from": {
+                      "type": "string",
+                      "example": "2026-04-01"
+                    },
+                    "wo_period_to": {
+                      "type": "string",
+                      "example": "2027-03-31"
+                    },
+                    "project_name": {
+                      "type": "string",
+                      "example": "Software Development Project"
+                    },
+                    "total_required_persons": {
+                      "type": "integer",
+                      "example": 10
+                    }
+                  }
+                },
+                "invoiceDetails": {
+                  "type": "object",
+                  "properties": {
+                    "invoice_no": {
+                      "type": "string",
+                      "example": "ABC123/26-27/09/Sep07"
+                    },
+                    "invoice_date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2026-09-07"
+                    },
+                    "month": {
+                      "type": "integer",
+                      "example": 9
+                    },
+                    "year": {
+                      "type": "integer",
+                      "example": 2026
+                    },
+                    "billing_amount": {
+                      "type": "number",
+                      "example": 100000
+                    },
+                    "igst_amount": {
+                      "type": "number",
+                      "example": 18000
+                    },
+                    "total_amount": {
+                      "type": "number",
+                      "example": 118000
+                    }
+                  }
+                },
+                "pbgSubmissionDetails": {
+                  "type": "object",
+                  "properties": {
+                    "pbg_submission_date": {
+                      "type": "string",
+                      "format": "date",
+                      "x-nullable": true,
+                      "example": "2026-09-10"
+                    },
+                    "nicsi_reg_no": {
+                      "type": "string",
+                      "example": "NICSI/REG/2026/001"
+                    },
+                    "nicsi_reg_date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2026-01-15"
+                    }
+                  }
+                },
+                "invoiceCalculation": {
+                  "type": "object",
+                  "properties": {
+                    "deployment_details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    },
+                    "resource_details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    },
+                    "total_required_persons": {
+                      "type": "integer",
+                      "example": 10
+                    }
+                  }
+                },
+                "leaveBalanceReport": {
+                  "type": "object",
+                  "properties": {
+                    "category": {
+                      "type": "string",
+                      "example": "General"
+                    },
+                    "department": {
+                      "type": "string",
+                      "example": "IT"
+                    },
+                    "empanelment_no": {
+                      "type": "string",
+                      "example": "EMP001"
+                    },
+                    "resource_details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                },
+                "salaryCalculation": {
+                  "type": "object",
+                  "properties": {
+                    "resource_details": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid Billing Submission ID",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
+      },
+      "401": {
+        "description": "Unauthorized"
+      },
+      "403": {
+        "description": "Forbidden"
+      },
+      "404": {
+        "description": "Billing Submission not found",
+        "schema": {
+          "$ref": "#/definitions/InvalidResponse"
+        }
       },
       "500": {
         "description": "Internal Server Error"

@@ -6,6 +6,7 @@ const BillingSubmissionController = require("./billingSubmission.controller");
 const {
   protect,
   restrictTo,
+  checkPermission,
 } = require("../../middlewares/authMiddleware");
 
 const ROLES = ["ORG_ADMIN", "SUPER_ADMIN"];
@@ -16,6 +17,7 @@ router.use(protect);
 router
   .route("/index")
   .get(
+    checkPermission("BILLING_SUB_DETAILS.READ"),
     restrictTo(...ROLES),
     BillingSubmissionController.index
   );
@@ -23,6 +25,7 @@ router
 // Invoice Number Preview
 router.get(
   "/work-order/:wo_id/invoice-preview",
+  checkPermission("BILLING_SUB_DETAILS.READ"),
   restrictTo(...ROLES),
   BillingSubmissionController.generateInvoicePreview
 );
@@ -31,14 +34,17 @@ router.get(
 router
   .route("/:id")
   .get(
+    checkPermission("BILLING_SUB_DETAILS.READ"),
     restrictTo(...ROLES),
     BillingSubmissionController.getById
   )
   .patch(
+    checkPermission("BILLING_SUB_DETAILS.UPDATE"),
     restrictTo(...ROLES),
     BillingSubmissionController.update
   )
   .delete(
+    checkPermission("BILLING_SUB_DETAILS.DELETE"),
     restrictTo(...ROLES),
     BillingSubmissionController.deleteBillingSubmission
   );
@@ -47,6 +53,7 @@ router
 router
   .route("/")
   .post(
+    checkPermission("BILLING_SUB_DETAILS.UPDATE"),
     restrictTo(...ROLES),
     BillingSubmissionController.create
   );  
@@ -54,8 +61,17 @@ router
   // Generate Billing Submission PDF
 router.post(
   "/:id/generatePdf",
+  checkPermission("BILLING_SUB_DETAILS.CREATE"),
   restrictTo(...ROLES),
   BillingSubmissionController.generatePdf
 );
+
+  router
+  .route("/:id/previewPdf")
+  .get(
+    checkPermission("BILLING_SUB_DETAILS.READ"),
+    restrictTo(...ROLES),
+    BillingSubmissionController.previewPdf
+  );
 
 module.exports = router;

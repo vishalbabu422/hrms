@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const sequelize = require("../../../utils/database");
-const { WorkorderPbg,PbgMaster,WorkOrder } = require("../../../models");
+const { WorkorderPbg, PbgMaster, WorkOrder } = require("../../../models");
 
 // Get PBG List
 exports.index = async (queryOptions) => {
@@ -8,6 +8,7 @@ exports.index = async (queryOptions) => {
     ...queryOptions,
 
     attributes: [
+      "id",
       "pbg_no",
       "start_date",
       "end_date",
@@ -22,7 +23,6 @@ exports.dataByPbgId = async (pbg_id) => {
   return await WorkorderPbg.findAll({
     where: {
       pbg_id: pbg_id,
-      is_active: true,
     },
 
     include: [
@@ -68,28 +68,30 @@ exports.create = async (data) => {
         pbg_upload_path: data.pbg_upload_path,
         is_active: data.is_active,
       },
-      {
-        transaction,
-      }
+      { transaction },
     );
 
-    // Create Workorder PBG
-    const workorderPbg = await WorkorderPbg.create(
-      {
-        pbg_id: pbg.id,
-        wo_id: data.wo_id,
-        is_active: true,
-      },
-      {
-        transaction,
-      }
-    );
+    // Create Workorder PBG records
+    const workorderPbgRecords = [];
+
+    for (const wo_id of data.work_order_ids) {
+      const workorderPbg = await WorkorderPbg.create(
+        {
+          pbg_id: pbg.id,
+          wo_id: wo_id,
+          is_active: true,
+        },
+        { transaction },
+      );
+
+      workorderPbgRecords.push(workorderPbg);
+    }
 
     await transaction.commit();
 
     return {
       pbg,
-      workorderPbg,
+      workorderPbg: workorderPbgRecords,
     };
   } catch (error) {
     await transaction.rollback();
@@ -144,7 +146,7 @@ exports.deletePbg = async (pbg_id) => {
       },
       {
         transaction,
-      }
+      },
     );
 
     // Soft delete Workorder PBG mappings
@@ -157,7 +159,7 @@ exports.deletePbg = async (pbg_id) => {
           pbg_id: pbg_id,
         },
         transaction,
-      }
+      },
     );
 
     await transaction.commit();
@@ -169,10 +171,7 @@ exports.deletePbg = async (pbg_id) => {
 };
 
 // Calculate Work Order Total Amount
-exports.calculateWorkOrderTotal = async (
-  work_order_ids
-) => {
-
+exports.calculateWorkOrderTotal = async (work_order_ids) => {
   // Get Work Orders
   const workOrders = await WorkOrder.findAll({
     where: {
@@ -181,51 +180,33 @@ exports.calculateWorkOrderTotal = async (
       },
       is_active: true,
     },
-    attributes: [
-      "id",
-      "grand_total",
-    ],
+    attributes: ["id", "grand_total"],
   });
 
-
   // Check if all requested Work Orders exist
-  const foundIds = workOrders.map(
-    (workOrder) => Number(workOrder.id)
-  );
+  const foundIds = workOrders.map((workOrder) => Number(workOrder.id));
 
   const missingIds = work_order_ids.filter(
-    (id) => !foundIds.includes(Number(id))
+    (id) => !foundIds.includes(Number(id)),
   );
-
 
   // Stop if any Work Order ID is invalid
   if (missingIds.length > 0) {
-    const error = new Error(
-      `Work Order not found: ${missingIds.join(", ")}`
-    );
+    const error = new Error(`Work Order not found: ${missingIds.join(", ")}`);
 
     error.statusCode = 404;
 
     throw error;
   }
 
-
   // Calculate total amount
-  const totalAmount = workOrders.reduce(
-    (sum, workOrder) => {
-      return (
-        sum + Number(workOrder.grand_total || 0)
-      );
-    },
-    0
-  );
-
+  const totalAmount = workOrders.reduce((sum, workOrder) => {
+    return sum + Number(workOrder.grand_total || 0);
+  }, 0);
 
   return {
     work_order_count: workOrders.length,
-    grand_total: Number(
-      totalAmount.toFixed(2)
-    ),
+    grand_total: Number(totalAmount.toFixed(2)),
   };
 };
 
@@ -258,10 +239,6 @@ exports.getPbgDocument = async (pbg_id) => {
       id: pbg_id,
       is_active: true,
     },
-    attributes: [
-      "id",
-      "pbg_no",
-      "pbg_upload_path",
-    ],
+    attributes: ["id", "pbg_no", "pbg_upload_path"],
   });
 };
